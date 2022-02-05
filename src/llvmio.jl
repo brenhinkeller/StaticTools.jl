@@ -137,35 +137,36 @@ end
 
 ## ---
 
-# Have to include literal `\n`s lol
-printfmt(::Type{<:AbstractFloat}) = mm"%e
+# Format vertically (have to include literal `\n`s, lol)
+printfmtv(::Type{<:AbstractFloat}) = mm"%e
 "
-printfmt(::Type{<:Integer}) = mm"%d
+printfmtv(::Type{<:Integer}) = mm"%d
 "
-printfmt(::Type{<:Unsigned}) = mm"0x%x
+printfmtv(::Type{<:Unsigned}) = mm"0x%x
 "
-printfmt(::Type{AbstractMatrix{<:AbstractFloat}}) = mm"%e	"
-printfmt(::Type{AbstractMatrix{<:Integer}}) = mm"%d	"
-printfmt(::Type{AbstractMatrix{<:Unsigned}}) = mm"0x%x	"
+# Format horizontally (have to include literal tabs)
+printfmth(::Type{<:AbstractFloat}) = mm"%e	"
+printfmth(::Type{<:Integer}) = mm"%d	"
+printfmth(::Type{<:Unsigned}) = mm"0x%x	"
 
 
 # Top-level formats, single numbers
 function printf(n::T) where T <:Number
-    fmt = printfmt(T)
+    fmt = printfmtv(T)
     GC.@preserve fmt printf(fmt, n)
 end
 
 # Print a vector of numbers
 function printf(v::AbstractVector{T}) where T <: Number
-    fmt = printfmt(T)
+    fmt = printfmtv(T)
     @inbounds GC.@preserve fmt for i ∈ eachindex(v)
         printf(fmt, v[i])
     end
 end
 
 # Print a 2d matrix of numbers
-function printf(m::T) where T <: AbstractMatrix
-    fmt = printfmt(T)
+function printf(m::AbstractMatrix{T}) where T <: Number
+    fmt = printfmth(T)
     @inbounds GC.@preserve fmt for i ∈ axes(m,1)
         for j ∈ axes(m,2)
             printf(fmt, m[i,j])
