@@ -14,6 +14,7 @@
     end
     newline() = putchar(0x0a)
 
+
 ## --- The old reliable: puts
 
     function puts(s)
@@ -135,8 +136,6 @@
     end
 
 ## ---
-
-    using ManualMemory
 
     # Top-level formats, single numbers
     function printf(n::AbstractFloat)
