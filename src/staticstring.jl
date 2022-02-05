@@ -16,11 +16,11 @@
 
     # Indexing
     Base.firstindex(s::StaticString) = 1
-    Base.lastindex(s::StaticString{N}) where N = N-1
-    Base.length(s::StaticString{N}) where N = N-1
+    Base.lastindex(s::StaticString{N}) where N = N
+    Base.length(s::StaticString{N}) where N = N
 
     Base.getindex(s::StaticString, i::Int) = load(pointer(s)+(i-1))
-    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codetuple(s)[r]) # Should  really null-terminate
+    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codetuple(s)[r]) # Should really null-terminate
     Base.getindex(s::StaticString, ::Colon) = copy(s)
 
     Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
@@ -41,22 +41,23 @@
 
     # Concatenation
     @inline function Base.:*(a::StaticString, b::StaticString)
-        l = length(a) + length(b) + 1
-        c = StaticString(MemoryBuffer{l, UInt8}(undef))
-        c[1:length(a)] = a
-        c[1+length(a):end] = b
-        c[end+1] = 0x00 # Null-terminate
+        N = length(a) + length(b) - 1
+        c = StaticString(MemoryBuffer{N, UInt8}(undef))
+        c[1:length(a)-1] = a
+        c[length(a):end-1] = b
+        c[end] = 0x00 # Null-terminate
         return c
     end
 
     # Repetition
     @inline function Base.:^(s::StaticString, n::Integer)
-        l = length(s)*n + 1
-        c = StaticString(MemoryBuffer{l, UInt8}(undef))
+        l = length(s)-1 # Excluding the null-termination
+        N = n*l + 1
+        c = StaticString(MemoryBuffer{N, UInt8}(undef))
         for i=1:n
-            c[(1+(i-1)*length(s)):(i*length(s))] = s
+            c[(l*(i-1) + 1):(l*i)] = s
         end
-        c[end+1] = 0x00 # Null-terminate
+        c[end] = 0x00 # Null-terminate
         return c
     end
 
