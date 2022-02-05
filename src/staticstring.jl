@@ -10,6 +10,7 @@
     # Basics
     Base.pointer(s::StaticString) = pointer(s.buf)
     Base.codeunits(s::StaticString) = s.buf
+    codetuple(s::StaticString) = s.buf.data
 
     # Indexing
     Base.firstindex(s::StaticString) = 1
@@ -17,7 +18,7 @@
     Base.length(s::StaticString{N}) where N = N-1
 
     Base.getindex(s::StaticString, i::Int) = load(pointer(s)+(i-1))
-    # Base.getindex(s::StaticString, I::AbstractArray{Int}) = ntuple(i->load(pointer(s)+(I[i]-1)), length(I))
+    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codetuple(s)[r])
 
     Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
     Base.setindex!(s::StaticString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))

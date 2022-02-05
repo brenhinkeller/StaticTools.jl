@@ -13,6 +13,6 @@ module StaticTools
     # Macros
     export @c_str, @mm_str
     # Functions
-    export putchar, puts, printf
+    export putchar, puts, printf, codetuple
 
 end
