@@ -26,6 +26,15 @@
         end
     end
 
+    # Concatenation
+    @inline function Base.:*(a::StaticString, b::StaticString)
+        l = length(a) + length(b) + 1
+        c = StaticString(MemoryBuffer{l, UInt8}(undef))
+        c[1:length(a)] = a
+        c[1+length(a):end] = b
+        c[end+1] = 0x00
+        return c
+    end
 
     # Custom printing
     function Base.print(s::StaticString)
