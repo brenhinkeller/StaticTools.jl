@@ -149,6 +149,10 @@ printfmth(::Type{<:AbstractFloat}) = mm"%e	"
 printfmth(::Type{<:Integer}) = mm"%d	"
 printfmth(::Type{<:Unsigned}) = mm"0x%x	"
 
+# Format horizontally, comma separated
+printfmt(::Type{<:AbstractFloat}) = mm"%e, "
+printfmt(::Type{<:Integer}) = mm"%d, "
+printfmt(::Type{<:Unsigned}) = mm"0x%x, "
 
 # Top-level formats, single numbers
 function printf(n::T) where T <:Number
@@ -162,6 +166,16 @@ function printf(v::AbstractVector{T}) where T <: Number
     @inbounds GC.@preserve fmt for i ∈ eachindex(v)
         printf(fmt, v[i])
     end
+end
+
+function printf(v::NTuple{N, T} where N) where T <: Number
+    fmt = printfmt(T)
+    putchar(0x28)
+    @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+        printf(fmt, v[i])
+    end
+    putchar(0x29)
+    newline()
 end
 
 # Print a 2d matrix of numbers

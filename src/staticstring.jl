@@ -13,6 +13,12 @@
     Base.lastindex(s::StaticString{MemoryBuffer{N, UInt8}}) where N = N
     Base.length(s::StaticString{MemoryBuffer{N, UInt8}}) where N = N
     Base.getindex(s::StaticString, i::Int) = load(pointer(s)+(i-1))
+    Base.getindex(s::StaticString, I::AbstractArray{Int}) = ntuple(i->load(pointer(s)+(I[i]-1)), length(I))
+
+
+
+
+
     Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
     Base.setindex!(s::StaticString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
 
