@@ -83,7 +83,7 @@
     # String macro to directly create null-terminated `ManualMemory.MemoryBuffer`s
     macro mm_str(s)
         n = _unsafe_unescape!(s)
-        t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
+        t = Expr(:tuple, codeunits(s[1:n])...)
         :(MemoryBuffer($t))
     end
 
