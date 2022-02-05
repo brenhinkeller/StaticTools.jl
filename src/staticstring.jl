@@ -18,12 +18,13 @@
 
     Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
     Base.setindex!(s::StaticString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
-    function Base.setindex!(s::StaticString, x, I::AbstractArray{Int})
-        @inbounds for i = 1:length(I)
-            setindex!(s, x[i], I[i])
+    @inline function Base.setindex!(s::StaticString, x, r::UnitRange{Int})
+        is₀ = first(r)-1
+        ix₀ = firstindex(x)-1
+        @inbounds for i = 1:length(r)
+            setindex!(s, x[i+ix₀], i+is₀)
         end
     end
-
 
 
     # Custom printing
@@ -43,7 +44,7 @@
         print(io, "\"")
     end
 
-    # String macro to create StaticStrings
+    # String macro to create null-terminated `StaticString`s
     macro c_str(s)
         t = Expr(:tuple, codeunits(s)..., 0x00)
         quote
@@ -51,7 +52,7 @@
         end
     end
 
-    # String macro to directly create `ManualMemory.MemoryBuffer`s
+    # String macro to directly create null-terminated `ManualMemory.MemoryBuffer`s
     macro mm_str(s)
         t = Expr(:tuple, codeunits(s)..., 0x00)
         quote
