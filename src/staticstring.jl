@@ -17,8 +17,15 @@
     Base.setindex!(s::LLVMString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
 
     # Custom printing
-    Base.print(s::LLVMString) = puts(s)
-    Base.println(s::LLVMString) = (puts(s); newline())
+    function Base.print(s::LLVMString)
+        c = codeunits(s)
+        GC.@preserve c puts(c)
+    end
+    function Base.println(s::LLVMString)
+        c = codeunits(s)
+        GC.@preserve c puts(c)
+        newline()
+    end
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::LLVMString)
@@ -35,9 +42,10 @@
         end
     end
 
-    # macro mm_str(s)
-    #     t = Expr(:tuple, codeunits(s)...)
-    #     quote
-    #         MemoryBuffer($t)
-    #     end
-    # end
+    # String macro to directly create `ManualMemory.MemoryBuffer`s
+    macro mm_str(s)
+        t = Expr(:tuple, codeunits(s)..., 0x00)
+        quote
+            MemoryBuffer($t)
+        end
+    end
