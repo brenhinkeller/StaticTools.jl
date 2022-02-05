@@ -1,5 +1,6 @@
 module StaticTools
 
-# Write your package code here.
+    using ManualMemory: MemoryBuffer
 
+    
 end
