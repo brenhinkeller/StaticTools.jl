@@ -8,6 +8,10 @@ using ManualMemory: MemoryBuffer
     str = c"Hello, world! 🌍"
     @test isa(str, StaticString{19})
 
+    # Test basic string operations
+    @test str == c"Hello, world! 🌍"
+    @test str*str == str^2
+
     # Test direct buffer constructor
     buf = mm"Hello, world! 🌍"
     @test isa(buf, MemoryBuffer{18, UInt8})
