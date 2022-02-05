@@ -19,12 +19,11 @@
     # Custom printing
     function Base.print(s::StaticString)
         c = codeunits(s)
-        GC.@preserve c puts(c)
+        GC.@preserve c printf(c)
     end
     function Base.println(s::StaticString)
         c = codeunits(s)
         GC.@preserve c puts(c)
-        newline()
     end
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
