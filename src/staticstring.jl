@@ -32,7 +32,18 @@
         c = StaticString(MemoryBuffer{l, UInt8}(undef))
         c[1:length(a)] = a
         c[1+length(a):end] = b
-        c[end+1] = 0x00
+        c[end+1] = 0x00 # Null-terminate
+        return c
+    end
+
+    # Repetition
+    @inline function Base.:^(s::StaticString, n::Integer)
+        l = length(s)*n + 1
+        c = StaticString(MemoryBuffer{l, UInt8}(undef))
+        for i=1:n
+            c[(1+(i-1)*length(s)):(i*length(s))] = s
+        end
+        c[end+1] = 0x00 # Null-terminate
         return c
     end
 
