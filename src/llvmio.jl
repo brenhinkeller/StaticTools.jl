@@ -138,21 +138,18 @@ end
 ## ---
 
 # Format vertically (have to include literal `\n`s, lol)
-printfmtv(::Type{<:AbstractFloat}) = mm"%e
-"
-printfmtv(::Type{<:Integer}) = mm"%d
-"
-printfmtv(::Type{<:Unsigned}) = mm"0x%x
-"
+printfmtv(::Type{<:AbstractFloat}) = mm"%e\n\0"
+printfmtv(::Type{<:Integer}) = mm"%d\n\0"
+printfmtv(::Type{<:Unsigned}) = mm"0x%x\n\0"
 # Format horizontally (have to include literal tabs)
-printfmth(::Type{<:AbstractFloat}) = mm"%e	"
-printfmth(::Type{<:Integer}) = mm"%d	"
-printfmth(::Type{<:Unsigned}) = mm"0x%x	"
+printfmth(::Type{<:AbstractFloat}) = mm"%e\t\0"
+printfmth(::Type{<:Integer}) = mm"%d\t\0"
+printfmth(::Type{<:Unsigned}) = mm"0x%x\t\0"
 
 # Format horizontally, comma separated
-printfmt(::Type{<:AbstractFloat}) = mm"%e, "
-printfmt(::Type{<:Integer}) = mm"%d, "
-printfmt(::Type{<:Unsigned}) = mm"0x%x, "
+printfmt(::Type{<:AbstractFloat}) = mm"%e, \0"
+printfmt(::Type{<:Integer}) = mm"%d, \0"
+printfmt(::Type{<:Unsigned}) = mm"0x%x, \0"
 
 # Top-level formats, single numbers
 function printf(n::T) where T <:Number
