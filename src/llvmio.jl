@@ -137,54 +137,54 @@ end
 
 ## ---
 
-# Format vertically (have to include literal `\n`s, lol)
-printfmtv(::Type{<:AbstractFloat}) = mm"%e\n\0"
-printfmtv(::Type{<:Integer}) = mm"%d\n\0"
-printfmtv(::Type{<:Unsigned}) = mm"0x%x\n\0"
-# Format horizontally (have to include literal tabs)
-printfmth(::Type{<:AbstractFloat}) = mm"%e\t\0"
-printfmth(::Type{<:Integer}) = mm"%d\t\0"
-printfmth(::Type{<:Unsigned}) = mm"0x%x\t\0"
+    # Format vertically (have to include literal `\n`s, lol)
+    printfmtv(::Type{<:AbstractFloat}) = mm"%e\n\0"
+    printfmtv(::Type{<:Integer}) = mm"%d\n\0"
+    printfmtv(::Type{<:Unsigned}) = mm"0x%x\n\0"
+    # Format horizontally (have to include literal tabs)
+    printfmth(::Type{<:AbstractFloat}) = mm"%e\t\0"
+    printfmth(::Type{<:Integer}) = mm"%d\t\0"
+    printfmth(::Type{<:Unsigned}) = mm"0x%x\t\0"
 
-# Format horizontally, comma separated
-printfmt(::Type{<:AbstractFloat}) = mm"%e, \0"
-printfmt(::Type{<:Integer}) = mm"%d, \0"
-printfmt(::Type{<:Unsigned}) = mm"0x%x, \0"
+    # Format horizontally, comma separated
+    printfmt(::Type{<:AbstractFloat}) = mm"%e, \0"
+    printfmt(::Type{<:Integer}) = mm"%d, \0"
+    printfmt(::Type{<:Unsigned}) = mm"0x%x, \0"
 
-# Top-level formats, single numbers
-function printf(n::T) where T <:Number
-    fmt = printfmtv(T)
-    GC.@preserve fmt printf(fmt, n)
-end
-
-# Print a vector of numbers
-function printf(v::AbstractVector{T}) where T <: Number
-    fmt = printfmtv(T)
-    @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-        printf(fmt, v[i])
+    # Top-level formats, single numbers
+    function printf(n::T) where T <:Number
+        fmt = printfmtv(T)
+        GC.@preserve fmt printf(fmt, n)
     end
-end
 
-function printf(v::NTuple{N, T} where N) where T <: Number
-    fmt = printfmt(T)
-    putchar(0x28)
-    @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-        printf(fmt, v[i])
-    end
-    putchar(0x29)
-    newline()
-end
-
-# Print a 2d matrix of numbers
-function printf(m::AbstractMatrix{T}) where T <: Number
-    fmt = printfmth(T)
-    @inbounds GC.@preserve fmt for i ∈ axes(m,1)
-        for j ∈ axes(m,2)
-            printf(fmt, m[i,j])
+    # Print a vector of numbers
+    function printf(v::AbstractVector{T}) where T <: Number
+        fmt = printfmtv(T)
+        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+            printf(fmt, v[i])
         end
+    end
+
+    function printf(v::NTuple{N, T} where N) where T <: Number
+        fmt = printfmt(T)
+        putchar(0x28)
+        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+            printf(fmt, v[i])
+        end
+        putchar(0x29)
         newline()
     end
-end
+
+    # Print a 2d matrix of numbers
+    function printf(m::AbstractMatrix{T}) where T <: Number
+        fmt = printfmth(T)
+        @inbounds GC.@preserve fmt for i ∈ axes(m,1)
+            for j ∈ axes(m,2)
+                printf(fmt, m[i,j])
+            end
+            newline()
+        end
+    end
 
 
 ## ---
