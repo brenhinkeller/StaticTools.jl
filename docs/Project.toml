@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+StaticTools = "86c06d3c-3f03-46de-9781-57580aa96d0a"
