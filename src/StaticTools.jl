@@ -2,7 +2,7 @@ module StaticTools
 
     using ManualMemory: MemoryBuffer, load, store!
 
-    # LLVMString type
+    # StaticString type
     include("staticstring.jl")
 
     # Tools for IO with LLVM

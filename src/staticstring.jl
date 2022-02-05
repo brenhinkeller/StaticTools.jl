@@ -1,34 +1,34 @@
 ## ---  Define a StatiCompiler- and LLVM-compatible string type
 
-    struct LLVMString{T <: MemoryBuffer}
+    struct StaticString{T <: MemoryBuffer}
         buf::T
     end
 
     # Basics
-    Base.pointer(s::LLVMString) = pointer(s.buf)
-    Base.codeunits(s::LLVMString) = s.buf
+    Base.pointer(s::StaticString) = pointer(s.buf)
+    Base.codeunits(s::StaticString) = s.buf
 
     # Indexing
-    Base.firstindex(s::LLVMString) = 1
-    Base.lastindex(s::LLVMString{MemoryBuffer{N, UInt8}}) where N = N
-    Base.length(s::LLVMString{MemoryBuffer{N, UInt8}}) where N = N
-    Base.getindex(s::LLVMString, i::Int) = load(pointer(s)+(i-1))
-    Base.setindex!(s::LLVMString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
-    Base.setindex!(s::LLVMString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
+    Base.firstindex(s::StaticString) = 1
+    Base.lastindex(s::StaticString{MemoryBuffer{N, UInt8}}) where N = N
+    Base.length(s::StaticString{MemoryBuffer{N, UInt8}}) where N = N
+    Base.getindex(s::StaticString, i::Int) = load(pointer(s)+(i-1))
+    Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
+    Base.setindex!(s::StaticString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
 
     # Custom printing
-    function Base.print(s::LLVMString)
+    function Base.print(s::StaticString)
         c = codeunits(s)
         GC.@preserve c puts(c)
     end
-    function Base.println(s::LLVMString)
+    function Base.println(s::StaticString)
         c = codeunits(s)
         GC.@preserve c puts(c)
         newline()
     end
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
-    function Base.show(io::IO, s::LLVMString)
+    function Base.show(io::IO, s::StaticString)
         print(io, "c\"")
         print(io, Base.unsafe_string(pointer(s)))
         print(io, "\"")
@@ -38,7 +38,7 @@
     macro c_str(s)
         t = Expr(:tuple, codeunits(s)..., 0x00)
         quote
-            LLVMString(MemoryBuffer($t))
+            StaticString(MemoryBuffer($t))
         end
     end
 
