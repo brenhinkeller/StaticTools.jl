@@ -138,30 +138,34 @@ end
 ## ---
 
 # Have to include literal `\n`s lol
-formatstring(::Type{<:AbstractFloat}) = mm"%e
+printfmt(::Type{<:AbstractFloat}) = mm"%e
 "
-formatstring(::Type{<:Integer}) = mm"%d
+printfmt(::Type{<:Integer}) = mm"%d
 "
-formatstring(::Type{<:Unsigned}) = mm"0x%x
+printfmt(::Type{<:Unsigned}) = mm"0x%x
 "
+printfmt(::Type{AbstractMatrix{<:AbstractFloat}}) = mm"%e	"
+printfmt(::Type{AbstractMatrix{<:Integer}}) = mm"%d	"
+printfmt(::Type{AbstractMatrix{<:Unsigned}}) = mm"0x%x	"
+
 
 # Top-level formats, single numbers
 function printf(n::T) where T <:Number
-    fmt = formatstring(T)
+    fmt = printfmt(T)
     GC.@preserve fmt printf(fmt, n)
 end
 
 # Print a vector of numbers
 function printf(v::AbstractVector{T}) where T <: Number
-    fmt = formatstring(T)
+    fmt = printfmt(T)
     @inbounds GC.@preserve fmt for i ∈ eachindex(v)
         printf(fmt, v[i])
     end
 end
 
 # Print a 2d matrix of numbers
-function printf(m::AbstractMatrix{T}) where T <: Number
-    fmt = formatstring(T)
+function printf(m::T) where T <: AbstractMatrix
+    fmt = printfmt(T)
     @inbounds GC.@preserve fmt for i ∈ axes(m,1)
         for j ∈ axes(m,2)
             printf(fmt, m[i,j])
