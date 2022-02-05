@@ -25,6 +25,12 @@
             setindex!(s, x[i+ix₀], i+is₀)
         end
     end
+    @inline function Base.setindex!(s::StaticString, x, ::Colon)
+        ix₀ = firstindex(x)-1
+        @inbounds for i = 1:length(s)
+            setindex!(s, x[i+ix₀], i)
+        end
+    end
 
     # Concatenation
     @inline function Base.:*(a::StaticString, b::StaticString)
