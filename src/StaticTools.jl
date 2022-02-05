@@ -8,4 +8,6 @@ module StaticTools
     # Tools for IO with LLVM
     include("llvmio.jl")
 
+    export @c_str, @mm_str, putchar, puts, printf
+
 end
