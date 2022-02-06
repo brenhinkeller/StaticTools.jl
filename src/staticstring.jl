@@ -8,10 +8,11 @@
     StaticString(data::NTuple) = StaticString(MemoryBuffer(data))
 
     # Basics
-    Base.pointer(s::StaticString) = pointer(s.buf)
+    Base.ncodeunits(s::StaticString{N}) where N = N
     Base.codeunits(s::StaticString) = s.buf
+    Base.pointer(s::StaticString) = pointer(s.buf)
     codetuple(s::StaticString) = s.buf.data
-    Base.:(==)(a::StaticString, b::StaticString) = a.buf.data == b.buf.data
+    Base.:(==)(a::StaticString, b::StaticString) = codetuple(a) == codetuple(b)
     Base.copy(s::StaticString) = StaticString(codetuple(s))
 
     # Indexing
