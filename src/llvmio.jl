@@ -18,7 +18,7 @@ newline() = putchar(0x0a)
 
 ## --- The old reliable: puts
 
-function puts(s)
+function puts(p::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the puts function
     declare i32 @puts(i8* nocapture) nounwind
@@ -28,11 +28,13 @@ function puts(s)
         %call = call i32 (i8*) @puts(i8* %0)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}}, pointer(s))
+    """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
+puts(s) = puts(pointer(s))
+
 ## --- Printf, just a string
 
-function printf(s)
+function printf(p::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -42,8 +44,10 @@ function printf(s)
         %call = call i32 (i8*, ...) @printf(i8* %0)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}}, pointer(s))
+    """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
+printf(s) = printf(pointer(s))
+
 function printf(fmt, s)
     Base.llvmcall(("""
     ; External declaration of the printf function
