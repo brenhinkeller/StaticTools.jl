@@ -86,7 +86,7 @@ function printf(fmt, n::AbstractFloat)
 end
 
 # Integers
-function printf(fmt, n::T) where T <: Union{Int64, UInt64}
+function printf(fmt, n::T) where T <: Union{Int64, UInt64, Ptr} # We're going to go ahead and assume 64-bit pointers here
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -137,50 +137,52 @@ end
 
 ## ---
 
-    # Format vertically (have to include literal `\n`s, lol)
-    printfmtv(::Type{<:AbstractFloat}) = mm"%e\n\0"
-    printfmtv(::Type{<:Integer}) = mm"%d\n\0"
-    printfmtv(::Type{<:Unsigned}) = mm"0x%x\n\0"
-    # Format horizontally (have to include literal tabs)
-    printfmth(::Type{<:AbstractFloat}) = mm"%e\t\0"
-    printfmth(::Type{<:Integer}) = mm"%d\t\0"
-    printfmth(::Type{<:Unsigned}) = mm"0x%x\t\0"
-
-    # Format horizontally, comma separated
-    printfmt(::Type{<:AbstractFloat}) = mm"%e, \0"
-    printfmt(::Type{<:Integer}) = mm"%d, \0"
-    printfmt(::Type{<:Unsigned}) = mm"0x%x, \0"
+    # Pick a printf format string depending on the type
+    printfmt(::Type{<:AbstractFloat}) = mm"%e\0"
+    printfmt(::Type{<:Integer}) = mm"%d\0"
+    printfmt(::Type{UInt64}) = mm"0x%016x\0"
+    printfmt(::Type{UInt32}) = mm"%08x\0"
+    printfmt(::Type{UInt16}) = mm"%04x\0"
+    printfmt(::Type{UInt8}) = mm"%02x\0"
+    printfmt(::Type{Ptr}) = mm"Ptr @0x%016x\0" # Assume 64-bit pointers
+    printfmt(::Type{StaticString}) = mm"\"%s\"\0" # Can I offer you a string in this trying time?
 
     # Top-level formats, single numbers
-    function printf(n::T) where T <:Number
-        fmt = printfmtv(T)
-        GC.@preserve fmt printf(fmt, n)
-    end
-
-    # Print a vector of numbers
-    function printf(v::AbstractVector{T}) where T <: Number
-        fmt = printfmtv(T)
-        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-            printf(fmt, v[i])
-        end
-    end
-
-    function printf(v::NTuple{N, T} where N) where T <: Number
+    function printf(n::T) where T <: Union{Number, Ptr}
         fmt = printfmt(T)
-        putchar(0x28)
-        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-            printf(fmt, v[i])
-        end
-        putchar(0x29)
+        GC.@preserve fmt printf(fmt, n)
         newline()
     end
 
-    # Print a 2d matrix of numbers
-    function printf(m::AbstractMatrix{T}) where T <: Number
-        fmt = printfmth(T)
+    # Print a vector
+    function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
+        fmt = printfmt(T)
+        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+            printf(fmt, v[i])
+            newline()
+        end
+    end
+
+    # Print a tuple
+    function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+        fmt = printfmtc(T)
+        putchar(0x28) # open paren
+        @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+            printf(fmt, v[i])
+            putchar(0x2c) # comma
+            putchar(0x20) # space
+        end
+        putchar(0x29) # close paren
+        newline()
+    end
+
+    # Print a 2d matrix
+    function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
+        fmt = printfmt(T)
         @inbounds GC.@preserve fmt for i ∈ axes(m,1)
             for j ∈ axes(m,2)
                 printf(fmt, m[i,j])
+                putchar(0x09) # tab
             end
             newline()
         end
