@@ -1,6 +1,6 @@
 ## --- The basics of basics: putchar
 
-function putchar(c)
+function putchar(c::UInt8)
     Base.llvmcall(("""
     ; External declaration of the puts function
     declare i32 @putchar(i8 nocapture) nounwind
@@ -12,6 +12,7 @@ function putchar(c)
     }
     """, "main"), Int32, Tuple{UInt8}, c)
 end
+putchar(c::Char) = putchar(UInt8(c))
 newline() = putchar(0x0a)
 
 
