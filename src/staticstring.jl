@@ -63,20 +63,27 @@
     end
 
     # Custom printing
-    function Base.print(s::StaticString)
-        c = codeunits(s)
-        GC.@preserve c printf(c)
-    end
-    function Base.println(s::StaticString)
-        c = codeunits(s)
-        GC.@preserve c puts(c)
-    end
+    Base.print(s::StaticString) = printf(s)
+    Base.println(s::StaticString) = puts(s)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StaticString)
         Base.print(io, "c\"")
         Base.escape_string(io, Base.unsafe_string(pointer(s)))
         Base.print(io, "\"")
+    end
+
+    # As Base.unsafe_string, but loading to a StaticString instead
+    @inline function unsafe_staticstring(p::Ptr{UInt8})
+        len = 1
+        while unsafe_load(p, len) != 0x00
+            len +=1
+        end
+        s = StaticString{len}(undef)
+        for i=1:len
+            s[i] = unsafe_load(p, i)
+        end
+        return s
     end
 
     # String macro to create null-terminated `StaticString`s

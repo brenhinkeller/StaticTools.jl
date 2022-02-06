@@ -15,7 +15,6 @@ end
 putchar(c::Char) = putchar(UInt8(c))
 newline() = putchar(0x0a)
 
-
 ## --- The old reliable: puts
 
 function puts(p::Ptr{UInt8})
@@ -31,8 +30,8 @@ function puts(p::Ptr{UInt8})
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
 function puts(s::StaticString)
-    b = codeunits(s)
-    GC.@preserve b puts(pointer(s))
+    c = codeunits(s)
+    GC.@preserve c puts(pointer(s))
 end
 puts(s) = GC.@preserve s puts(pointer(s))
 
@@ -51,8 +50,8 @@ function printf(p::Ptr{UInt8})
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
 function printf(s::StaticString)
-    b = codeunits(s)
-    GC.@preserve b printf(pointer(s))
+    c = codeunits(s)
+    GC.@preserve c printf(pointer(s))
 end
 printf(s) = GC.@preserve s printf(pointer(s))
 
@@ -75,12 +74,11 @@ end
 printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
 
 
-
 ## --- printf, with a format string, just like in C
 
 function printf(fmt::StaticString, n)
-    b = codeunits(fmt)
-    GC.@preserve b printf(pointer(fmt), n)
+    c = codeunits(fmt)
+    GC.@preserve c printf(pointer(fmt), n)
 end
 printf(fmt::MemoryBuffer, n) = GC.@preserve fmt printf(pointer(fmt), n)
 
