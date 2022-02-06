@@ -30,7 +30,11 @@ function puts(p::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
-puts(s) = puts(pointer(s))
+function puts(s::StaticString)
+    b = codeunits(s)
+    GC.@preserve b puts(pointer(s))
+end
+puts(s) = GC.@preserve s puts(pointer(s))
 
 ## --- Printf, just a string
 
@@ -46,25 +50,42 @@ function printf(p::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
-printf(s) = printf(pointer(s))
+function printf(s::StaticString)
+    b = codeunits(s)
+    GC.@preserve b printf(pointer(s))
+end
+printf(s) = GC.@preserve s printf(pointer(s))
 
-function printf(fmt, s)
+function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
 
     define i32 @main(i8*, i8*) {
     entry:
-        %call = call i32 (i8*, ...) @printf(i8* %0 %1)
+        %call = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, pointer(fmt), pointer(s))
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
 end
+function printf(fmt::StaticString, s::StaticString)
+    a, b = codeunits(fmt), codeunits(s)
+    GC.@preserve a b printf(pointer(fmt), pointer(s))
+end
+printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
+
+
 
 ## --- printf, with a format string, just like in C
 
+function printf(fmt::StaticString, n)
+    b = codeunits(fmt)
+    GC.@preserve b printf(pointer(fmt), n)
+end
+printf(fmt::MemoryBuffer, n) = GC.@preserve fmt printf(pointer(fmt), n)
+
 # Floating point numbers
-function printf(fmt, n::Float64)
+function printf(fmt::Ptr{UInt8}, n::Float64)
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -74,10 +95,10 @@ function printf(fmt, n::Float64)
         %call = call i32 (i8*, ...) @printf(i8* %0, double %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, pointer(fmt), n)
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
 end
 # Just convert everything else to double
-function printf(fmt, n::AbstractFloat)
+function printf(fmt::Ptr{UInt8}, n::AbstractFloat)
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -87,11 +108,11 @@ function printf(fmt, n::AbstractFloat)
         %call = call i32 (i8*, ...) @printf(i8* %0, double %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, pointer(fmt), Float64(n))
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, Float64(n))
 end
 
 # Integers
-function printf(fmt, n::T) where T <: Union{Int64, UInt64, Ptr} # We're going to go ahead and assume 64-bit pointers here
+function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -101,9 +122,9 @@ function printf(fmt, n::T) where T <: Union{Int64, UInt64, Ptr} # We're going to
         %call = call i32 (i8*, ...) @printf(i8* %0, i64 %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, pointer(fmt), n)
+    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function printf(fmt, n::T) where T <: Union{Int32, UInt32}
+function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -113,9 +134,9 @@ function printf(fmt, n::T) where T <: Union{Int32, UInt32}
         %call = call i32 (i8*, ...) @printf(i8* %0, i32 %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, pointer(fmt), n)
+    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function printf(fmt, n::T) where T <: Union{Int16, UInt16}
+function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -125,9 +146,9 @@ function printf(fmt, n::T) where T <: Union{Int16, UInt16}
         %call = call i32 (i8*, ...) @printf(i8* %0, i16 %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, pointer(fmt), n)
+    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function printf(fmt, n::T) where T <: Union{Int8, UInt8}
+function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
@@ -137,7 +158,7 @@ function printf(fmt, n::T) where T <: Union{Int8, UInt8}
         %call = call i32 (i8*, ...) @printf(i8* %0, i8 %1)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, pointer(fmt), n)
+    """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
 
 ## ---
@@ -154,16 +175,16 @@ end
 
     # Top-level formats, single numbers
     function printf(n::T) where T <: Union{Number, Ptr}
-        fmt = printfmt(T)
-        GC.@preserve fmt printf(fmt, n)
+        printf(printfmt(T), n)
         newline()
     end
 
     # Print a vector
     function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
         fmt = printfmt(T)
+        p = pointer(fmt)
         @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-            printf(fmt, v[i])
+            printf(p, v[i])
             newline()
         end
     end
@@ -171,9 +192,10 @@ end
     # Print a tuple
     function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
         fmt = printfmtc(T)
+        p = pointer(fmt)
         putchar(0x28) # open paren
         @inbounds GC.@preserve fmt for i ∈ eachindex(v)
-            printf(fmt, v[i])
+            printf(p, v[i])
             putchar(0x2c) # comma
             putchar(0x20) # space
         end
@@ -184,9 +206,10 @@ end
     # Print a 2d matrix
     function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
         fmt = printfmt(T)
+        p = pointer(fmt)
         @inbounds GC.@preserve fmt for i ∈ axes(m,1)
             for j ∈ axes(m,2)
-                printf(fmt, m[i,j])
+                printf(p, m[i,j])
                 putchar(0x09) # tab
             end
             newline()
