@@ -3,6 +3,7 @@
     # Test StaticString constructors
     str = c"Hello, world! 🌍"
     @test isa(str, StaticString{19})
+    @test sizeof(str) == 19
 
     # Test basic string operations
     @test str == c"Hello, world! 🌍"
