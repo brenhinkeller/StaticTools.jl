@@ -155,9 +155,9 @@ end
     printfmt(::Type{<:Integer}) = mm"%d\0"
     printfmt(::Type{<:Ptr}) = mm"Ptr @0x%016x\0" # Assume 64-bit pointers
     printfmt(::Type{UInt64}) = mm"0x%016x\0"
-    printfmt(::Type{UInt32}) = mm"%08x\0"
-    printfmt(::Type{UInt16}) = mm"%04x\0"
-    printfmt(::Type{UInt8}) = mm"%02x\0"
+    printfmt(::Type{UInt32}) = mm"0x%08x\0"
+    printfmt(::Type{UInt16}) = mm"0x%04x\0"
+    printfmt(::Type{UInt8}) = mm"0x%02x\0"
     printfmt(::Type{<:Union{MallocString, StaticString}}) = mm"\"%s\"\0" # Can I offer you a string in this trying time?
 
     # Top-level formats, single numbers
@@ -174,6 +174,7 @@ end
             printf(p, v[i])
             newline()
         end
+        return 0
     end
 
     # Print a tuple
@@ -201,6 +202,7 @@ end
             end
             newline()
         end
+        return 0
     end
 
 

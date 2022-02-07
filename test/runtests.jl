@@ -3,6 +3,7 @@ using Test
 using ManualMemory: MemoryBuffer
 
 
+@testset "IO" begin include("testllvmio.jl") end
 @testset "StaticString" begin include("teststaticstring.jl") end
 @testset "MallocString" begin include("testmallocstring.jl") end
 @testset "MemoryBuffer" begin
