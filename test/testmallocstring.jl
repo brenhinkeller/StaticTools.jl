@@ -10,12 +10,12 @@
     @test str == m"Hello, world! 🌍"
     m, p = str*str, str^2
     @test m == p
+    @test free(m) === nothing
+    @test free(p) == nothing
     @test codeunit(str) === UInt8
     @test codeunit(str, 5) == UInt8('o')
     @test ncodeunits(str) == length(str)
     @test codeunits(str) == codeunits(c"Hello, world! 🌍")
-    free(m)
-    free(p)
 
     # Test mutability
     str[8] = 'W'
@@ -37,3 +37,9 @@
     @test codeunits(many_escapes) == codeunits("\0\a\b\f\n\r\t\v'\"\\\0")
 
     # Test unsafe_staticstring
+    s = "Hello there!"
+    m = unsafe_mallocstring(pointer(s))
+    @test isa(m, MallocString)
+    @test length(m) == 13
+    @test codeunits(m) == codeunits(c"Hello there!")
+    @test free(m) === nothing
