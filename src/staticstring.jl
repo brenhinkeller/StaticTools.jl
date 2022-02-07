@@ -73,8 +73,8 @@
     # Implement some of the AbstractString interface
     Base.ncodeunits(s::StaticString{N}) where N = N
     Base.codeunits(s::StaticString) = s.data
-    Base.codeunit(s::MallocString) = UInt8
-    Base.codeunit(s::MallocString, i::Integer) = s[i]
+    Base.codeunit(s::StaticString) = UInt8
+    Base.codeunit(s::StaticString, i::Integer) = s[i]
     @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
         N = length(a) + length(b) - 1
         c = StaticString{N}(undef)

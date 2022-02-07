@@ -17,7 +17,6 @@
     Base.pointer(a::MallocBuffer) = a.pointer
     Base.length(a::MallocBuffer) = a.length
     Base.sizeof(a::MallocBuffer{T}) where {T} = a.length * sizeof(T)
-    @inline Base.:(==)(::MallocBuffer, ::MallocBuffer) = false
     @inline function Base.:(==)(a::MallocBuffer{A}, b::MallocBuffer{B}) where {A,B}
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
