@@ -1,33 +1,49 @@
 ## ---  Define a StatiCompiler- and LLVM-compatible statically-sized string type
 
-    # Define the StaticString type, backed by a ManualMemory.MemoryBuffer
+    # Define the StaticString type, backed by an NTuple
 
     # Definition and constructors:
-    struct StaticString{N,T}
-        buf::MemoryBuffer{N,T}
+    mutable struct StaticString{N}
+        data::NTuple{N,UInt8}
+        @inline function StaticString{N}(::UndefInitializer) where N
+            new{N}()
+        end
+        @inline function StaticString(data::NTuple{N,UInt8}) where N
+            new{N}(data)
+        end
     end
-    StaticString{N}(::UndefInitializer) where N = StaticString(MemoryBuffer{N, UInt8}(undef))
-    StaticString(data::NTuple) = StaticString(MemoryBuffer(data))
+
+    # Fundamentals
+    @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
+    @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
+    @inline Base.:(==)(::StaticString, ::StaticString) = false
+    @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
+        GC.@preserve a b begin
+            pa, pb = pointer(a), pointer(b)
+            for n in 0:N-1
+                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+            end
+            return true
+        end
+    end
+
 
     # Basics
     Base.ncodeunits(s::StaticString{N}) where N = N
-    Base.codeunits(s::StaticString) = s.buf
-    Base.pointer(s::StaticString) = pointer(s.buf)
-    codetuple(s::StaticString) = s.buf.data
-    Base.:(==)(a::StaticString, b::StaticString) = codetuple(a) == codetuple(b)
-    Base.copy(s::StaticString) = StaticString(codetuple(s))
+    Base.codeunits(s::StaticString) = s.data
+    Base.copy(s::StaticString) = StaticString(codeunits(s))
 
     # Indexing
     Base.firstindex(s::StaticString) = 1
     Base.lastindex(s::StaticString{N}) where N = N
     Base.length(s::StaticString{N}) where N = N
 
-    Base.getindex(s::StaticString, i::Int) = load(pointer(s)+(i-1))
-    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codetuple(s)[r]) # Should really null-terminate
+    Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
+    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
     Base.getindex(s::StaticString, ::Colon) = copy(s)
 
-    Base.setindex!(s::StaticString, x::UInt8, i::Int) = store!(pointer(s)+(i-1), x)
-    Base.setindex!(s::StaticString, x, i::Int) = store!(pointer(s)+(i-1), convert(UInt8, x))
+    Base.setindex!(s::StaticString, x::UInt8, i::Int) = unsafe_store!(pointer(s)+(i-1), x)
+    Base.setindex!(s::StaticString, x, i::Int) = unsafe_store!(pointer(s)+(i-1), convert(UInt8, x))
     @inline function Base.setindex!(s::StaticString, x, r::UnitRange{Int})
         is₀ = first(r)-1
         ix₀ = firstindex(x)-1
@@ -45,7 +61,7 @@
     # Concatenation
     @inline function Base.:*(a::StaticString, b::StaticString)
         N = length(a) + length(b) - 1
-        c = StaticString(MemoryBuffer{N, UInt8}(undef))
+        c = StaticString{N}(undef)
         c[1:length(a)-1] = a
         c[length(a):end-1] = b
         c[end] = 0x00 # Null-terminate
@@ -56,7 +72,7 @@
     @inline function Base.:^(s::StaticString, n::Integer)
         l = length(s)-1 # Excluding the null-termination
         N = n*l + 1
-        c = StaticString(MemoryBuffer{N, UInt8}(undef))
+        c = StaticString{N}(undef)
         for i=1:n
             c[(l*(i-1) + 1):(l*i)] = s
         end
@@ -75,18 +91,6 @@
         Base.print(io, "\"")
     end
 
-    # As Base.unsafe_string, but loading to a StaticString instead
-    @inline function unsafe_staticstring(p::Ptr{UInt8})
-        len = 1
-        while unsafe_load(p, len) != 0x00
-            len +=1
-        end
-        s = StaticString{len}(undef)
-        for i=1:len
-            s[i] = unsafe_load(p, i)
-        end
-        return s
-    end
 
     # String macro to create null-terminated `StaticString`s
     macro c_str(s)

@@ -20,9 +20,9 @@ using ManualMemory: MemoryBuffer
     many_escapes = c"\0\a\b\f\n\r\t\v'\"\\"
     @test isa(many_escapes, StaticString{12})
     @test length(many_escapes) == 12
-    a = codeunits(many_escapes)::MemoryBuffer
+    a = codeunits(many_escapes)::Tuple
     b = mm"\0\a\b\f\n\r\t\v'\"\\\0"::MemoryBuffer
-    @test a.data == b.data
+    @test a == b.data
     c = MemoryBuffer((codeunits("\0\a\b\f\n\r\t\v'\"\\\0")...,))
     @test b.data == c.data
 

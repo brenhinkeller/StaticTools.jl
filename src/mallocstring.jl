@@ -29,7 +29,6 @@
     Base.pointer(s::MallocString) = s.pointer
     Base.length(s::MallocString) = s.length
     Base.sizeof(s::MallocString) = s.length
-    @inline Base.:(==)(::MallocString, ::MallocString) = false
     @inline function Base.:(==)(a::MallocString, b::MallocString)
         length(a) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
@@ -89,18 +88,18 @@
     Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) ## TODO: return some sort of array
     Base.codeunit(s::MallocString) = UInt8
     Base.codeunit(s::MallocString, i::Integer) = s[i]
-    @inline function Base.:*(a::StaticString, b::StaticString)    # Concatenation
+    @inline function Base.:*(a::MallocString, b::MallocString)    # Concatenation
         N = length(a) + length(b) - 1
-        c = StaticString(MemoryBuffer{N, UInt8}(undef))
+        c = MallocString(undef, N)
         c[1:length(a)-1] = a
         c[length(a):end-1] = b
         c[end] = 0x00 # Null-terminate
         return c
     end
-    @inline function Base.:^(s::StaticString, n::Integer)    # Repetition
+    @inline function Base.:^(s::MallocString, n::Integer)    # Repetition
         l = length(s)-1 # Excluding the null-termination
         N = n*l + 1
-        c = StaticString(MemoryBuffer{N, UInt8}(undef))
+        c = MallocString(undef, N)
         for i=1:n
             c[(l*(i-1) + 1):(l*i)] = s
         end
