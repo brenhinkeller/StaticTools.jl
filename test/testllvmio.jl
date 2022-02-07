@@ -38,3 +38,6 @@
     @test puts(str) == 0
     @test printf(m"%s \n", str) == 0
     show(str)
+
+    # Wrap up
+    @test newline() == 0

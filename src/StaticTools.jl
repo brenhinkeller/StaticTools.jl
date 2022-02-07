@@ -18,6 +18,6 @@ module StaticTools
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export putchar, puts, printf, unsafe_mallocstring
+    export newline, putchar, puts, printf, unsafe_mallocstring
 
 end
