@@ -28,6 +28,7 @@
     @test printf(str) == 0
     @test puts(str) == 0
     @test printf(m"%s \n", str) == 0
+    show(str)
 
     # Print StaticString
     str = c"Hello, world! 🌍"
@@ -36,3 +37,4 @@
     @test printf(str) == 0
     @test puts(str) == 0
     @test printf(m"%s \n", str) == 0
+    show(str)

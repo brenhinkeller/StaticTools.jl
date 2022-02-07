@@ -85,10 +85,10 @@
 
     # Some of the AbstractString interface
     Base.ncodeunits(s::MallocString) = s.length
-    Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) ## TODO: return some sort of array
+    Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) # TODO: return some sort of array
     Base.codeunit(s::MallocString) = UInt8
     Base.codeunit(s::MallocString, i::Integer) = s[i]
-    @inline function Base.:*(a::MallocString, b::MallocString)    # Concatenation
+    @inline function Base.:*(a::MallocString, b::MallocString)  # Concatenation
         N = length(a) + length(b) - 1
         c = MallocString(undef, N)
         c[1:length(a)-1] = a
@@ -96,7 +96,7 @@
         c[end] = 0x00 # Null-terminate
         return c
     end
-    @inline function Base.:^(s::MallocString, n::Integer)    # Repetition
+    @inline function Base.:^(s::MallocString, n::Integer)       # Repetition
         l = length(s)-1 # Excluding the null-termination
         N = n*l + 1
         c = MallocString(undef, N)

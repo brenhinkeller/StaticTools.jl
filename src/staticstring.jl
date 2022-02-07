@@ -13,9 +13,17 @@
         end
     end
 
+    # String macro to create null-terminated `StaticString`s
+    macro c_str(s)
+        n = _unsafe_unescape!(s)
+        t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
+        :(StaticString($t))
+    end
+
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
     @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
+    @inline Base.length(s::StaticString{N}) where N = N
     @inline Base.:(==)(::StaticString, ::StaticString) = false
     @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
         GC.@preserve a b begin
@@ -27,21 +35,23 @@
         end
     end
 
+    # Custom printing
+    Base.print(s::StaticString) = printf(s)
+    Base.println(s::StaticString) = puts(s)
 
-    # Basics
-    Base.ncodeunits(s::StaticString{N}) where N = N
-    Base.codeunits(s::StaticString) = s.data
-    Base.copy(s::StaticString) = StaticString(codeunits(s))
+    # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
+    function Base.show(io::IO, s::StaticString)
+        Base.print(io, "c\"")
+        Base.escape_string(io, Base.unsafe_string(pointer(s)))
+        Base.print(io, "\"")
+    end
 
-    # Indexing
+    # Implement some of the AbstractArray interface:
     Base.firstindex(s::StaticString) = 1
     Base.lastindex(s::StaticString{N}) where N = N
-    Base.length(s::StaticString{N}) where N = N
-
     Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
     Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
-    Base.getindex(s::StaticString, ::Colon) = copy(s)
-
+    Base.getindex(s::StaticString, ::Colon) = s
     Base.setindex!(s::StaticString, x::UInt8, i::Int) = unsafe_store!(pointer(s)+(i-1), x)
     Base.setindex!(s::StaticString, x, i::Int) = unsafe_store!(pointer(s)+(i-1), convert(UInt8, x))
     @inline function Base.setindex!(s::StaticString, x, r::UnitRange{Int})
@@ -57,9 +67,15 @@
             setindex!(s, x[i+ix₀], i)
         end
     end
+    Base.copy(s::StaticString) = StaticString(codeunits(s))
 
-    # Concatenation
-    @inline function Base.:*(a::StaticString, b::StaticString)
+
+    # Implement some of the AbstractString interface
+    Base.ncodeunits(s::StaticString{N}) where N = N
+    Base.codeunits(s::StaticString) = s.data
+    Base.codeunit(s::MallocString) = UInt8
+    Base.codeunit(s::MallocString, i::Integer) = s[i]
+    @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
         N = length(a) + length(b) - 1
         c = StaticString{N}(undef)
         c[1:length(a)-1] = a
@@ -67,9 +83,7 @@
         c[end] = 0x00 # Null-terminate
         return c
     end
-
-    # Repetition
-    @inline function Base.:^(s::StaticString, n::Integer)
+    @inline function Base.:^(s::StaticString, n::Integer)       # Repetition
         l = length(s)-1 # Excluding the null-termination
         N = n*l + 1
         c = StaticString{N}(undef)
@@ -80,24 +94,6 @@
         return c
     end
 
-    # Custom printing
-    Base.print(s::StaticString) = printf(s)
-    Base.println(s::StaticString) = puts(s)
-
-    # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
-    function Base.show(io::IO, s::StaticString)
-        Base.print(io, "c\"")
-        Base.escape_string(io, Base.unsafe_string(pointer(s)))
-        Base.print(io, "\"")
-    end
-
-
-    # String macro to create null-terminated `StaticString`s
-    macro c_str(s)
-        n = _unsafe_unescape!(s)
-        t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
-        :(StaticString($t))
-    end
 
     # String macro to directly create null-terminated `ManualMemory.MemoryBuffer`s
     macro mm_str(s)
