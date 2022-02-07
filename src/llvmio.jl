@@ -68,7 +68,6 @@ printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
 ## --- printf, with a format string, just like in C
 
 printf(fmt::StaticString, n) = GC.@preserve fmt printf(pointer(fmt), n)
-printf(fmt::MemoryBuffer, n) = GC.@preserve fmt printf(pointer(fmt), n)
 printf(fmt::MallocString, n) = printf(pointer(fmt), n)
 
 # Floating point numbers
@@ -151,14 +150,14 @@ end
 ## ---
 
     # Pick a printf format string depending on the type
-    printfmt(::Type{<:AbstractFloat}) = mm"%e\0"
-    printfmt(::Type{<:Integer}) = mm"%d\0"
-    printfmt(::Type{<:Ptr}) = mm"Ptr @0x%016x\0" # Assume 64-bit pointers
-    printfmt(::Type{UInt64}) = mm"0x%016x\0"
-    printfmt(::Type{UInt32}) = mm"0x%08x\0"
-    printfmt(::Type{UInt16}) = mm"0x%04x\0"
-    printfmt(::Type{UInt8}) = mm"0x%02x\0"
-    printfmt(::Type{<:Union{MallocString, StaticString}}) = mm"\"%s\"\0" # Can I offer you a string in this trying time?
+    printfmt(::Type{<:AbstractFloat}) = c"%e"
+    printfmt(::Type{<:Integer}) = c"%d"
+    printfmt(::Type{<:Ptr})  = c"Ptr @0x%016x" # Assume 64-bit pointers
+    printfmt(::Type{UInt64}) = c"0x%016x"
+    printfmt(::Type{UInt32}) = c"0x%08x"
+    printfmt(::Type{UInt16}) = c"0x%04x"
+    printfmt(::Type{UInt8})  = c"0x%02x"
+    printfmt(::Type{<:Union{MallocString, StaticString}}) = c"\"%s\"" # Can I offer you a string in this trying time?
 
     # Top-level formats, single numbers
     function printf(n::T) where T <: Union{Number, Ptr}

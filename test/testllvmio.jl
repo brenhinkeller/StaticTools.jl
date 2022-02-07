@@ -6,6 +6,7 @@
     @test printf("%s\n", "3") == 0
     @test printf(4) == 0
     @test printf(5.0) == 0
+    @test printf(10.0f0) == 0
     @test printf(0x01) == 0
     @test printf(0x0001) == 0
     @test printf(0x00000001) == 0
