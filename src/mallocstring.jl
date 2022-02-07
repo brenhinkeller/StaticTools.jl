@@ -30,10 +30,10 @@
     Base.length(s::MallocString) = s.length
     Base.sizeof(s::MallocString) = s.length
     @inline function Base.:(==)(a::MallocString, b::MallocString)
-        length(a) == length(b) || return false
+        (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
         for n in 0:N-1
-            unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
         return true
     end

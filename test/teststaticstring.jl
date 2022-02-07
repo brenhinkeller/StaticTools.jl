@@ -16,5 +16,4 @@
     many_escapes = c"\0\a\b\f\n\r\t\v'\"\\"
     @test isa(many_escapes, StaticString{12})
     @test length(many_escapes) == 12
-    a = codeunits(many_escapes)::Tuple
-    @test a == (codeunits("\0\a\b\f\n\r\t\v'\"\\\0")...,)
+    @test all(codeunits(many_escapes) .== codeunits("\0\a\b\f\n\r\t\v'\"\\\0"))

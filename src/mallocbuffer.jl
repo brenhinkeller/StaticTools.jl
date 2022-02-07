@@ -26,6 +26,20 @@
         end
         return true
     end
+    @inline function Base.:(==)(a::MallocBuffer, b)
+        (N = length(a)) == length(b) || return false
+        for n in 1:N
+            a[n] == b[n] || return false
+        end
+        return true
+    end
+    @inline function Base.:(==)(a, b::MallocBuffer)
+        (N = length(a)) == length(b) || return false
+        for n in 1:N
+            a[n] == b[n] || return false
+        end
+        return true
+    end
 
     # Some of the AbstractArray interface:
     Base.firstindex(a::MallocBuffer) = 1
