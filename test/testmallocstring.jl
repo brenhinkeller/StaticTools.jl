@@ -36,7 +36,7 @@
     @test length(many_escapes) == 12
     @test codeunits(many_escapes) == codeunits("\0\a\b\f\n\r\t\v'\"\\\0")
 
-    # Test unsafe_staticstring
+    # Test unsafe_mallocstring
     s = "Hello there!"
     m = unsafe_mallocstring(pointer(s))
     @test isa(m, MallocString)
