@@ -1,4 +1,5 @@
 
+    # Definition and constructors:
     struct MallocBuffer{T}
         pointer::Ptr{T}
         length::Int
@@ -7,18 +8,31 @@
         @assert Base.allocatedinline(T)
         MallocBuffer{T}(Ptr{T}(Libc.malloc(len*sizeof(T))), N)
     end
+
+    # Destructor:
     @inline free(a::MallocBuffer) = Libc.free(a.pointer)
 
-    @inline Base.unsafe_convert(::Type{Ptr{T}}, m::MallocBuffer) where {T} = Ptr{T}(a.pointer)
-    @inline Base.pointer(a::MallocBuffer) = a.pointer
-    @inline Base.length(a::MallocBuffer) = a.length
-    @inline Base.firstindex(a::MallocBuffer) = 1
-    @inline Base.lastindex(a::MallocBuffer) = a.length
-    @inline Base.sizeof(a::MallocBuffer{T}) where {T} = a.length * sizeof(T)
+    # Fundamentals
+    Base.unsafe_convert(::Type{Ptr{T}}, m::MallocBuffer) where {T} = Ptr{T}(a.pointer)
+    Base.pointer(a::MallocBuffer) = a.pointer
+    Base.length(a::MallocBuffer) = a.length
+    Base.sizeof(a::MallocBuffer{T}) where {T} = a.length * sizeof(T)
+    @inline Base.:(==)(::MallocBuffer, ::MallocBuffer) = false
+    @inline function Base.:(==)(a::MallocBuffer{A}, b::MallocBuffer{N,B}) where {A,B}
+        length(a) == length(b) || return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:N-1
+            unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
+        end
+        return true
+    end
 
-    @inline Base.getindex(a::MallocBuffer{T}, i::Int) where T = unsafe_load(a.ptr+(i-1)*sizeof(T))
-    @inline Base.setindex!(a::MallocBuffer{T}, x::T, i::Int) where T = unsafe_store!(a.ptr+(i-1)*sizeof(T), x)
-    @inline Base.setindex!(a::MallocBuffer{T}, x, i::Int) where T = unsafe_store!(a.ptr+(i-1)*sizeof(T), convert(T,x))
+    # Some of the AbstractArray interface:
+    Base.firstindex(a::MallocBuffer) = 1
+    Base.lastindex(a::MallocBuffer) = a.length
+    Base.getindex(a::MallocBuffer{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
+    Base.setindex!(a::MallocBuffer{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
+    Base.setindex!(a::MallocBuffer{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     @inline function Base.setindex!(a::MallocBuffer, x, r::UnitRange{Int})
         is₀ = first(r)-1
         ix₀ = firstindex(x)-1
@@ -33,16 +47,7 @@
         end
     end
 
-    @inline Base.:(==)(::MallocBuffer, ::MallocBuffer) = false
-    @inline function Base.:(==)(a::MallocBuffer{A}, b::MallocBuffer{N,B}) where {A,B}
-        length(a) == length(b) || return false
-        pa, pb = pointer(a), pointer(b)
-        for n in 0:N-1
-            unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
-        end
-        return true
-    end
-
-
-    # Base.getindex(a::MallocBuffer, r::AbstractArray{Int}) = MallocBuffer(codetuple(s)[r]) # Should really null-terminate
+    # TODO:
+    # Base.copy(a::MallocBuffer)
+    # Base.getindex(a::MallocBuffer, r::AbstractArray{Int})
     # Base.getindex(a::MallocBuffer, ::Colon) = copy(s)

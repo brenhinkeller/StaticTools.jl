@@ -33,6 +33,7 @@ function puts(s::StaticString)
     c = codeunits(s)
     GC.@preserve c puts(pointer(s))
 end
+puts(s::MallocString) = puts(pointer(s))
 puts(s) = GC.@preserve s puts(pointer(s))
 
 ## --- Printf, just a string
@@ -53,6 +54,7 @@ function printf(s::StaticString)
     c = codeunits(s)
     GC.@preserve c printf(pointer(s))
 end
+printf(s::MallocString) = printf(pointer(s))
 printf(s) = GC.@preserve s printf(pointer(s))
 
 function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
@@ -71,6 +73,7 @@ function printf(fmt::StaticString, s::StaticString)
     a, b = codeunits(fmt), codeunits(s)
     GC.@preserve a b printf(pointer(fmt), pointer(s))
 end
+printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
 printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
 
 
@@ -81,6 +84,7 @@ function printf(fmt::StaticString, n)
     GC.@preserve c printf(pointer(fmt), n)
 end
 printf(fmt::MemoryBuffer, n) = GC.@preserve fmt printf(pointer(fmt), n)
+printf(fmt::MallocString, n) = printf(pointer(fmt), n)
 
 # Floating point numbers
 function printf(fmt::Ptr{UInt8}, n::Float64)
@@ -169,7 +173,7 @@ end
     printfmt(::Type{UInt32}) = mm"%08x\0"
     printfmt(::Type{UInt16}) = mm"%04x\0"
     printfmt(::Type{UInt8}) = mm"%02x\0"
-    printfmt(::Type{StaticString}) = mm"\"%s\"\0" # Can I offer you a string in this trying time?
+    printfmt(::Type{<:Union{MallocString, StaticString}) = mm"\"%s\"\0" # Can I offer you a string in this trying time?
 
     # Top-level formats, single numbers
     function printf(n::T) where T <: Union{Number, Ptr}
