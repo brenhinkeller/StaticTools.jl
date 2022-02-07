@@ -18,8 +18,8 @@
     Base.length(a::MallocBuffer) = a.length
     Base.sizeof(a::MallocBuffer{T}) where {T} = a.length * sizeof(T)
     @inline Base.:(==)(::MallocBuffer, ::MallocBuffer) = false
-    @inline function Base.:(==)(a::MallocBuffer{A}, b::MallocBuffer{N,B}) where {A,B}
-        length(a) == length(b) || return false
+    @inline function Base.:(==)(a::MallocBuffer{A}, b::MallocBuffer{B}) where {A,B}
+        (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
         for n in 0:N-1
             unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
