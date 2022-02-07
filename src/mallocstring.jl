@@ -54,7 +54,7 @@
     Base.lastindex(s::MallocString) = s.length
     Base.getindex(s::MallocString, i::Int) = unsafe_load(pointer(s)+(i-1))
     Base.setindex!(s::MallocString, x::UInt8, i::Integer) = unsafe_store!(pointer(s)+(i-1), x)
-    Base.setindex!(s::MallocString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1)*sizeof(x), convert(UInt8,x))
+    Base.setindex!(s::MallocString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
     @inline function Base.getindex(s::MallocString, r::AbstractRange{<:Integer})
         new_s = MallocString(undef, length(r))
         is₀ = first(r)-1

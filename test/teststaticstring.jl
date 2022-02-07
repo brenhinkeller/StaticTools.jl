@@ -7,6 +7,10 @@
     # Test basic string operations
     @test str == c"Hello, world! 🌍"
     @test str*str == str^2
+    @test codeunit(str) === UInt8
+    @test codeunit(str, 5) == UInt8('o')
+    @test ncodeunits(str) == length(str)
+    @test codeunits(c"Hello") == codeunits(c"Hello")
 
     # Test mutability
     str[8] = 'W'
@@ -18,6 +22,7 @@
     @test str == str[1:end]
     @test str == str[:]
     @test str[1:2] == str[1:2]
+    @test str[1:2] != str[1:3]
 
     # Test ascii escaping
     many_escapes = c"\0\a\b\f\n\r\t\v'\"\\"
