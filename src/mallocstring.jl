@@ -3,7 +3,7 @@
     # Define the MallocString type, backed by a Libc.malloc'd heap of memory
 
     # Definition and constructors:
-    struct MallocString <: AbstractString
+    struct MallocString
         pointer::Ptr{UInt8}
         length::Int
     end
