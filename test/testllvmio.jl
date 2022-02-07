@@ -20,3 +20,19 @@
     # Print AbstractArray
     @test printf((1:5)') == 0
     @test printf(rand(4,4)) == 0
+
+    # Print MallocString
+    str = m"Hello, world! 🌍"
+    @test print(str) == 0
+    @test println(str) == 0
+    @test printf(str) == 0
+    @test puts(str) == 0
+    @test printf(m"%s \n", str) == 0
+
+    # Print StaticString
+    str = c"Hello, world! 🌍"
+    @test print(str) == 0
+    @test println(str) == 0
+    @test printf(str) == 0
+    @test puts(str) == 0
+    @test printf(m"%s \n", str) == 0

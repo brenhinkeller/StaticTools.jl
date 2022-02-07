@@ -4,10 +4,6 @@
     str = m"Hello, world! 🌍"
     @test isa(str, MallocString)
     @test length(str) == 19
-    @test print(str) == 0
-    @test println(str) == 0
-    @test printf(str) == 0
-    @test puts(str) == 0
 
     # Test basic string operations
     @test str == m"Hello, world! 🌍"

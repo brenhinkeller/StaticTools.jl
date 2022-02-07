@@ -3,10 +3,6 @@
     # Test StaticString constructors
     str = c"Hello, world! 🌍"
     @test isa(str, StaticString{19})
-    @test print(str) == 0
-    @test println(str) == 0
-    @test printf(str) == 0
-    @test puts(str) == 0
 
     # Test basic string operations
     @test str == c"Hello, world! 🌍"
