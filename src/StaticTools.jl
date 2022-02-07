@@ -14,10 +14,10 @@ module StaticTools
     include("llvmio.jl")
 
     # Types
-    export StaticString, MallocString
+    export StaticString, MallocString, MallocBuffer
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export putchar, puts, printf
+    export putchar, puts, printf, unsafe_mallocstring
 
 end

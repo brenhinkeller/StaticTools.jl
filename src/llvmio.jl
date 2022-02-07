@@ -179,7 +179,7 @@ end
 
     # Print a tuple
     function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
-        fmt = printfmtc(T)
+        fmt = printfmt(T)
         p = pointer(fmt)
         putchar(0x28) # open paren
         @inbounds GC.@preserve fmt for i ∈ eachindex(v)
