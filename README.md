@@ -26,11 +26,13 @@ function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
     return 0
 end
 ```
-This API is liable to change, but for an example:
+The native compilation API is liable to change, but for an example:
 ```julia
 # Compile executable
 using StaticCompiler: generate_executable # to get this branch: ] add https://github.com/brenhinkeller/StaticCompiler.jl#executables
 path, name = generate_executable(print_args, Tuple{Int64, Ptr{Ptr{UInt8}}}, "./")
+```
+and...
 ```
 shell> ./print_args 1 2 3 4 5.0 foo
 Argument count is 7:
