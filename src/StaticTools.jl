@@ -1,16 +1,23 @@
 module StaticTools
 
+    # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
 
-    # Manual memory allocation:
-    include("mallocbuffer.jl")
+    # Declare any abstract types we'll be subtyping later
+    abstract type AbstractMallocedMemory end
+
+    # Here there be `llvmcall`s
+    include("llvmlibc.jl")       # 🎶 Pointers, assembly,...
+
+    # Manual memory allocation
+    include("mallocbuffer.jl")   #...manage your memory with malloc and free! 🎶
 
     # String handling
-    include("unescape.jl")
-    include("staticstring.jl")
-    include("mallocstring.jl")
+    include("unescape.jl")       # You don't want to know
+    include("staticstring.jl")   # StaticCompiler-safe stack-allocated strings
+    include("mallocstring.jl")   # StaticCompiler-safe heap-allocated strings
 
-    # Tools for IO with LLVM
+    # What's the best way to print things? LLVM IR obviously
     include("llvmio.jl")
 
     # Types
