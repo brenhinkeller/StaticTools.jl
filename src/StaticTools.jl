@@ -4,7 +4,7 @@ module StaticTools
     using ManualMemory: MemoryBuffer, load, store!
 
     # Declare any abstract types we'll be subtyping later
-    abstract type AbstractMallocedMemory end
+    abstract type AbstractMallocdMemory end
 
     # Here there be `llvmcall`s
     include("llvmlibc.jl")       # 🎶 Pointers, assembly,...
