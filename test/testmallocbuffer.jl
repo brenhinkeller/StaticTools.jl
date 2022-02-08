@@ -11,6 +11,8 @@
     @test buf[8] === 5.0
     buf[8] = 3.1415926735897
     @test buf[8] === 3.1415926735897
+    buf[1:end] = fill(2, 20)
+    @test buf[10] === 2.0
     buf[:] = ones(20)
     @test buf[8] === 1.0
     @test buf === buf[1:end]
