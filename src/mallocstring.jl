@@ -3,7 +3,7 @@
     # Define the MallocString type, backed by a Libc.malloc'd heap of memory
 
     # Definition and constructors:
-    struct MallocString
+    struct MallocString <: AbstractMallocdMemory
         pointer::Ptr{UInt8}
         length::Int
     end
@@ -13,7 +13,7 @@
     @inline function MallocString(data::NTuple{N, UInt8}) where N
         s = MallocString(Ptr{UInt8}(Libc.malloc(N)), N)
         s[:] = data
-        s
+        return s
     end
     macro m_str(s) # String macro to create null-terminated `MallocStrings`s
         n = _unsafe_unescape!(s)

@@ -29,7 +29,7 @@ function puts(p::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
-puts(s::MallocString) = puts(pointer(s))
+puts(s::AbstractMallocdMemory) = puts(pointer(s))
 puts(s) = GC.@preserve s puts(pointer(s))
 
 ## --- Printf, just a string
@@ -46,7 +46,7 @@ function printf(p::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
-printf(s::MallocString) = printf(pointer(s))
+printf(s::AbstractMallocdMemory) = printf(pointer(s))
 printf(s) = GC.@preserve s printf(pointer(s))
 
 function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
@@ -61,7 +61,7 @@ function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
 end
-printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
+printf(fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = printf(pointer(fmt), pointer(s))
 printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
 
 
