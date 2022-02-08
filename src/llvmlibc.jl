@@ -26,11 +26,11 @@ end
 function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
-    declare i64 @strtoll(i8*, i8**, i32)
+    declare i64 @strtol(i8*, i8**, i32)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
     define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
-      %li = call i64 (i8*, i8**, i32) @strtoll (i8* %str, i8** %ptr, i32 %base)
+      %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
 
