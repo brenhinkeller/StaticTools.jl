@@ -7,6 +7,7 @@ using ManualMemory: MemoryBuffer
 @testset "Parsing" begin include("testparse.jl") end
 @testset "StaticString" begin include("teststaticstring.jl") end
 @testset "MallocString" begin include("testmallocstring.jl") end
+@testset "MallocBuffer" begin include("testmallocbuffer.jl") end
 @testset "MemoryBuffer" begin
 
     # Test direct buffer constructor

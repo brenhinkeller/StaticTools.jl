@@ -6,7 +6,7 @@
     end
     @inline function MallocBuffer{T}(::UndefInitializer, N::Int) where {T}
         @assert Base.allocatedinline(T)
-        MallocBuffer{T}(Ptr{T}(Libc.malloc(len*sizeof(T))), N)
+        MallocBuffer{T}(Ptr{T}(Libc.malloc(N*sizeof(T))), N)
     end
 
     # Destructor:
