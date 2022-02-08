@@ -23,23 +23,23 @@ end
     return num, pbuf
 end
 
-function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
+function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
-    declare i64 @strtol(i8*, i8**)
+    declare i64 @strtol(i8*, i8**, i32)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str, i8** %ptr) #0 {
-      %l = call i64 (i8*, i8**) @strtol (i8* %str, i8** %ptr)
-      ret i64 %l
+    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+      %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
+      ret i64 %li
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
-    """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}}, s, p)
+    """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 @inline function strtol(s::AbstractMallocdMemory)
     pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve buf strtol(pointer(s), pointer(pbuf))
+    num = GC.@preserve pbuf strtol(pointer(s), pointer(pbuf))
     return num, pbuf
 end
 @inline function strtol(s)
@@ -49,19 +49,19 @@ end
 end
 
 
-@inline function Base.parse(Float64, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
     num, pbuf = strtod(s)
     load(pointer(pbuf)) == Ptr{UInt8}(0) && return NaN
     return num
 end
-@inline Base.parse(::T, s::Union{StaticString, MallocString}) where T <: AbstractFloat = T(parse(Float64, s))
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: AbstractFloat} = T(parse(Float64, s))
 
-@inline function Base.parse(Int64, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{Int64}, s::Union{StaticString, MallocString})
     num, pbuf = strtol(s)
     load(pointer(pbuf)) == Ptr{UInt8}(0) && throw(ArgumentError)
     return num
 end
-@inline Base.parse(::T, s::Union{StaticString, MallocString}) where T <: Integer = T(parse(Int64, s))
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Integer} = T(parse(Int64, s))
 
 
 function system(s::Ptr{UInt8})
