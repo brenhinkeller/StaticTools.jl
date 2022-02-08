@@ -4,6 +4,7 @@
     str = c"Hello, world! 🌍"
     @test isa(str, StaticString{19})
     @test sizeof(str) == 19
+    @test StaticTools.strlen(str) == 18
 
     # Test basic string operations
     @test str == c"Hello, world! 🌍"

@@ -3,7 +3,7 @@ module StaticTools
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
 
-    # Declare any abstract types we'll be subtyping later
+    # Declare some types we'll use for dispatch later
     abstract type AbstractMallocdMemory end
 
     # Manual memory allocation
@@ -19,11 +19,11 @@ module StaticTools
     include("llvmlibc.jl")      # strtod, strtol, parse, etc...
 
     # Types
-    export StaticString, MallocString, MallocBuffer
+    export StaticString, MallocString, MallocBuffer, AbstractMallocdMemory
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export newline, putchar, puts, printf
+    export newline, putchar, puts, printf, strlen
     export unsafe_mallocstring, free
 
 end

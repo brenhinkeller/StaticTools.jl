@@ -2,10 +2,14 @@
 
     # `Base.parse` is the frontend, but strtol and strtod are the backend
     # Test basic methods for both of our string types
+    m = m"123456789" # MallocString
     @test parse(Float64, c"123456789") === 123456789.0
-    @test parse(Float64, m"123456789") === 123456789.0
+    @test parse(Float64, m) === 123456789.0
+    @test parse(Float64, MallocString(pointer(m))) === 123456789.0
     @test parse(Int64, c"123456789") === 123456789
-    @test parse(Int64, m"123456789") === 123456789
+    @test parse(Int64, m) === 123456789
+    @test parse(Int64, MallocString(pointer(m))) === 123456789
+    free(m)
 
     # Signed Integers (via strtol)
     @test parse(Int64, c"123") === Int64(123)

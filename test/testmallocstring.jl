@@ -5,6 +5,7 @@
     @test isa(str, MallocString)
     @test length(str) == 19
     @test sizeof(str) == 19
+    @test StaticTools.strlen(str) == 18
 
     # Test basic string operations
     @test str == m"Hello, world! 🌍"

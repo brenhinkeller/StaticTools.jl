@@ -15,7 +15,10 @@
         s[:] = data
         return s
     end
-    macro m_str(s) # String macro to create null-terminated `MallocStrings`s
+    @inline MallocString(p::Ptr{UInt8}) = MallocString(p, strlen(p)+1)
+
+    # String macro to create null-terminated `MallocStrings`s
+    macro m_str(s)
         n = _unsafe_unescape!(s)
         t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
         :(MallocString($t))
@@ -23,6 +26,7 @@
 
     # Destructor:
     @inline free(s::MallocString) = Libc.free(s.pointer)
+
 
     # Fundamentals
     Base.unsafe_convert(::Type{Ptr{T}}, m::MallocString) where {T} = Ptr{T}(s.pointer)
