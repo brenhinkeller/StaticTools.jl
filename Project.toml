@@ -7,7 +7,7 @@ version = "0.1.0"
 ManualMemory = "d125e4d3-2237-4719-b19c-fa641b8a4667"
 
 [compat]
-julia = "1.8"
+julia = "1.7"
 ManualMemory = "0.1.8"
 
 [extras]

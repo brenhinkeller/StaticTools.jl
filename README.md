@@ -6,6 +6,8 @@
 
 Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code to standalone native binaries by eliding GC allocations and `llvmcall`-ing all the things.
 
+Requires Julia 1.8+
+
 ### Examples
 ```julia
 # This is all StaticCompiler-friendly
