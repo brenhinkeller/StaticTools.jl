@@ -41,3 +41,4 @@
 
     # Wrap up
     @test newline() == 0
+    @test system(c"echo Enough printing for now!") == 0
