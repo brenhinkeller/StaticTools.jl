@@ -44,6 +44,8 @@
     Base.firstindex(a::MallocBuffer) = 1
     Base.lastindex(a::MallocBuffer) = a.length
     Base.getindex(a::MallocBuffer{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
+    Base.getindex(s::MallocBuffer{T}, r::UnitRange{<:Integer}) where T = MallocBuffer(pointer(s)+(first(r)-1)*sizeof(T), length(r))
+    Base.getindex(s::MallocBuffer, ::Colon) = s
     Base.setindex!(a::MallocBuffer{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
     Base.setindex!(a::MallocBuffer{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     @inline function Base.setindex!(a::MallocBuffer, x, r::UnitRange{Int})

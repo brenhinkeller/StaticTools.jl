@@ -31,7 +31,7 @@
     @test parse(Float64, c"3.1415926535897") === 3.1415926535897
 
     # Strtod and strtol are a bit more forgiving than Base.parse,
-    # and I for one am here for it
+    # and I, for one, am here for it
     @test parse(Int64, c"3.1415926535897") === 3
     @test parse(Int64, c"3asdfasdf") === 3
     @test parse(Float64, c"3 4 5") === 3.0
