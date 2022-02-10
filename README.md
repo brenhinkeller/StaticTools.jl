@@ -27,9 +27,7 @@ function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
     println(c"That was fun, see you next time!")
     return 0
 end
-```
-The native compilation API is liable to change, but for an example:
-```julia
+
 # Compile executable
 using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest master
 filepath = compile_executable(print_args, (Int64, Ptr{Ptr{UInt8}}), "./")
