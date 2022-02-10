@@ -31,8 +31,8 @@ end
 The native compilation API is liable to change, but for an example:
 ```julia
 # Compile executable
-using StaticCompiler: generate_executable # to get this branch: ] add https://github.com/brenhinkeller/StaticCompiler.jl#executables
-path, name = generate_executable(print_args, Tuple{Int64, Ptr{Ptr{UInt8}}}, "./")
+using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest master
+filepath = compile_executable(print_args, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 and...
 ```
