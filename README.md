@@ -44,4 +44,14 @@ Argument count is 7:
 5.0
 foo
 That was fun, see you next time!
+
+shell> hyperfine './print_args hello there'
+Benchmark 1: ./print_args hello there
+  Time (mean ± σ):       2.2 ms ±   0.5 ms    [User: 0.8 ms, System: 0.0 ms]
+  Range (min … max):     1.5 ms …   5.5 ms    564 runs
+
+  Warning: Command took less than 5 ms to complete. Results might be inaccurate.
+
+shell> ls -lh print_args
+  -rwxr-xr-x  1 user  staff   8.5K Feb 10 02:36 print_args
 ```
