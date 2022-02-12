@@ -1,38 +1,3 @@
-## --- The basics of basics: putchar
-
-putchar(c::Char) = putchar(UInt8(c))
-function putchar(c::UInt8)
-    Base.llvmcall(("""
-    ; External declaration of the puts function
-    declare i32 @putchar(i8 nocapture) nounwind
-
-    define i32 @main(i8) {
-    entry:
-        %call = call i32 (i8) @putchar(i8 %0)
-        ret i32 0
-    }
-    """, "main"), Int32, Tuple{UInt8}, c)
-end
-
-newline() = putchar(0x0a)
-
-## --- The old reliable: puts
-
-puts(s::AbstractMallocdMemory) = puts(pointer(s))
-puts(s) = GC.@preserve s puts(pointer(s))
-function puts(p::Ptr{UInt8})
-    Base.llvmcall(("""
-    ; External declaration of the puts function
-    declare i32 @puts(i8* nocapture) nounwind
-
-    define i32 @main(i8*) {
-    entry:
-        %call = call i32 (i8*) @puts(i8* %0)
-        ret i32 0
-    }
-    """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
-end
-
 ## --- File IO primitives
 
 struct FILE end
@@ -107,6 +72,55 @@ function stdinp()
 end
 
 
+## --- The basics of basics: putchar/fputc
+
+putchar(c::Char) = putchar(UInt8(c))
+function putchar(c::UInt8)
+    Base.llvmcall(("""
+    ; External declaration of the putchar function
+    declare i32 @putchar(i8 nocapture) nounwind
+
+    define i32 @main(i8) {
+    entry:
+        %call = call i32 (i8) @putchar(i8 %0)
+        ret i32 0
+    }
+    """, "main"), Int32, Tuple{UInt8}, c)
+end
+putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
+function putchar(fp::Ptr{FILE}, c::UInt8)
+    Base.llvmcall(("""
+    ; External declaration of the fputc function
+    declare i32 @fputc(i8, i8*) nounwind
+
+    define i32 @main(i8* %fp, i8 %c) {
+    entry:
+        %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
+        ret i32 %status
+    }
+    """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
+end
+
+newline() = putchar(0x0a)
+newline(fp::Ptr{FILE}) = putchar(fp, 0x08)
+
+## --- The old reliable: puts
+
+puts(s::AbstractMallocdMemory) = puts(pointer(s))
+puts(s) = GC.@preserve s puts(pointer(s))
+function puts(p::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the puts function
+    declare i32 @puts(i8* nocapture) nounwind
+
+    define i32 @main(i8*) {
+    entry:
+        %call = call i32 (i8*) @puts(i8* %0)
+        ret i32 0
+    }
+    """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
+end
+
 ## --- printf/fprintf, just a string
 
 printf(s::AbstractMallocdMemory) = printf(pointer(s))
@@ -137,7 +151,6 @@ function fprintf(fp::Ptr{FILE}, s::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
 end
-newline(fp::Ptr{FILE}) = fprintf(fp, c"\n")
 
 ## --- printf/fprintf, with a format string, just like in C
 

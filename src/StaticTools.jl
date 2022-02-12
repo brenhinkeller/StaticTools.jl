@@ -17,7 +17,9 @@ module StaticTools
     # Here there be `llvmcall`s
     include("llvmio.jl")        # Best way to print things? LLVM IR obviously!
     include("llvmlibc.jl")      # strtod, strtol, parse, etc...
-    include("printformats.jl")        # Best way to print things? LLVM IR obviously!
+
+    # higher-level printing
+    include("printformats.jl")
 
 
     # Types
