@@ -1,7 +1,9 @@
 ## --- File IO primitives
 
+# Plain struct to denote and allow dispatch on file pointers
 struct FILE end
 
+# Open a file
 fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
 fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
 function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
@@ -17,6 +19,7 @@ function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
     """, "main"), Ptr{FILE}, Tuple{Ptr{UInt8}, Ptr{UInt8}}, name, mode)
 end
 
+# Close a file
 function fclose(fp::Ptr{FILE})
     Base.llvmcall(("""
     ; External declaration of the fclose function
@@ -102,23 +105,38 @@ function putchar(fp::Ptr{FILE}, c::UInt8)
 end
 
 newline() = putchar(0x0a)
-newline(fp::Ptr{FILE}) = putchar(fp, 0x08)
+newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
 
-## --- The old reliable: puts
+## --- The old reliable: puts/fputs
 
 puts(s::AbstractMallocdMemory) = puts(pointer(s))
 puts(s) = GC.@preserve s puts(pointer(s))
-function puts(p::Ptr{UInt8})
+function puts(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the puts function
     declare i32 @puts(i8* nocapture) nounwind
 
     define i32 @main(i8*) {
     entry:
-        %call = call i32 (i8*) @puts(i8* %0)
+        %status = call i32 (i8*) @puts(i8* %0)
         ret i32 0
     }
-    """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
+    """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
+end
+
+puts(fp::Ptr{FILE}, s::AbstractMallocdMemory) = puts(fp, pointer(s))
+puts(fp::Ptr{FILE}, s) = GC.@preserve s puts(fp, pointer(s))
+function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the puts function
+    declare i32 @fputs(i8*, i8*) nounwind
+
+    define i32 @main(i8* %fp, i8* %str) {
+    entry:
+        %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
+        ret i32 0
+    }
+    """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
 end
 
 ## --- printf/fprintf, just a string
