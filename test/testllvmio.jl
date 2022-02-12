@@ -1,14 +1,16 @@
 ## --- File pointers
 
-    fp = stdoutp()
-    @test isa(fp, Ptr{StaticTools.FILE})
-    @test stdoutp() == fp != 0
-    fp = stderrp()
-    @test isa(fp, Ptr{StaticTools.FILE})
-    @test stderrp() == fp != 0
-    fp = stdinp()
-    @test isa(fp, Ptr{StaticTools.FILE})
-    @test stdinp() == fp != 0
+    @static if Sys.isapple() # Looks like this trick only works on Apple
+        fp = stdoutp()
+        @test isa(fp, Ptr{StaticTools.FILE})
+        @test stdoutp() == fp != 0
+        fp = stderrp()
+        @test isa(fp, Ptr{StaticTools.FILE})
+        @test stderrp() == fp != 0
+        fp = stdinp()
+        @test isa(fp, Ptr{StaticTools.FILE})
+        @test stdinp() == fp != 0
+    end
 
 
 ## -- Test low-level printing functions on a variety of arguments
@@ -62,7 +64,7 @@
     @test print(str) === nothing
     @test println(str) === nothing
     @test printf(str) == strlen(str)
-    @test printf(stdoutp(), str) == strlen(str)
+    @test printf(fp, str) == strlen(str)
     @test puts(str) == 0
     @test printf(m"%s \n", str) >= 0
     show(str)
@@ -72,7 +74,7 @@
     @test print(str) === nothing
     @test println(str) === nothing
     @test printf(str) == strlen(str)
-    @test printf(stdoutp(), str) == strlen(str)
+    @test printf(fp, str) == strlen(str)
     @test puts(str) == 0
     @test printf(m"%s \n", str) >= 0
     show(str)
