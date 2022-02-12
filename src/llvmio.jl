@@ -143,8 +143,8 @@ end
 
 printf(s::AbstractMallocdMemory) = printf(pointer(s))
 printf(s) = GC.@preserve s printf(pointer(s))
-fprintf(fp::Ptr{FILE}, s::AbstractMallocdMemory) = fprintf(fp, pointer(s))
-fprintf(fp::Ptr{FILE}, s) = GC.@preserve s fprintf(fp, pointer(s))
+printf(fp::Ptr{FILE}, s::AbstractMallocdMemory) = printf(fp, pointer(s))
+printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
 function printf(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the printf function
@@ -157,7 +157,7 @@ function printf(s::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end
-function fprintf(fp::Ptr{FILE}, s::Ptr{UInt8})
+function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the fprintf function
     declare i32 @fprintf(i8*, i8*)
@@ -174,8 +174,8 @@ end
 
 printf(fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = printf(pointer(fmt), pointer(s))
 printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
-fprintf(fp::Ptr{FILE}, fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = fprintf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
-fprintf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s fprintf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+printf(fp::Ptr{FILE}, fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
 function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the printf function
@@ -188,7 +188,7 @@ function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the fprintf function
     declare i32 @fprintf(i8*, ...)
@@ -204,8 +204,8 @@ end
 
 printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
 printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(pointer(fmt), n)
-fprintf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt fprintf(fp::Ptr{FILE}, pointer(fmt), n)
-fprintf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = fprintf(fp::Ptr{FILE}, pointer(fmt), n)
+printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, pointer(fmt), n)
+printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, pointer(fmt), n)
 
 # Floating point numbers
 function printf(fmt::Ptr{UInt8}, n::Float64)
@@ -220,7 +220,7 @@ function printf(fmt::Ptr{UInt8}, n::Float64)
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @fprintf(i8*, ...)
@@ -235,7 +235,7 @@ end
 
 # Just convert all other Floats to double
 printf(fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fmt::Ptr{UInt8}, Float64(n))
-fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::AbstractFloat) = fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, Float64(n))
+printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, Float64(n))
 
 # Integers
 function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
@@ -250,7 +250,7 @@ function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @fprintf(i8*, ...)
@@ -275,7 +275,7 @@ function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @fprintf(i8*, ...)
@@ -300,7 +300,7 @@ function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @fprintf(i8*, ...)
@@ -325,7 +325,7 @@ function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
 end
-function fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
     Base.llvmcall(("""
     ; External declaration of the printf function
     declare i32 @fprintf(i8*, ...)

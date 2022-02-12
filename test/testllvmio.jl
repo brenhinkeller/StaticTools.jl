@@ -33,9 +33,9 @@
     @test fp != 0
 
     @test puts(fp, "1") == 0
-    @test fprintf(fp, "2") == 1
+    @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 10
-    @test fprintf(fp, "%s\n", "3") == 2
+    @test printf(fp, "%s\n", "3") == 2
     # @test printf(4) == 0
     # @test printf(5.0) == 0
     # @test printf(10.0f0) == 0
