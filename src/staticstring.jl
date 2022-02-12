@@ -38,6 +38,8 @@
     # Custom printing
     Base.print(s::StaticString) = (printf(s); nothing)
     Base.println(s::StaticString) = (puts(s); nothing)
+    Base.print(fp::Ptr{FILE}, s::StaticString) = (printf(fp, s); nothing)
+    Base.println(fp::Ptr{FILE}, s::StaticString) = (puts(fp, s); nothing)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StaticString)

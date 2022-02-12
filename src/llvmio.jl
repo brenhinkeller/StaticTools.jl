@@ -1,8 +1,5 @@
 ## --- File IO primitives
 
-# Plain struct to denote and allow dispatch on file pointers
-struct FILE end
-
 # Open a file
 fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
 fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
@@ -181,6 +178,7 @@ function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
         ret i32 0
     }
     """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+    newline(fp) # puts appends `\n`, but fputs doesn't (!)
 end
 
 ## --- printf/fprintf, just a string

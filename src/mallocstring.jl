@@ -45,6 +45,8 @@
     # Custom printing
     Base.print(s::MallocString) = (printf(s); nothing)
     Base.println(s::MallocString) = (puts(s); nothing)
+    Base.print(fp::Ptr{FILE}, s::MallocString) = (printf(fp, s); nothing)
+    Base.println(fp::Ptr{FILE}, s::MallocString) = (puts(fp, s); nothing)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::MallocString)

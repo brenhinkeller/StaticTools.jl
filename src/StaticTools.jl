@@ -3,8 +3,9 @@ module StaticTools
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
 
-    # Declare some types we'll use for dispatch later
-    abstract type AbstractMallocdMemory end
+    # Declare some empty types we'll use for dispatch, etc., later
+    abstract type AbstractMallocdMemory end # that doesn't need GC.@protect
+    struct FILE end # Plain struct to denote and dispatch on file pointers
 
     # Manual memory allocation
     include("mallocbuffer.jl")  # 🎶 Manage your memory with malloc and free! 🎶

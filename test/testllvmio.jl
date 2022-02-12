@@ -40,7 +40,7 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test fp != 0
 
-    @test puts(fp, "1\n") == 0
+    @test puts(fp, "1") == 0
     @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 0
     @test printf(fp, "%s\n", "3") == 2
@@ -73,6 +73,8 @@
     str = m"Hello, world! 🌍"
     @test print(str) === nothing
     @test println(str) === nothing
+    @test print(fp, str) === nothing
+    @test println(fp, str) === nothing
     @test printf(str) == strlen(str)
     @test printf(fp, str) == strlen(str)
     @test puts(str) == 0
@@ -83,6 +85,8 @@
     str = c"Hello, world! 🌍"
     @test print(str) === nothing
     @test println(str) === nothing
+    @test print(fp, str) === nothing
+    @test println(fp, str) === nothing
     @test printf(str) == strlen(str)
     @test printf(fp, str) == strlen(str)
     @test puts(str) == 0
