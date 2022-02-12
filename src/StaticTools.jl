@@ -25,7 +25,7 @@ module StaticTools
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export newline, putchar, puts, printf, strlen
+    export newline, putchar, puts, printf, fprintf, fopen, fclose, strlen
     export unsafe_mallocstring, free
 
 end
