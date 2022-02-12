@@ -1,16 +1,14 @@
 ## --- File pointers
 
-    @static if Sys.isapple() # Looks like this trick only works on Apple
-        fp = stdoutp()
-        @test isa(fp, Ptr{StaticTools.FILE})
-        @test stdoutp() == fp != 0
-        fp = stderrp()
-        @test isa(fp, Ptr{StaticTools.FILE})
-        @test stderrp() == fp != 0
-        fp = stdinp()
-        @test isa(fp, Ptr{StaticTools.FILE})
-        @test stdinp() == fp != 0
-    end
+    fp = stdoutp()
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test stdoutp() == fp != 0
+    fp = stderrp()
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test stderrp() == fp != 0
+    fp = stdinp()
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test stdinp() == fp != 0
 
 
 ## -- Test low-level printing functions on a variety of arguments

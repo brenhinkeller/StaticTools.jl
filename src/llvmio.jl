@@ -35,43 +35,87 @@ end
 
 ## -- stdio pointers
 
-# Get pointer to stdout
-function stdoutp()
-    Base.llvmcall(("""
-    @__stdoutp = external global i8*
+    # Get pointer to stdout
+@static if Sys.isapple()
+    function stdoutp()
+        Base.llvmcall(("""
+        @__stdoutp = external global i8*
 
-    define i8* @main() {
-    entry:
-        %ptr = load i8*, i8** @__stdoutp, align 8
-        ret i8* %ptr
-    }
-    """, "main"), Ptr{FILE}, Tuple{}, ())
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @__stdoutp, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
+else
+    function stdoutp()
+        Base.llvmcall(("""
+        @stdout = external global i8*
+
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @stdout, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
 end
 
-# Get pointer to stderr
-function stderrp()
-    Base.llvmcall(("""
-    @__stderrp = external global i8*
 
-    define i8* @main() {
-    entry:
-        %ptr = load i8*, i8** @__stderrp, align 8
-        ret i8* %ptr
-    }
-    """, "main"), Ptr{FILE}, Tuple{}, ())
+    # Get pointer to stderr
+@static if Sys.isapple()
+    function stderrp()
+        Base.llvmcall(("""
+        @__stderrp = external global i8*
+
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @__stderrp, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
+else
+    function stderrp()
+        Base.llvmcall(("""
+        @stderr = external global i8*
+
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @stderr, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
 end
 
-# Get pointer to stdin
-function stdinp()
-    Base.llvmcall(("""
-    @__stdinp = external global i8*
 
-    define i8* @main() {
-    entry:
-        %ptr = load i8*, i8** @__stdinp, align 8
-        ret i8* %ptr
-    }
-    """, "main"), Ptr{FILE}, Tuple{}, ())
+    # Get pointer to stdin
+@static if Sys.isapple()
+    function stdinp()
+        Base.llvmcall(("""
+        @__stdinp = external global i8*
+
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @__stdinp, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
+else
+    function stdinp()
+        Base.llvmcall(("""
+        @stdin = external global i8*
+
+        define i8* @main() {
+        entry:
+            %ptr = load i8*, i8** @stdin, align 8
+            ret i8* %ptr
+        }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
 end
 
 
