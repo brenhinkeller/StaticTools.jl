@@ -43,8 +43,8 @@
     end
 
     # Custom printing
-    Base.print(s::MallocString) = printf(s)
-    Base.println(s::MallocString) = puts(s)
+    Base.print(s::MallocString) = (printf(s); nothing)
+    Base.println(s::MallocString) = (puts(s); nothing)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::MallocString)

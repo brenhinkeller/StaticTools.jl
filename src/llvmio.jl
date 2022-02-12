@@ -150,10 +150,10 @@ function printf(s::Ptr{UInt8})
     ; External declaration of the printf function
     declare i32 @printf(i8*, ...)
 
-    define i32 @main(i8*) {
+    define i32 @main(i8* %str) {
     entry:
-        %call = call i32 (i8*, ...) @printf(i8* %0)
-        ret i32 0
+        %status = call i32 (i8*, ...) @printf(i8* %str)
+        ret i32 %status
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end

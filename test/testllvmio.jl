@@ -14,9 +14,9 @@
 ## -- Test low-level printing functions on a variety of arguments
 
     @test puts("1") == 0
-    @test printf("2") == 0
+    @test printf("2") >= 0
     @test putchar('\n') == 0
-    @test printf("%s\n", "3") == 0
+    @test printf("%s\n", "3") >= 0
     @test printf(4) == 0
     @test printf(5.0) == 0
     @test printf(10.0f0) == 0
@@ -32,7 +32,7 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test fp != 0
 
-    @test puts(fp, "1") == 0
+    @test puts(fp, "1\n") == 0
     @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 0
     @test printf(fp, "%s\n", "3") == 2
@@ -45,7 +45,6 @@
     @test printf(fp, 0x0000000000000001) == 0
     @test printf(Ptr{UInt64}(0)) == 0
 
-    @test fclose(fp) == 0
 
 
 ## -- High-level printing
@@ -60,20 +59,22 @@
 
     # Print MallocString
     str = m"Hello, world! 🌍"
-    @test print(str) == 0
-    @test println(str) == 0
-    @test printf(str) == 0
+    @test print(str) === nothing
+    @test println(str) === nothing
+    @test printf(str) == strlen(str)
+    @test printf(stdoutp(), str) == strlen(str)
     @test puts(str) == 0
-    @test printf(m"%s \n", str) == 0
+    @test printf(m"%s \n", str) >= 0
     show(str)
 
     # Print StaticString
     str = c"Hello, world! 🌍"
-    @test print(str) == 0
-    @test println(str) == 0
-    @test printf(str) == 0
+    @test print(str) === nothing
+    @test println(str) === nothing
+    @test printf(str) == strlen(str)
+    @test printf(stdoutp(), str) == strlen(str)
     @test puts(str) == 0
-    @test printf(m"%s \n", str) == 0
+    @test printf(m"%s \n", str) >= 0
     show(str)
 
 
@@ -81,4 +82,6 @@
 
     # Wrap up
     @test newline() == 0
+    @test newline(fp) == 0
     @test StaticTools.system(c"echo Enough printing for now!") == 0
+    @test fclose(fp) == 0

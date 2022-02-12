@@ -36,8 +36,8 @@
     end
 
     # Custom printing
-    Base.print(s::StaticString) = printf(s)
-    Base.println(s::StaticString) = puts(s)
+    Base.print(s::StaticString) = (printf(s); nothing)
+    Base.println(s::StaticString) = (puts(s); nothing)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StaticString)
