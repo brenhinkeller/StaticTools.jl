@@ -24,7 +24,7 @@ function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString
         printf(p, v[i])
         newline()
     end
-    return 0
+    return zero(Int32)
 end
 
 # Print a tuple
@@ -52,7 +52,7 @@ function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString
         end
         newline()
     end
-    return 0
+    return zero(Int32)
 end
 
 
@@ -62,4 +62,45 @@ end
 function printf(fp::Ptr{FILE}, n::T) where T <: Union{Number, Ptr}
     printf(fp, printfmt(T), n)
     newline(fp)
+end
+
+
+# Print a vector
+function printf(fp::Ptr{FILE}, v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
+    fmt = printfmt(T)
+    p = pointer(fmt)
+    @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+        printf(fp, p, v[i])
+        newline(fp)
+    end
+    return zero(Int32)
+end
+
+# Print a tuple
+function printf(fp::Ptr{FILE}, v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+    fmt = printfmt(T)
+    p = pointer(fmt)
+    putchar(fp, 0x28) # open paren
+    @inbounds GC.@preserve fmt for i ∈ eachindex(v)
+        printf(fp, p, v[i])
+        putchar(fp, 0x2c) # comma
+        putchar(fp, 0x20) # space
+    end
+    putchar(fp, 0x29) # close paren
+    newline(fp)
+end
+
+
+# Print a 2d matrix
+function printf(fp::Ptr{FILE}, m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
+    fmt = printfmt(T)
+    p = pointer(fmt)
+    @inbounds GC.@preserve fmt for i ∈ axes(m,1)
+        for j ∈ axes(m,2)
+            printf(fp, p, m[i,j])
+            putchar(fp, 0x09) # tab
+        end
+        newline(fp)
+    end
+    return zero(Int32)
 end

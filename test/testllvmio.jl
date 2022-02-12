@@ -43,7 +43,7 @@
     @test printf(fp, 0x0001) == 0
     @test printf(fp, 0x00000001) == 0
     @test printf(fp, 0x0000000000000001) == 0
-    @test printf(Ptr{UInt64}(0)) == 0
+    @test printf(fp, Ptr{UInt64}(0)) == 0
 
 
 
@@ -52,10 +52,14 @@
     # Print AbstractVector
     @test printf(1:5) == 0
     @test printf((1:5...,)) == 0
+    @test printf(fp, 1:5) == 0
+    @test printf(fp, (1:5...,)) == 0
 
     # Print AbstractArray
     @test printf((1:5)') == 0
     @test printf(rand(4,4)) == 0
+    @test printf(fp, (1:5)') == 0
+    @test printf(fp, rand(4,4)) == 0
 
     # Print MallocString
     str = m"Hello, world! 🌍"
