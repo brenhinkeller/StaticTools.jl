@@ -33,7 +33,6 @@ function puts(p::Ptr{UInt8})
     """, "main"), Int32, Tuple{Ptr{UInt8}}, p)
 end
 
-
 ## --- File IO primitives
 
 struct FILE end
@@ -65,6 +64,48 @@ function fclose(fp::Ptr{FILE})
     }
     """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
 end
+
+## -- stdio pointers
+
+# Get pointer to stdout
+function stdoutp()
+    Base.llvmcall(("""
+    @__stdoutp = external global i8*
+
+    define i8* @main() {
+    entry:
+        %ptr = load i8*, i8** @__stdoutp, align 8
+        ret i8* %ptr
+    }
+    """, "main"), Ptr{FILE}, Tuple{}, ())
+end
+
+# Get pointer to stderr
+function stderrp()
+    Base.llvmcall(("""
+    @__stderrp = external global i8*
+
+    define i8* @main() {
+    entry:
+        %ptr = load i8*, i8** @__stderrp, align 8
+        ret i8* %ptr
+    }
+    """, "main"), Ptr{FILE}, Tuple{}, ())
+end
+
+# Get pointer to stdin
+function stdinp()
+    Base.llvmcall(("""
+    @__stdinp = external global i8*
+
+    define i8* @main() {
+    entry:
+        %ptr = load i8*, i8** @__stdinp, align 8
+        ret i8* %ptr
+    }
+    """, "main"), Ptr{FILE}, Tuple{}, ())
+end
+
 
 ## --- printf/fprintf, just a string
 
