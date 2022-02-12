@@ -56,4 +56,10 @@ function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString
 end
 
 
-## ---
+## --- Printing to file
+
+# Top-level formats, single numbers
+function printf(fp::Ptr{FILE}, n::T) where T <: Union{Number, Ptr}
+    printf(fp, printfmt(T), n)
+    newline(fp)
+end

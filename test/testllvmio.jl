@@ -34,16 +34,16 @@
 
     @test puts(fp, "1") == 0
     @test printf(fp, "2") == 1
-    @test putchar(fp, '\n') == 10
+    @test putchar(fp, '\n') == 0
     @test printf(fp, "%s\n", "3") == 2
-    # @test printf(4) == 0
-    # @test printf(5.0) == 0
-    # @test printf(10.0f0) == 0
-    # @test printf(0x01) == 0
-    # @test printf(0x0001) == 0
-    # @test printf(0x00000001) == 0
-    # @test printf(0x0000000000000001) == 0
-    # @test printf(Ptr{UInt64}(0)) == 0
+    @test printf(fp, 4) == 0
+    @test printf(fp, 5.0) == 0
+    @test printf(fp, 10.0f0) == 0
+    @test printf(fp, 0x01) == 0
+    @test printf(fp, 0x0001) == 0
+    @test printf(fp, 0x00000001) == 0
+    @test printf(fp, 0x0000000000000001) == 0
+    @test printf(Ptr{UInt64}(0)) == 0
 
     @test fclose(fp) == 0
 

@@ -85,7 +85,7 @@ function putchar(c::UInt8)
 
     define i32 @main(i8) {
     entry:
-        %call = call i32 (i8) @putchar(i8 %0)
+        %status = call i32 (i8) @putchar(i8 %0)
         ret i32 0
     }
     """, "main"), Int32, Tuple{UInt8}, c)
@@ -99,7 +99,7 @@ function putchar(fp::Ptr{FILE}, c::UInt8)
     define i32 @main(i8* %fp, i8 %c) {
     entry:
         %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
-        ret i32 %status
+        ret i32 0
     }
     """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
 end
