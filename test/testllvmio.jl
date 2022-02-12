@@ -10,6 +10,14 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test stdinp() == fp != 0
 
+    name, mode = m"testfile.txt", m"w"
+    fp = fopen(name, mode)
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test fp != 0
+    @test fclose(fp) == 0
+    @test free(name) === nothing
+    @test free(mode) === nothing
+
 
 ## -- Test low-level printing functions on a variety of arguments
 
