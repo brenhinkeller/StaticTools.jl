@@ -5,28 +5,18 @@
         length::Int
         size::NTuple{N, Int}
     end
-    @inline function MallocArray{T}(::UndefInitializer, size::NTuple{N, Int}) where {N,T}
+    @inline function MallocArray{T,N}(p::Ptr, size::NTuple{N, Int}) where {N,T}
         @assert Base.allocatedinline(T)
-        len = prod(size)
-        MallocArray{T,N}(Ptr{T}(Libc.malloc(len*sizeof(T))), len, size)
+        MallocArray{T,N}(Ptr{T}(p), prod(size), size)
     end
     @inline function MallocArray{T,N}(::UndefInitializer, size::NTuple{N, Int}) where {N,T}
         @assert Base.allocatedinline(T)
         len = prod(size)
         MallocArray{T,N}(Ptr{T}(Libc.malloc(len*sizeof(T))), len, size)
     end
-    @inline function MallocArray{T}(::UndefInitializer, size...) where {T}
-        @assert Base.allocatedinline(T)
-        N = length(size)
-        len = prod(size)
-        MallocArray{T,N}(Ptr{T}(Libc.malloc(len*sizeof(T))), len, size)
-    end
-    @inline function MallocArray{T,N}(::UndefInitializer, size...) where {T,N}
-        @assert Base.allocatedinline(T)
-        @assert N == length(size)
-        len = prod(size)
-        MallocArray{T,N}(Ptr{T}(Libc.malloc(len*sizeof(T))), len, size)
-    end
+    @inline MallocArray{T}(x::Union{Ptr, UndefInitializer}, size::NTuple{N, Int}) where {N,T} = MallocArray{T,N}(x, size)
+    @inline MallocArray{T}(x::Union{Ptr, UndefInitializer}, length::Int) where {T} = MallocArray{T,1}(x, (length,))
+    @inline MallocArray{T}(x::Union{Ptr, UndefInitializer}, size...) where {T} = MallocArray{T}(x, size)
 
     # Destructor:
     @inline free(a::MallocArray) = Libc.free(a.pointer)
@@ -44,8 +34,8 @@
     Base.firstindex(::MallocArray) = 1
     Base.lastindex(a::MallocArray) = a.length
     Base.getindex(a::MallocArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
-    # Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}) where T = MallocArray(pointer(a)+(first(r)-1)*sizeof(T), length(r))
-    # Base.getindex(a::MallocArray, ::Colon) = a
+    Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}) where T = MallocArray(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
+    Base.getindex(a::MallocArray, ::Colon) = a
     Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
     Base.setindex!(a::MallocArray{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     # @inline function Base.setindex!(a::MallocArray, x, r::UnitRange{Int})
