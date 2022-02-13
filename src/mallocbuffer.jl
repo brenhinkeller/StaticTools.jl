@@ -1,6 +1,6 @@
 
     # Definition and constructors:
-    struct MallocBuffer{T} <: AbstractMallocdMemory
+    struct MallocBuffer{T}
         pointer::Ptr{T}
         length::Int
     end
