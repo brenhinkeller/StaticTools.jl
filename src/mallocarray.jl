@@ -38,6 +38,26 @@
     Base.getindex(a::MallocArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
     Base.getindex(a::MallocArray, ::Colon) = a
     Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}) where T = MallocArray(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
+
+    Base.getindex(a::MallocArray, r::UnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
+    function Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}, inds::NTuple{N,Int}) where {T,N}
+        @assert ndims(a) == N + 1
+        i0 = 0
+        for i=1:N
+            i0 += (inds[i]-1) * stride(a, i+1)
+        end
+        return MallocArray{T,1}(pointer(a)+i0*sizeof(T), length(r), (length(r),))
+    end
+    Base.getindex(a::MallocArray, ::Colon, inds::Vararg{Int}) = getindex(a, :, inds)
+    function Base.getindex(a::MallocArray{T}, ::Colon, inds::NTuple{N,Int}) where {T,N}
+        @assert ndims(a) == N + 1
+        i0 = 0
+        for i=1:N
+            i0 += (inds[i]-1) * stride(a, i+1)
+        end
+        return MallocArray{T,1}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1),))
+    end
+
     Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
     Base.setindex!(a::MallocArray{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     @inline function Base.setindex!(a::MallocArray, x, r::UnitRange{Int})
