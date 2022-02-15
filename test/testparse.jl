@@ -41,3 +41,11 @@
     @test parse(Float64, c"3 4 5") === 3.0
     @test parse(Float64, c"3asdfasdf") === 3.0
     @test parse(Float64, c"3 4 5") === 3.0
+
+
+    # Test parsing from Ptr{Ptr{UInt8}} as in argv
+    s1,s2 = "1", "2.0"
+    a = [pointer(s1), pointer(s2)]
+    argv = pointer(a)
+    @test parse(Int64, argv, 1) === 1
+    @test parse(Float64, argv, 2) === 2.0

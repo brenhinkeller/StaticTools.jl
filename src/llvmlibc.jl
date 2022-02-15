@@ -131,3 +131,6 @@ end
     return num
 end
 @inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Integer} = T(parse(Int64, s))
+
+# Convenient parsing for argv
+@inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
