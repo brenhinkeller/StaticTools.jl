@@ -29,13 +29,15 @@
     @test str === str[:]
     @test str[1:2] === str[1:2]
     @test str[1:2] != str[1:3]
+    strc = copy(str)
+    @test strc == str
     free(str)
 
     # Test ascii escaping
-    many_escapes = m"\0\a\b\f\n\r\t\v'\"\\"
+    many_escapes = m"\"\0\a\b\f\n\r\t\v\'\"\\"
     @test isa(many_escapes, MallocString)
-    @test length(many_escapes) == 12
-    @test codeunits(many_escapes) == codeunits("\0\a\b\f\n\r\t\v'\"\\\0")
+    @test length(many_escapes) == 13
+    @test codeunits(many_escapes) == codeunits("\"\0\a\b\f\n\r\t\v'\"\\\0")
 
     # Test unsafe_mallocstring
     s = "Hello there!"

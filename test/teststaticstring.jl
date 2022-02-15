@@ -25,6 +25,7 @@
     @test str == str[:]
     @test str[1:2] == str[1:2]
     @test str[1:2] != str[1:3]
+    @test str == copy(str)
 
     # Test ascii escaping
     many_escapes = c"\0\a\b\f\n\r\t\v'\"\\"
