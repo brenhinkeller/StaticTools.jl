@@ -27,7 +27,7 @@ module StaticTools
 
 
     # Types
-    export StaticString, MallocString, MallocBuffer, MallocArray
+    export StaticString, MallocString, MallocArray, MallocMatrix, MallocVector
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions

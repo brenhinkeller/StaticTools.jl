@@ -1,8 +1,8 @@
 # Test MallocBuffer type
 
     # Test MallocBuffer constructors
-    buf = MallocBuffer{Float64}(undef, 20)
-    @test isa(buf, MallocBuffer{Float64})
+    buf = StaticTools.MallocBuffer{Float64}(undef, 20)
+    @test isa(buf, StaticTools.MallocBuffer{Float64})
     @test length(buf) == 20
     @test sizeof(buf) == 20*sizeof(Float64)
 
