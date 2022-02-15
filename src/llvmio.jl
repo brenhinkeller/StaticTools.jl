@@ -183,9 +183,9 @@ end
 
 ## --- printf/fprintf, just a string
 
-printf(s::AbstractMallocdMemory) = printf(pointer(s))
+printf(s::MallocString) = printf(pointer(s))
 printf(s) = GC.@preserve s printf(pointer(s))
-printf(fp::Ptr{FILE}, s::AbstractMallocdMemory) = printf(fp, pointer(s))
+printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
 printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
 function printf(s::Ptr{UInt8})
     Base.llvmcall(("""
@@ -214,9 +214,9 @@ end
 
 ## --- printf/fprintf, with a format string, just like in C
 
-printf(fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = printf(pointer(fmt), pointer(s))
+printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
 printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
-printf(fp::Ptr{FILE}, fmt::AbstractMallocdMemory, s::AbstractMallocdMemory) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
 printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
 function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
     Base.llvmcall(("""
