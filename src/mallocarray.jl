@@ -41,7 +41,6 @@
 
     @inline Base.getindex(a::MallocArray, r::UnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
     @inline function Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}, inds::NTuple{N,Int}) where {T,N}
-        @assert ndims(a) == N + 1
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
@@ -50,7 +49,6 @@
     end
     @inline Base.getindex(a::MallocArray, ::Colon, inds::Vararg{Int}) = getindex(a, :, inds)
     @inline function Base.getindex(a::MallocArray{T}, ::Colon, inds::NTuple{N,Int}) where {T,N}
-        @assert ndims(a) == N + 1
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
