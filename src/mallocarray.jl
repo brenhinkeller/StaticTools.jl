@@ -2,7 +2,7 @@
     const MaybePointer = Union{Ptr, UndefInitializer}
 
     # Definition and constructors:
-    struct MallocArray{T,N} <: DenseArray{T,N}
+    struct MallocArray{T,N} # <: DenseArray{T,N}
         pointer::Ptr{T}
         length::Int
         size::NTuple{N, Int}
