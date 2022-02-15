@@ -1,23 +1,23 @@
 ## --- Auto-formatted `printf` methods for Julia types
 
 # Pick a printf format string depending on the type
-printfmt(::Type{<:AbstractFloat}) = c"%e"
-printfmt(::Type{<:Integer}) = c"%d"
-printfmt(::Type{<:Ptr})  = c"Ptr @0x%016x" # Assume 64-bit pointers
-printfmt(::Type{UInt64}) = c"0x%016x"
-printfmt(::Type{UInt32}) = c"0x%08x"
-printfmt(::Type{UInt16}) = c"0x%04x"
-printfmt(::Type{UInt8})  = c"0x%02x"
-printfmt(::Type{<:Union{MallocString, StaticString}}) = c"\"%s\"" # Can I offer you a string in this trying time?
+@inline printfmt(::Type{<:AbstractFloat}) = c"%e"
+@inline printfmt(::Type{<:Integer}) = c"%d"
+@inline printfmt(::Type{<:Ptr})  = c"Ptr @0x%016x" # Assume 64-bit pointers
+@inline printfmt(::Type{UInt64}) = c"0x%016x"
+@inline printfmt(::Type{UInt32}) = c"0x%08x"
+@inline printfmt(::Type{UInt16}) = c"0x%04x"
+@inline printfmt(::Type{UInt8})  = c"0x%02x"
+@inline printfmt(::Type{<:Union{MallocString, StaticString}}) = c"\"%s\"" # Can I offer you a string in this trying time?
 
 # Top-level formats, single numbers
-function printf(n::T) where T <: Union{Number, Ptr}
+@inline function printf(n::T) where T <: Union{Number, Ptr}
     printf(printfmt(T), n)
     newline()
 end
 
 # Print a vector
-function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     @inbounds GC.@preserve fmt for i ∈ eachindex(v)
@@ -28,7 +28,7 @@ function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString
 end
 
 # Print a tuple
-function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     putchar(0x28) # open paren
@@ -42,7 +42,7 @@ function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticStr
 end
 
 # Print a 2d matrix
-function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     @inbounds GC.@preserve fmt for i ∈ axes(m,1)
