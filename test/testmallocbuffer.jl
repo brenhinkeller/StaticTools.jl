@@ -26,4 +26,4 @@
     @test buf == buf
 
     # The end
-    @test free(buf) === nothing
+    @test free(buf) == 0

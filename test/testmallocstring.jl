@@ -11,8 +11,8 @@
     @test str == m"Hello, world! 🌍"
     m, p = str*str, str^2
     @test m == p
-    @test free(m) === nothing
-    @test free(p) == nothing
+    @test free(m) == 0
+    @test free(p) == 0
     @test codeunit(str) === UInt8
     @test codeunit(str, 5) == UInt8('o')
     @test ncodeunits(str) == length(str)
@@ -43,4 +43,4 @@
     @test isa(m, MallocString)
     @test length(m) == 13
     @test codeunits(m) == codeunits(c"Hello there!")
-    @test free(m) === nothing
+    @test free(m) == 0

@@ -1,6 +1,6 @@
 ## ---  Define a StatiCompiler- and LLVM-compatible dynamically-sized string type
 
-    # Define the MallocString type, backed by a Libc.malloc'd heap of memory
+    # Define the MallocString type, backed by a malloc'd heap of memory
 
     # Definition and constructors:
     struct MallocString
@@ -8,10 +8,10 @@
         length::Int
     end
     @inline function MallocString(::UndefInitializer, N::Int)
-        MallocString(Ptr{UInt8}(Libc.malloc(N)), N)
+        MallocString(Ptr{UInt8}(malloc(N)), N)
     end
     @inline function MallocString(data::NTuple{N, UInt8}) where N
-        s = MallocString(Ptr{UInt8}(Libc.malloc(N)), N)
+        s = MallocString(Ptr{UInt8}(malloc(N)), N)
         s[:] = data
         return s
     end
@@ -25,7 +25,7 @@
     end
 
     # Destructor:
-    @inline free(s::MallocString) = Libc.free(s.pointer)
+    @inline free(s::MallocString) = free(s.pointer)
 
 
     # Fundamentals

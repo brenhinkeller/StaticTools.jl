@@ -15,8 +15,8 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test fp != 0
     @test fclose(fp) == 0
-    @test free(name) === nothing
-    @test free(mode) === nothing
+    @test free(name) == 0
+    @test free(mode) == 0
 
 
 ## -- Test low-level printing functions on a variety of arguments

@@ -10,7 +10,7 @@
     end
 
     # Destructor:
-    @inline free(a::MallocBuffer) = Libc.free(a.pointer)
+    @inline free(a::MallocBuffer) = free(a.pointer)
 
     # Fundamentals
     Base.unsafe_convert(::Type{Ptr{T}}, m::MallocBuffer) where {T} = Ptr{T}(a.pointer)

@@ -2,7 +2,7 @@
     const MaybePointer = Union{Ptr, UndefInitializer}
 
     # Definition and constructors:
-    struct MallocArray{T,N} # <: DenseArray{T,N}
+    struct MallocArray{T,N} <: DenseArray{T,N}
         pointer::Ptr{T}
         length::Int
         size::NTuple{N, Int}
@@ -12,7 +12,7 @@
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, size::NTuple{N, Int}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(size)
-        p = Ptr{T}(Libc.malloc(length*sizeof(T)))
+        p = Ptr{T}(malloc(length*sizeof(T)))
         MallocArray{T,N}(p, length, size)
     end
     @inline MallocArray{T,N}(x::MaybePointer, size::NTuple{N, Int}) where {T,N} = MallocArray{T,N}(x, prod(size), size)
@@ -21,7 +21,7 @@
     @inline MallocArray{T}(x::MaybePointer, size::Vararg{Int}) where {T} = MallocArray{T}(x, size)
 
     # Destructor:
-    @inline free(a::MallocArray) = Libc.free(a.pointer)
+    @inline free(a::MallocArray) = free(a.pointer)
 
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::MallocArray) where {T} = Ptr{T}(a.pointer)

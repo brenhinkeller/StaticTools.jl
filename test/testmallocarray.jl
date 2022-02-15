@@ -26,4 +26,4 @@
     @test A == A
 
     # The end
-    @test free(A) === nothing
+    @test free(A) == 0

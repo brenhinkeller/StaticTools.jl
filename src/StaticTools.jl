@@ -31,6 +31,7 @@ module StaticTools
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
+    export malloc, free
     export newline, putchar, puts, printf
     export stdinp, stdoutp, stderrp, fopen, fclose # File pointers
     export unsafe_mallocstring, strlen, free
