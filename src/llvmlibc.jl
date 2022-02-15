@@ -1,4 +1,4 @@
-function system(s::Ptr{UInt8})
+@inline function system(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the `system` function
     declare i32 @system(...)
@@ -12,11 +12,11 @@ function system(s::Ptr{UInt8})
     attributes #0 = { noinline nounwind optnone ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end
-system(s::AbstractMallocdMemory) = system(pointer(s))
-system(s) = GC.@preserve s system(pointer(s))
+@inline system(s::AbstractMallocdMemory) = system(pointer(s))
+@inline system(s) = GC.@preserve s system(pointer(s))
 
 
-function strlen(s::Ptr{UInt8})
+@inline function strlen(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the `strlen` function
     declare i64 @strlen(i8*)
@@ -30,10 +30,10 @@ function strlen(s::Ptr{UInt8})
     attributes #0 = { noinline nounwind optnone ssp uwtable }
     """, "main"), Int64, Tuple{Ptr{UInt8}}, s)
 end
-strlen(s::AbstractMallocdMemory) = strlen(pointer(s))
-strlen(s) = GC.@preserve s strlen(pointer(s))
+@inline strlen(s::AbstractMallocdMemory) = strlen(pointer(s))
+@inline strlen(s) = GC.@preserve s strlen(pointer(s))
 
-function strtod(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
+@inline function strtod(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
     Base.llvmcall(("""
     ; External declaration of the `strtod` function
     declare double @strtod(i8*, i8**)
@@ -58,7 +58,7 @@ end
     return num, pbuf
 end
 
-function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
+@inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
     declare i64 @strtol(i8*, i8**, i32)
@@ -92,7 +92,6 @@ end
 
 @inline function Base.parse(::Type{Int64}, s::Union{StaticString, MallocString})
     num, pbuf = strtol(s)
-    load(pointer(pbuf)) == Ptr{UInt8}(0) && throw(ArgumentError)
     return num
 end
 @inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Integer} = T(parse(Int64, s))
