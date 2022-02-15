@@ -8,12 +8,14 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8+
 
-Much of this package is inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated arrays which should also be StaticCompiler-friendly.
+Caution: this package should be considered experimental at present, and involves a lot of juggling of pointers
+
+The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
 ### Examples
 ```julia
 # This is all StaticCompiler-friendly
-using StaticTools
+using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
 
 function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
     # c"..." lets you construct statically-sized, stack allocated `StaticString`s
@@ -31,11 +33,14 @@ function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
 end
 
 # Compile executable
-using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest master
+using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest
 filepath = compile_executable(print_args, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 and...
 ```
+shell> ls -lh $filepath
+  -rwxr-xr-x  1 user  staff   8.5K Feb 10 02:36 print_args
+
 shell> ./print_args 1 2 3 4 5.0 foo
 Argument count is 7:
 ./print_args
@@ -53,7 +58,45 @@ Benchmark 1: ./print_args hello there
   Range (min … max):     1.5 ms …   5.5 ms    564 runs
 
   Warning: Command took less than 5 ms to complete. Results might be inaccurate.
+```
 
-shell> ls -lh print_args
-  -rwxr-xr-x  1 user  staff   8.5K Feb 10 02:36 print_args
+Or, for an example with arrays:
+```julia
+using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
+function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
+    rows = parse(Int64, MallocString(argv, 2))  # First command-line argument
+    cols = parse(Int64, MallocString(argv, 3))  # Second command-line argument
+
+    M = MallocArray{Int64}(undef, rows, cols)
+    @inbounds for i=1:rows
+        for j=1:cols
+            M[i,j] = i*j
+        end
+    end
+    printf(M)
+    free(M)
+    return 0
+end
+
+using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest
+filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
+```
+which gives us...
+```
+shell> ls -lh $filepath
+-rwxr-xr-x  1 user  staff   8.9K Feb 15 14:58 times_table
+
+shell> ./times_table 12, 7
+1   2   3   4   5   6   7
+2   4   6   8   10  12  14
+3   6   9   12  15  18  21
+4   8   12  16  20  24  28
+5   10  15  20  25  30  35
+6   12  18  24  30  36  42
+7   14  21  28  35  42  49
+8   16  24  32  40  48  56
+9   18  27  36  45  54  63
+10  20  30  40  50  60  70
+11  22  33  44  55  66  77
+12  24  36  48  60  72  84
 ```
