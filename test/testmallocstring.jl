@@ -44,3 +44,10 @@
     @test length(m) == 13
     @test codeunits(m) == codeunits(c"Hello there!")
     @test free(m) == 0
+
+    # Test constructing from Ptr{Ptr{UInt8}} as in argv
+    s1,s2 = "Hello", "there"
+    a = [pointer(s1), pointer(s2)]
+    argv = pointer(a)
+    @test MallocString(argv,1) == c"Hello"
+    @test MallocString(argv,2) == c"there"

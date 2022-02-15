@@ -16,6 +16,7 @@
         return s
     end
     @inline MallocString(p::Ptr{UInt8}) = MallocString(p, strlen(p)+1)
+    @inline MallocString(argv::Ptr{Ptr{UInt8}}, n::Integer) = MallocString(unsafe_load(argv, n))
 
     # String macro to create null-terminated `MallocStrings`s
     macro m_str(s)
@@ -41,6 +42,18 @@
         end
         return true
     end
+    const NullTerminatedString = Union{StaticString, MallocString}
+    @inline function Base.:(==)(a::NullTerminatedString, b::NullTerminatedString)
+        GC.@preserve a b begin
+            (N = length(a)) == length(b) || return false
+            pa, pb = pointer(a), pointer(b)
+            for n in 0:N-1
+                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+            end
+            return true
+        end
+    end
+
 
     # Custom printing
     Base.print(s::MallocString) = (printf(s); nothing)
