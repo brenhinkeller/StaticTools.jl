@@ -71,24 +71,24 @@
 
     # Print MallocString
     str = m"Hello, world! 🌍"
-    @test print(str) === nothing
-    @test println(str) === nothing
-    @test print(fp, str) === nothing
-    @test println(fp, str) === nothing
-    @test printf(str) == strlen(str)
-    @test printf(fp, str) == strlen(str)
+    @test print(str) === Int32(strlen(str))
+    @test println(str) === Int32(0)
+    @test print(fp, str) === Int32(strlen(str))
+    @test println(fp, str) === Int32(0)
+    @test printf(str) == Int32(strlen(str))
+    @test printf(fp, str) == Int32(strlen(str))
     @test puts(str) == 0
     @test printf(m"%s \n", str) >= 0
     show(str)
 
     # Print StaticString
     str = c"Hello, world! 🌍"
-    @test print(str) === nothing
-    @test println(str) === nothing
-    @test print(fp, str) === nothing
-    @test println(fp, str) === nothing
-    @test printf(str) == strlen(str)
-    @test printf(fp, str) == strlen(str)
+    @test print(str) === Int32(strlen(str))
+    @test println(str) === Int32(0)
+    @test print(fp, str) === Int32(strlen(str))
+    @test println(fp, str) === Int32(0)
+    @test printf(str) === Int32(strlen(str))
+    @test printf(fp, str) === Int32(strlen(str))
     @test puts(str) == 0
     @test printf(m"%s \n", str) >= 0
     show(str)
