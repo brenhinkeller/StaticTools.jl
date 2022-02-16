@@ -64,6 +64,7 @@ Or, for an example with arrays:
 ```julia
 using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
 function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
+    argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
     rows = parse(Int64, argv, 2)            # First command-line argument
     cols = parse(Int64, argv, 3)            # Second command-line argument
 
@@ -75,7 +76,6 @@ function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
     end
     printf(M)
     free(M)
-    return 0
 end
 
 using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest
