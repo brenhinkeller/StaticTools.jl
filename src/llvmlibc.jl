@@ -31,6 +31,26 @@ end
 end
 
 
+@inline memcpy!(a, b) = memcpy!(a, b, length(b))
+@inline memcpy!(a, b, n::Int64) = GC.@preserve a b memcpy!(pointer(a), pointer(b), n)
+@inline memcpy!(dst::Ptr, src::Ptr{T}, n::Int64) where {T} = memcpy!(Ptr{UInt8}(dst), Ptr{UInt8}(src), n*sizeof(T))
+@inline function memcpy!(dst::Ptr{UInt8}, src::Ptr{UInt8}, nbytes::Int64)
+    Base.llvmcall(("""
+    ; External declaration of the `malloc` function
+    ; Function Attrs: argmemonly nounwind
+    declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
+
+    ; Function Attrs: noinline nounwind ssp uwtable
+    define dso_local i32 @main(i8* %dest, i8* %src, i64 %nbytes) #1 {
+      call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dest, i8* %src, i64 %nbytes, i1 false)
+      ret i32 0
+    }
+
+    attributes #0 = { argmemonly nounwind }
+    attributes #1 = { noinline nounwind ssp uwtable }
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, dst, src, nbytes)
+end
+
 @inline system(s::AbstractMallocdMemory) = system(pointer(s))
 @inline system(s) = GC.@preserve s system(pointer(s))
 @inline function system(s::Ptr{UInt8})
