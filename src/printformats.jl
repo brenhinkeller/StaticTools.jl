@@ -59,14 +59,14 @@ end
 ## --- Printing to file
 
 # Top-level formats, single numbers
-function printf(fp::Ptr{FILE}, n::T) where T <: Union{Number, Ptr}
+@inline function printf(fp::Ptr{FILE}, n::T) where T <: Union{Number, Ptr}
     printf(fp, printfmt(T), n)
     newline(fp)
 end
 
 
 # Print a vector
-function printf(fp::Ptr{FILE}, v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(fp::Ptr{FILE}, v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     @inbounds GC.@preserve fmt for i ∈ eachindex(v)
@@ -77,7 +77,7 @@ function printf(fp::Ptr{FILE}, v::AbstractVector{T}) where T <: Union{Number, Pt
 end
 
 # Print a tuple
-function printf(fp::Ptr{FILE}, v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(fp::Ptr{FILE}, v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     putchar(fp, 0x28) # open paren
@@ -92,7 +92,7 @@ end
 
 
 # Print a 2d matrix
-function printf(fp::Ptr{FILE}, m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(fp::Ptr{FILE}, m::AbstractMatrix{T}) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)
     @inbounds GC.@preserve fmt for i ∈ axes(m,1)

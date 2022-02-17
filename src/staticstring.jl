@@ -36,10 +36,10 @@
     end
 
     # Custom printing
-    Base.print(s::StaticString) = printf(s)
-    Base.println(s::StaticString) = puts(s)
-    Base.print(fp::Ptr{FILE}, s::StaticString) = printf(fp, s)
-    Base.println(fp::Ptr{FILE}, s::StaticString) = puts(fp, s)
+    @inline Base.print(s::StaticString) = printf(s)
+    @inline Base.println(s::StaticString) = puts(s)
+    @inline Base.print(fp::Ptr{FILE}, s::StaticString) = printf(fp, s)
+    @inline Base.println(fp::Ptr{FILE}, s::StaticString) = puts(fp, s)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StaticString)
@@ -49,13 +49,13 @@
     end
 
     # Implement some of the AbstractArray interface:
-    Base.firstindex(s::StaticString) = 1
-    Base.lastindex(s::StaticString{N}) where N = N
-    Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
-    Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
-    Base.getindex(s::StaticString, ::Colon) = s
-    Base.setindex!(s::StaticString, x::UInt8, i::Int) = unsafe_store!(pointer(s)+(i-1), x)
-    Base.setindex!(s::StaticString, x, i::Int) = unsafe_store!(pointer(s)+(i-1), convert(UInt8, x))
+    @inline Base.firstindex(s::StaticString) = 1
+    @inline Base.lastindex(s::StaticString{N}) where N = N
+    @inline Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
+    @inline Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
+    @inline Base.getindex(s::StaticString, ::Colon) = s
+    @inline Base.setindex!(s::StaticString, x::UInt8, i::Int) = unsafe_store!(pointer(s)+(i-1), x)
+    @inline Base.setindex!(s::StaticString, x, i::Int) = unsafe_store!(pointer(s)+(i-1), convert(UInt8, x))
     @inline function Base.setindex!(s::StaticString, x, r::UnitRange{Int})
         is₀ = first(r)-1
         ix₀ = firstindex(x)-1
@@ -69,14 +69,14 @@
             setindex!(s, x[i+ix₀], i)
         end
     end
-    Base.copy(s::StaticString) = StaticString(codeunits(s))
+    @inline Base.copy(s::StaticString) = StaticString(codeunits(s))
 
 
     # Implement some of the AbstractString interface
-    Base.ncodeunits(s::StaticString{N}) where N = N
-    Base.codeunits(s::StaticString) = s.data
-    Base.codeunit(s::StaticString) = UInt8
-    Base.codeunit(s::StaticString, i::Integer) = s[i]
+    @inline Base.ncodeunits(s::StaticString{N}) where N = N
+    @inline Base.codeunits(s::StaticString) = s.data
+    @inline Base.codeunit(s::StaticString) = UInt8
+    @inline Base.codeunit(s::StaticString, i::Integer) = s[i]
     @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
         N = length(a) + length(b) - 1
         c = StaticString{N}(undef)

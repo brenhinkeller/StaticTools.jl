@@ -30,10 +30,10 @@
 
 
     # Fundamentals
-    Base.unsafe_convert(::Type{Ptr{T}}, m::MallocString) where {T} = Ptr{T}(s.pointer)
-    Base.pointer(s::MallocString) = s.pointer
-    Base.length(s::MallocString) = s.length
-    Base.sizeof(s::MallocString) = s.length
+    @inline Base.unsafe_convert(::Type{Ptr{T}}, m::MallocString) where {T} = Ptr{T}(s.pointer)
+    @inline Base.pointer(s::MallocString) = s.pointer
+    @inline Base.length(s::MallocString) = s.length
+    @inline Base.sizeof(s::MallocString) = s.length
     @inline function Base.:(==)(a::MallocString, b::MallocString)
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
@@ -56,10 +56,10 @@
 
 
     # Custom printing
-    Base.print(s::MallocString) = printf(s)
-    Base.println(s::MallocString) = puts(s)
-    Base.print(fp::Ptr{FILE}, s::MallocString) = printf(fp, s)
-    Base.println(fp::Ptr{FILE}, s::MallocString) = puts(fp, s)
+    @inline Base.print(s::MallocString) = printf(s)
+    @inline Base.println(s::MallocString) = puts(s)
+    @inline Base.print(fp::Ptr{FILE}, s::MallocString) = printf(fp, s)
+    @inline Base.println(fp::Ptr{FILE}, s::MallocString) = puts(fp, s)
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::MallocString)
@@ -69,13 +69,13 @@
     end
 
     # Some of the AbstractArray interface:
-    Base.firstindex(s::MallocString) = 1
-    Base.lastindex(s::MallocString) = s.length
-    Base.getindex(s::MallocString, i::Int) = unsafe_load(pointer(s)+(i-1))
-    Base.setindex!(s::MallocString, x::UInt8, i::Integer) = unsafe_store!(pointer(s)+(i-1), x)
-    Base.setindex!(s::MallocString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
-    Base.getindex(s::MallocString, r::UnitRange{<:Integer}) = MallocString(pointer(s)+first(r)-1, length(r))
-    Base.getindex(s::MallocString, ::Colon) = s
+    @inline Base.firstindex(s::MallocString) = 1
+    @inline Base.lastindex(s::MallocString) = s.length
+    @inline Base.getindex(s::MallocString, i::Int) = unsafe_load(pointer(s)+(i-1))
+    @inline Base.setindex!(s::MallocString, x::UInt8, i::Integer) = unsafe_store!(pointer(s)+(i-1), x)
+    @inline Base.setindex!(s::MallocString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
+    @inline Base.getindex(s::MallocString, r::UnitRange{<:Integer}) = MallocString(pointer(s)+first(r)-1, length(r))
+    @inline Base.getindex(s::MallocString, ::Colon) = s
     @inline function Base.setindex!(s::MallocString, x, r::UnitRange{<:Integer})
         is₀ = first(r)-1
         ix₀ = firstindex(x)-1
@@ -96,10 +96,10 @@
     end
 
     # Some of the AbstractString interface
-    Base.ncodeunits(s::MallocString) = s.length
-    Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) # TODO: return some sort of array
-    Base.codeunit(s::MallocString) = UInt8
-    Base.codeunit(s::MallocString, i::Integer) = s[i]
+    @inline Base.ncodeunits(s::MallocString) = s.length
+    @inline Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) # TODO: return some sort of array
+    @inline Base.codeunit(s::MallocString) = UInt8
+    @inline Base.codeunit(s::MallocString, i::Integer) = s[i]
     @inline function Base.:*(a::MallocString, b::MallocString)  # Concatenation
         N = length(a) + length(b) - 1
         c = MallocString(undef, N)
