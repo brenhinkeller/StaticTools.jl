@@ -81,20 +81,20 @@
         end
         return true
     end
-    # @inline function Base.:(==)(a::MallocArray, b)
-    #     (N = length(a)) == length(b) || return false
-    #     for n in 1:N
-    #         a[n] == b[n] || return false
-    #     end
-    #     return true
-    # end
-    # @inline function Base.:(==)(a, b::MallocArray)
-    #     (N = length(a)) == length(b) || return false
-    #     for n in 1:N
-    #         a[n] == b[n] || return false
-    #     end
-    #     return true
-    # end
+    @inline function Base.:(==)(a::MallocArray, b::NTuple{N, <:Number}) where N
+        N == length(a) || return false
+        for n in 1:N
+            a[n] == b[n] || return false
+        end
+        return true
+    end
+    @inline function Base.:(==)(a::NTuple{N, <:Number}, b::MallocArray) where N
+        N == length(b) || return false
+        for n in 1:N
+            a[n] == b[n] || return false
+        end
+        return true
+    end
 
 
     # TODO:

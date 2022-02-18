@@ -97,7 +97,7 @@
 
     # Some of the AbstractString interface
     @inline Base.ncodeunits(s::MallocString) = s.length
-    @inline Base.codeunits(s::MallocString) = MallocBuffer{UInt8}(s.pointer, s.length) # TODO: return some sort of array
+    @inline Base.codeunits(s::MallocString) = MallocVector{UInt8}(s.pointer, s.length)
     @inline Base.codeunit(s::MallocString) = UInt8
     @inline Base.codeunit(s::MallocString, i::Integer) = s[i]
     @inline function Base.:*(a::MallocString, b::MallocString)  # Concatenation

@@ -17,6 +17,7 @@
     @test codeunit(str, 5) == UInt8('o')
     @test ncodeunits(str) == length(str)
     @test codeunits(str) == codeunits(c"Hello, world! 🌍")
+    @test codeunits(c"Hello, world! 🌍") == codeunits(str)
 
     # Test mutability
     str[8] = 'W'
