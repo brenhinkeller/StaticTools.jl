@@ -102,3 +102,40 @@ shell> ./times_table 12, 7
 ```
 
 `MallocArray`s can be `reshape`d and `reinterpret`ed  without causing any new allocations. Unlike base `Array`s, `getindex` produces fast views by default when indexing memory-contiguous slices.
+```julia
+julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
+           argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
+           rows = parse(Int64, argv, 2)            # First command-line argument
+           cols = parse(Int64, argv, 3)            # Second command-line argument
+
+           M = MallocArray{Int64}(undef, rows, cols)
+           @inbounds for i=1:rows
+               for j=1:cols
+                   M[i,j] = i*j
+               end
+           end
+           printf(M)
+           M = reinterpret(Int32, M)
+           println(c"\n\nThe same array, reinterpreted as Int32:")
+           printf(M)
+           free(M)
+       end
+times_table (generic function with 1 method)
+
+julia> filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
+"/Users/user/times_table"
+
+shell> ./times_table 3 3
+1	2	3
+2	4	6
+3	6	9
+
+
+The same array, reinterpreted as Int32:
+1	2	3
+0	0	0
+2	4	6
+0	0	0
+3	6	9
+0	0	0
+```
