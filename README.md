@@ -100,3 +100,5 @@ shell> ./times_table 12, 7
 11  22  33  44  55  66  77
 12  24  36  48  60  72  84
 ```
+
+`MallocArray`s can be `reshape`d and `reinterpret`ed  without causing any new allocations. Unlike base `Array`s, `getindex` produces fast views by default when indexing memory-contiguous slices.
