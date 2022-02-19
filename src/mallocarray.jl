@@ -42,7 +42,6 @@
     @inline Base.sizeof(a::MallocArray{T}) where {T} = a.length * sizeof(T)
     @inline Base.size(a::MallocArray) = a.size
 
-
     # Some of the AbstractArray interface:
     @inline Base.IndexStyle(::MallocArray) = IndexLinear()
     @inline Base.stride(a::MallocArray, dim::Int) = (dim <= 1) ? 1 : stride(a, dim-1) * size(a, dim-1)
@@ -127,5 +126,9 @@
     end
 
 
-    # TODO:
-    # Base.copy(a::MallocArray)
+    # Reshaping and Reinterpreting
+    @inline function Base.reshape(a::MallocArray{T}, dims::Dims{N})  where {T,N}
+        @assert prod(dims) == length(a)
+        MallocArray{T,N}(pointer(a), dims)
+    end
+    @inline Base.reshape(a::MallocArray, dims::Vararg{Int}) = reshape(a, dims)

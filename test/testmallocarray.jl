@@ -34,6 +34,13 @@
     @test isa(B, MallocArray)
     @test A == B
     @test A !== B
+    C = reshape(A, 5, 4)
+    @test isa(C, MallocArray{Float64,2})
+    @test size(C) == (5,4)
+    A[2] = 7
+    @test C[2,1] == 7
+    A[7] = 2
+    @test C[2,2] == 2
 
     # Test other constructors
     C = similar(B)
