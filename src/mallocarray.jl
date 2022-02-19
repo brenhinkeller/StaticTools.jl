@@ -94,10 +94,23 @@
             setindex!(a, x[i+ix₀], i+is₀)
         end
     end
+    @inline function Base.setindex!(a::MallocArray{T}, x::Union{T,<:Number}, r::UnitRange{Int}) where T
+        xₜ = convert(T,x)
+        is₀ = first(r)-1
+        @inbounds for i = 1:length(r)
+            setindex!(a, xₜ, i+is₀)
+        end
+    end
     @inline function Base.setindex!(a::MallocArray, x, ::Colon)
         ix₀ = firstindex(x)-1
         @inbounds for i = 1:length(a)
             setindex!(a, x[i+ix₀], i)
+        end
+    end
+    @inline function Base.setindex!(a::MallocArray{T}, x::Union{T,<:Number}, ::Colon) where T
+        xₜ = convert(T,x)
+        @inbounds for i = 1:length(a)
+            setindex!(a, xₜ, i)
         end
     end
 
