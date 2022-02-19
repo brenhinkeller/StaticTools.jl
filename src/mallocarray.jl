@@ -131,3 +131,13 @@
         MallocArray{T,N}(pointer(a), dims)
     end
     @inline Base.reshape(a::MallocArray, dims::Vararg{Int}) = reshape(a, dims)
+
+    @inline function Base.reinterpret(::Type{Tᵣ}, a::MallocArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
+        @assert Base.allocatedinline(Tᵣ)
+        @assert length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
+        @assert size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
+        lengthᵣ = length(a)*sizeof(Tᵢ)÷sizeof(Tᵣ)
+        sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
+        pointerᵣ = Ptr{Tᵣ}(pointer(a))
+        MallocArray{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
+    end

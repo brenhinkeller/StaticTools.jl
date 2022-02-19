@@ -41,6 +41,14 @@
     @test C[2,1] == 7
     A[7] = 2
     @test C[2,2] == 2
+    A[1:end] = 5
+    @test C[2,2] == 5
+    A[:] = 0
+    @test all(C .=== 0.0)
+    C = reinterpret(Float16, C)
+    @test isa(C, MallocArray{Float16,2})
+    @test size(C) == (20,4)
+    @test all(C .=== Float16(0))
 
     # Test other constructors
     C = similar(B)
