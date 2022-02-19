@@ -7,7 +7,6 @@ module StaticTools
     struct FILE end # Plain struct to denote and dispatch on file pointers
 
     # Manual memory allocation
-    include("mallocbuffer.jl")  # 🎶 Manage your memory with malloc and free! 🎶
     include("mallocarray.jl")
 
     # String handling
@@ -16,7 +15,7 @@ module StaticTools
     include("mallocstring.jl")  # StaticCompiler-safe heap-allocated strings
 
     # Union of things that don't need GC.@protect
-    const AbstractMallocdMemory = Union{MallocString, MallocBuffer, MallocArray}
+    const AbstractMallocdMemory = Union{MallocString, MallocArray}
 
     # Here there be `llvmcall`s
     include("llvmio.jl")        # Best way to print things? LLVM IR obviously!
