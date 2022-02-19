@@ -69,3 +69,25 @@
     B[:,:,2] .= 5
     @test B[2,2,2] === 5
     @test free(B) == 0
+
+    B = MallocArray{Int64}(undef,2,2,2,2)
+    @test isa(B, MallocArray{Int64,4})
+    @test size(B) == (2,2,2,2)
+    @test length(B) == 16
+    @test stride(B,1) == 1
+    @test stride(B,2) == 2
+    @test stride(B,3) == 4
+    @test stride(B,4) == 8
+    @test stride(B,5) == 16
+    @test B[:,1,1,1] === B[:,1,1,1]
+    @test B[1:2,1,1,1] === B[1:2,1,1,1]
+    @test B[1:2,1,1,1] != B[1:3,1,1,1]
+    @test B[:,:,1,1] === B[:,:,1,1]
+    @test B[:,:,:,1] === B[:,:,:,1]
+    B[:,2,2,2] .= 7
+    @test B[2,2,2,2] === 7
+    B[:,:,2,2] .= 5
+    @test B[2,2,2,2] === 5
+    B[:,:,:,2] .= 3
+    @test B[2,2,2,2] === 3
+    @test free(B) == 0

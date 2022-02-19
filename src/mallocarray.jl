@@ -67,7 +67,15 @@
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+2)
         end
-        return MallocArray{T,2}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1), size(a,2)))
+        return MallocArray{T,2}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2), (size(a,1), size(a,2)))
+    end
+    @inline Base.getindex(a::MallocArray, ::Colon, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, :, inds)
+    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, ::Colon, inds::NTuple{N,Int}) where {T,N}
+        i0 = 0
+        for i=1:N
+            i0 += (inds[i]-1) * stride(a, i+3)
+        end
+        return MallocArray{T,3}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2)*size(a,3), (size(a,1), size(a,2), size(a,3)))
     end
 
     @inline Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
