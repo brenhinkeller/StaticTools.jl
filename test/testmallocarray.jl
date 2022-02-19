@@ -30,9 +30,14 @@
     @test A == ones(20)
     @test ones(20) == A
     @test A == A
+    B = copy(A)
+    @test isa(B, MallocArray)
+    @test A == B
+    @test A !== B
 
     # The end
     @test free(A) == 0
+    @test free(B) == 0
 
     # Text constructor in higher dims
     B = MallocMatrix{Float32}(undef, 10, 10)
@@ -58,4 +63,9 @@
     @test B[:,1,1] === B[:,1,1]
     @test B[1:2,1,1] === B[1:2,1,1]
     @test B[1:2,1,1] != B[1:3,1,1]
+    @test B[:,:,1] === B[:,:,1]
+    B[:,2,2] .= 7
+    @test B[2,2,2] === 7
+    B[:,:,2] .= 5
+    @test B[2,2,2] === 5
     @test free(B) == 0

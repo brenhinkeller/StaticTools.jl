@@ -29,6 +29,11 @@
     @inline Base.length(a::MallocArray) = a.length
     @inline Base.sizeof(a::MallocArray{T}) where {T} = a.length * sizeof(T)
     @inline Base.size(a::MallocArray) = a.size
+    @inline function Base.copy(a::MallocArray{T}) where T
+        new_a = MallocArray{T}(undef, size(a))
+        copyto!(new_a, a)
+        return new_a
+    end
 
     # Some of the AbstractArray interface:
     @inline Base.IndexStyle(::MallocArray) = IndexLinear()
@@ -47,6 +52,7 @@
         end
         return MallocArray{T,1}(pointer(a)+i0*sizeof(T), length(r), (length(r),))
     end
+
     @inline Base.getindex(a::MallocArray, ::Colon, inds::Vararg{Int}) = getindex(a, :, inds)
     @inline function Base.getindex(a::MallocArray{T}, ::Colon, inds::NTuple{N,Int}) where {T,N}
         i0 = 0
@@ -54,6 +60,14 @@
             i0 += (inds[i]-1) * stride(a, i+1)
         end
         return MallocArray{T,1}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1),))
+    end
+    @inline Base.getindex(a::MallocArray, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, inds)
+    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, inds::NTuple{N,Int}) where {T,N}
+        i0 = 0
+        for i=1:N
+            i0 += (inds[i]-1) * stride(a, i+2)
+        end
+        return MallocArray{T,2}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1), size(a,2)))
     end
 
     @inline Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
