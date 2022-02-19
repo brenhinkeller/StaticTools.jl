@@ -35,6 +35,28 @@
     @test A == B
     @test A !== B
 
+    # Test other constructors
+    C = similar(B)
+    @test isa(C, MallocArray{Float64,1})
+    @test isa(C[1], Float64)
+    @test length(C) == 20
+    @test size(C) == (20,)
+    @test free(C) == 0
+
+    C = similar(B, 10, 10)
+    @test isa(C, MallocArray{Float64,2})
+    @test isa(C[1], Float64)
+    @test length(C) == 100
+    @test size(C) == (10,10)
+    @test free(C) == 0
+
+    C = similar(B, Float32, 10)
+    @test isa(C, MallocArray{Float32,1})
+    @test isa(C[1], Float32)
+    @test length(C) == 10
+    @test size(C) == (10,)
+    @test free(C) == 0
+
     # The end
     @test free(A) == 0
     @test free(B) == 0

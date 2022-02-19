@@ -20,6 +20,18 @@
     @inline MallocArray{T,N}(x::MaybePointer, size::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(size), size)
     @inline MallocArray{T}(x::MaybePointer, size::Vararg{Int}) where {T} = MallocArray{T}(x, size)
 
+    # Indirect constructors
+    @inline Base.similar(a::MallocArray{T,N}) where {T,N} = MallocArray{T,N}(undef, size(a))
+    @inline Base.similar(a::MallocArray{T}, size::Dims{N}) where {T,N} = MallocArray{T,N}(undef, size)
+    @inline Base.similar(a::MallocArray{T}, size::Vararg{Int}) where {T} = MallocArray{T}(undef, size)
+    @inline Base.similar(a::MallocArray, ::Type{T}, size::Dims{N}) where {T,N} = MallocArray{T,N}(undef, size)
+    @inline Base.similar(a::MallocArray, ::Type{T}, size::Vararg{Int}) where {T} = MallocArray{T}(undef, size)
+    @inline function Base.copy(a::MallocArray{T,N}) where {T,N}
+        new_a = MallocArray{T,N}(undef, size(a))
+        copyto!(new_a, a)
+        return new_a
+    end
+
     # Destructor:
     @inline free(a::MallocArray) = free(a.pointer)
 
@@ -29,11 +41,7 @@
     @inline Base.length(a::MallocArray) = a.length
     @inline Base.sizeof(a::MallocArray{T}) where {T} = a.length * sizeof(T)
     @inline Base.size(a::MallocArray) = a.size
-    @inline function Base.copy(a::MallocArray{T}) where T
-        new_a = MallocArray{T}(undef, size(a))
-        copyto!(new_a, a)
-        return new_a
-    end
+
 
     # Some of the AbstractArray interface:
     @inline Base.IndexStyle(::MallocArray) = IndexLinear()
