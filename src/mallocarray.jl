@@ -9,23 +9,23 @@
     end
     const MallocMatrix{T} = MallocArray{T,2}
     const MallocVector{T} = MallocArray{T,1}
-    @inline function MallocArray{T,N}(::UndefInitializer, length::Int, size::NTuple{N, Int}) where {T,N}
+    @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
-        @assert length == prod(size)
+        @assert length == prod(dims)
         p = Ptr{T}(malloc(length*sizeof(T)))
-        MallocArray{T,N}(p, length, size)
+        MallocArray{T,N}(p, length, dims)
     end
-    @inline MallocArray{T,N}(x::MaybePointer, size::NTuple{N, Int}) where {T,N} = MallocArray{T,N}(x, prod(size), size)
-    @inline MallocArray{T}(x::MaybePointer, size::NTuple{N, Int}) where {T,N} = MallocArray{T,N}(x, prod(size), size)
-    @inline MallocArray{T,N}(x::MaybePointer, size::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(size), size)
-    @inline MallocArray{T}(x::MaybePointer, size::Vararg{Int}) where {T} = MallocArray{T}(x, size)
+    @inline MallocArray{T,N}(x::MaybePointer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T}(x::MaybePointer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T,N}(x::MaybePointer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T}(x::MaybePointer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
 
     # Indirect constructors
     @inline Base.similar(a::MallocArray{T,N}) where {T,N} = MallocArray{T,N}(undef, size(a))
-    @inline Base.similar(a::MallocArray{T}, size::Dims{N}) where {T,N} = MallocArray{T,N}(undef, size)
-    @inline Base.similar(a::MallocArray{T}, size::Vararg{Int}) where {T} = MallocArray{T}(undef, size)
-    @inline Base.similar(a::MallocArray, ::Type{T}, size::Dims{N}) where {T,N} = MallocArray{T,N}(undef, size)
-    @inline Base.similar(a::MallocArray, ::Type{T}, size::Vararg{Int}) where {T} = MallocArray{T}(undef, size)
+    @inline Base.similar(a::MallocArray{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
+    @inline Base.similar(a::MallocArray{T}, dims::Vararg{Int}) where {T} = MallocArray{T}(undef, dims)
+    @inline Base.similar(a::MallocArray, ::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
+    @inline Base.similar(a::MallocArray, ::Type{T}, dims::Vararg{Int}) where {T} = MallocArray{T}(undef, dims)
     @inline function Base.copy(a::MallocArray{T,N}) where {T,N}
         new_a = MallocArray{T,N}(undef, size(a))
         copyto!(new_a, a)
@@ -52,7 +52,7 @@
     @inline Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}) where T = MallocArray(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
 
     @inline Base.getindex(a::MallocArray, r::UnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
-    @inline function Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}, inds::NTuple{N,Int}) where {T,N}
+    @inline function Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}, inds::Dims{N}) where {T,N}
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
@@ -61,7 +61,7 @@
     end
 
     @inline Base.getindex(a::MallocArray, ::Colon, inds::Vararg{Int}) = getindex(a, :, inds)
-    @inline function Base.getindex(a::MallocArray{T}, ::Colon, inds::NTuple{N,Int}) where {T,N}
+    @inline function Base.getindex(a::MallocArray{T}, ::Colon, inds::Dims{N}) where {T,N}
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
@@ -69,7 +69,7 @@
         return MallocArray{T,1}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1),))
     end
     @inline Base.getindex(a::MallocArray, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, inds)
-    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, inds::NTuple{N,Int}) where {T,N}
+    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, inds::Dims{N}) where {T,N}
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+2)
@@ -77,7 +77,7 @@
         return MallocArray{T,2}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2), (size(a,1), size(a,2)))
     end
     @inline Base.getindex(a::MallocArray, ::Colon, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, :, inds)
-    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, ::Colon, inds::NTuple{N,Int}) where {T,N}
+    @inline function Base.getindex(a::MallocArray{T}, ::Colon, ::Colon, ::Colon, inds::Dims{N}) where {T,N}
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+3)
@@ -124,7 +124,6 @@
         end
         return true
     end
-
 
     # Reshaping and Reinterpreting
     @inline function Base.reshape(a::MallocArray{T}, dims::Dims{N})  where {T,N}
