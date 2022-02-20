@@ -154,3 +154,9 @@
         pointerᵣ = Ptr{Tᵣ}(pointer(a))
         MallocArray{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
     end
+
+    # Custom printing
+    @inline Base.print(a::MallocArray) = printf(a)
+    @inline Base.println(a::MallocArray) = (printf(a); newline())
+    @inline Base.print(fp::Ptr{FILE}, a::MallocArray) = printf(fp, a)
+    @inline Base.println(fp::Ptr{FILE}, a::MallocArray) = (printf(fp, a); newline(fp))
