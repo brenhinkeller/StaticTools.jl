@@ -1,4 +1,5 @@
-@inline function malloc(size::Int)
+@inline malloc(size::Integer) = malloc(Int64(size))
+@inline function malloc(size::Int64)
     Base.llvmcall(("""
     ; External declaration of the `malloc` function
     declare i8* @malloc(i64)
@@ -10,7 +11,22 @@
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int}, size)
+    """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
+end
+@inline malloc(size::Unsigned) = malloc(UInt64(size))
+@inline function malloc(size::UInt64)
+    Base.llvmcall(("""
+    ; External declaration of the `malloc` function
+    declare i8* @malloc(i64)
+
+    ; Function Attrs: noinline nounwind optnone ssp uwtable
+    define dso_local i8* @main(i64 %size) #0 {
+      %ptr = call i8* (i64) @malloc(i64 %size)
+      ret i8* %ptr
+    }
+
+    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
 end
 
 
@@ -151,6 +167,31 @@ end
     """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
+@inline function strtoul(s::AbstractMallocdMemory)
+    pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
+    num = GC.@preserve pbuf strtoul(pointer(s), pointer(pbuf))
+    return num, pbuf
+end
+@inline function strtoul(s)
+    pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
+    num = GC.@preserve s pbuf strtoul(pointer(s), pointer(pbuf))
+    return num, pbuf
+end
+@inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
+    Base.llvmcall(("""
+    ; External declaration of the `strtoul` function
+    declare i64 @strtoul(i8*, i8**, i32)
+
+    ; Function Attrs: noinline nounwind optnone ssp uwtable
+    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+      %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
+      ret i64 %li
+    }
+
+    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    """, "main"), UInt64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
+end
+
 
 @inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
     num, pbuf = strtod(s)
@@ -165,5 +206,11 @@ end
 end
 @inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Integer} = T(parse(Int64, s))
 
-# Convenient parsing for argv
+@inline function Base.parse(::Type{UInt64}, s::Union{StaticString, MallocString})
+    num, pbuf = strtoul(s)
+    return num
+end
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Unsigned} = T(parse(UInt64, s))
+
+# Convenient parsing for argv (slight type piracy)
 @inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))

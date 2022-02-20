@@ -19,6 +19,7 @@
     @test parse(Int8, c"123") === Int8(123)
 
     # Unsigned Integers (via strtol)
+    @test parse(UInt64, c"18446744073709551615") === 0xffffffffffffffff
     @test parse(UInt64, c"123") === UInt64(123)
     @test parse(UInt32, c"123") === UInt32(123)
     @test parse(UInt16, c"123") === UInt16(123)
