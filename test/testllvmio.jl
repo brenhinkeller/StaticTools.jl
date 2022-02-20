@@ -93,13 +93,19 @@
     @test printf(m"%s \n", str) >= 0
     show(str)
 
+## --- Printing errors
+
+    @test error(c"This is a test\n") == 0
+    msg = m"This is a test\n"
+    @test error(msg) == 0
+    free(msg)
 
 ## --- Libc functions that just happen to print
 
-    m = m"pwd"
-    @test StaticTools.system(m) == 0
+    msg = m"pwd"
+    @test StaticTools.system(msg) == 0
     @test StaticTools.system(c"pwd") == 0
-    free(m)
+    free(msg)
 
 ## ---  Wrap up
 

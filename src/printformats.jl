@@ -104,3 +104,21 @@ end
     end
     return zero(Int32)
 end
+
+## -- Print errors
+
+@inline Base.error(s::Union{StaticString,MallocString}) = (perror(c"ERROR: "); perror(s))
+@inline perror(s::MallocString) = perror(pointer(s))
+@inline perror(s::StaticString) = GC.@preserve s perror(pointer(s))
+@inline function perror(s::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the fprintf function
+    declare i32 @fprintf(i8*, i8*)
+
+    define i32 @main(i8* %fp, i8* %str) {
+    entry:
+        %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
+        ret i32 0
+    }
+    """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, stderrp(), s)
+end
