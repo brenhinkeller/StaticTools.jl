@@ -8,6 +8,7 @@ module StaticTools
 
     # Manual memory allocation
     include("mallocarray.jl")
+    include("staticrng.jl")
 
     # String handling
     include("unescape.jl")      # You don't want to know
