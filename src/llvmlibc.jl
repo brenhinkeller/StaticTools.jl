@@ -51,6 +51,19 @@ end
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, dst, src, nbytes)
 end
 
+@inline function time()
+    Base.llvmcall(("""
+    ; External declaration of the `time` function
+    declare i64 @time(i64*)
+
+    ; Function Attrs: noinline nounwind optnone ssp uwtable
+    define dso_local i64 @main() {
+      %time = call i64 @time(i64* null)
+      ret i64 %time
+    }
+    """, "main"), Int64, Tuple{}, size)
+end
+
 @inline system(s::AbstractMallocdMemory) = system(pointer(s))
 @inline system(s) = GC.@preserve s system(pointer(s))
 @inline function system(s::Ptr{UInt8})

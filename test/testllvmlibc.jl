@@ -8,3 +8,6 @@
     @test StaticTools.memcpy!(a, ones(100)) == 0
     @test a == ones(100)
     free(a)
+
+    @test isa(StaticTools.time(), Int64)
+    @test StaticTools.time() > 10^9
