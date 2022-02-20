@@ -1,6 +1,6 @@
 # Test parsing strings as numbers!
 
-    # `Base.parse` is the frontend, but strtol and strtod are the backend
+    # `Base.parse` is the frontend, but strtod, strotol, and strtoul are the backend
     # Test basic methods for both of our string types
     m = m"123456789" # MallocString
     @test parse(Float64, c"123456789") === 123456789.0
@@ -9,6 +9,9 @@
     @test parse(Int64, c"123456789") === 123456789
     @test parse(Int64, m) === 123456789
     @test parse(Int64, MallocString(pointer(m))) === 123456789
+    @test parse(UInt64, c"123456789") === 0x00000000075bcd15
+    @test parse(UInt64, m) === 0x00000000075bcd15
+    @test parse(UInt64, MallocString(pointer(m))) === 0x00000000075bcd15
     free(m)
 
     # Signed Integers (via strtol)

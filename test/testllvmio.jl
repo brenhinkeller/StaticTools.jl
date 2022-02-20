@@ -94,9 +94,15 @@
     show(str)
 
 
-## ---
+## --- Libc functions that just happen to print
 
-    # Wrap up
+    m = m"pwd"
+    @test StaticTools.system(m) == 0
+    @test StaticTools.system(c"pwd") == 0
+    free(m)
+
+## ---  Wrap up
+
     @test newline() == 0
     @test newline(fp) == 0
     @test StaticTools.system(c"echo Enough printing for now!") == 0
