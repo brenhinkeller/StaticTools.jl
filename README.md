@@ -12,6 +12,11 @@ Caution: this package should be considered experimental at present, and involves
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
+In addition to the exported names, Julia `Base` functions extended for StaticTools types (`StaticString`, `MallocString`, and `MallocArray`) include:
+* `print`, `println`, `error`,
+* `parse`,
+* and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
+
 ### Examples
 ```julia
 # This is all StaticCompiler-friendly
