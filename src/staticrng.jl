@@ -1,24 +1,38 @@
-# Constructors
-mutable struct StaticRNG{T}
-    state::NTuple
-    @inline function StaticRNG{T}(state::NTuple) where {T}
-        new{T}(state)
-    end
+# General
+const Bits64 = Union{Int64, UInt64, Float64}
+abstract type StaticRNG end
+@inline Base.pointer(x::StaticRNG) = Ptr{UInt64}(Base.pointer_from_objref(x))
+@inline static_rng(seed=time()) = Xoshiro256✴︎✴︎(seed)
+
+# SplitMix64
+mutable struct SplitMix64{T<:Bits64} <: StaticRNG
+    state::NTuple{1,T}
 end
-struct Xoshiro256✴︎✴︎ end
+@inline SplitMix64(seed::Bits64=time()) = SplitMix64((seed,))
+@inline Base.rand(rng::SplitMix64) = splitmix64(rng)/typemax(UInt64)
+@inline splitmix64(rng::SplitMix64=SplitMix64()) = GC.@preserve rng splitmix64(pointer(rng))
+@inline function splitmix64(state::Ptr{UInt64})
+    s = unsafe_load(state)
+    s += 0x9e3779b97f4a7c15
+    unsafe_store!(state, s)
+    z = s
+    z = (z ⊻ (z >> 30)) * 0xbf58476d1ce4e5b9
+    z = (z ⊻ (z >> 27)) * 0x94d049bb133111eb
+    return z ⊻ (z >> 31)
+end
 
-@inline static_rng(seed=time()) = StaticRNG{Xoshiro256✴︎✴︎}((1*seed, 2*seed, 3*seed, 4*seed))
-
-@inline Base.rand(rng::StaticRNG{Xoshiro256✴︎✴︎}) = xoshiro256✴︎✴︎(rng)/typemax(UInt64)
-# @inline Random.rand!(rng::StaticRNG, A::AbstractArray)
-#     @inbounds for i ∈ A
-#         A[i] = rand(rng)
-#     end
-# end
-
+# Xoshiro256✴︎✴︎
+mutable struct Xoshiro256✴︎✴︎{T<:Bits64} <: StaticRNG
+    state::NTuple{4,T}
+end
+@inline function Xoshiro256✴︎✴︎(seed::Bits64=time())
+    rng = SplitMix64(seed)
+    Xoshiro256✴︎✴︎((rand(rng),rand(rng),rand(rng),rand(rng)))
+end
+@inline Base.rand(rng::Xoshiro256✴︎✴︎) = xoshiro256✴︎✴︎(rng)/typemax(UInt64)
 # Xoshiro256✴︎✴︎ PRNG implemented in LLVM IR
-@inline xoshiro256✴︎✴︎(rng::StaticRNG) = GC.@preserve rng xoshiro256✴︎✴︎(Ptr{Int64}(pointer_from_objref(rng)))
-@inline function xoshiro256✴︎✴︎(state::Ptr{Int64})
+@inline xoshiro256✴︎✴︎(rng::Xoshiro256✴︎✴︎) = GC.@preserve rng xoshiro256✴︎✴︎(pointer(rng))
+@inline function xoshiro256✴︎✴︎(state::Ptr{UInt64})
     Base.llvmcall(("""
     ; Function Attrs: noinline nounwind ssp uwtable
     define i64 @next(i64*) #0 {
@@ -107,5 +121,5 @@ struct Xoshiro256✴︎✴︎ end
     }
 
     attributes #0 = { noinline nounwind ssp uwtable }
-    """, "next"), UInt64, Tuple{Ptr{Int64}}, state)
+    """, "next"), UInt64, Tuple{Ptr{UInt64}}, state)
 end

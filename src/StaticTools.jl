@@ -35,6 +35,6 @@ module StaticTools
     export newline, putchar, puts, printf
     export stdinp, stdoutp, stderrp, fopen, fclose # File pointers
     export unsafe_mallocstring, strlen, free
-    export static_rng, StaticRNG, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎
+    export static_rng, StaticRNG, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64
 
 end
