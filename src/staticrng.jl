@@ -2,13 +2,13 @@
 const Bits64 = Union{Int64, UInt64, Float64}
 abstract type StaticRNG end
 @inline Base.pointer(x::StaticRNG) = Ptr{UInt64}(Base.pointer_from_objref(x))
-@inline static_rng(seed=time()) = Xoshiro256✴︎✴︎(seed)
+@inline static_rng(seed=StaticTools.time()) = Xoshiro256✴︎✴︎(seed)
 
 # SplitMix64
 mutable struct SplitMix64{T<:Bits64} <: StaticRNG
     state::NTuple{1,T}
 end
-@inline SplitMix64(seed::Bits64=time()) = SplitMix64((seed,))
+@inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
 @inline Base.rand(rng::SplitMix64) = splitmix64(rng)/typemax(UInt64)
 @inline splitmix64(rng::SplitMix64=SplitMix64()) = GC.@preserve rng splitmix64(pointer(rng))
 @inline function splitmix64(state::Ptr{UInt64})
