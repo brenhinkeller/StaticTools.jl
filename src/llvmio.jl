@@ -148,6 +148,39 @@ end
 newline() = putchar(0x0a)
 newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
 
+## --- getchar / getc
+
+
+function getchar()
+    Base.llvmcall(("""
+    ; External declaration of the fgetc function
+    declare i32 @getchar()
+
+    define i8 @main() {
+    entry:
+        %result = call i32 @getchar()
+        %c = trunc i32 %result to i8
+        ret i8 %c
+    }
+    """, "main"), UInt8, Tuple{})
+end
+
+
+function getchar(fp::Ptr{FILE})
+    Base.llvmcall(("""
+    ; External declaration of the fgetc function
+    declare i32 @fgetc(i8*)
+
+    define i8 @main(i8* %fp) {
+    entry:
+        %result = call i32 (i8*) @fgetc(i8* %fp)
+        %c = trunc i32 %result to i8
+        ret i8 %c
+    }
+    """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
+end
+
+
 ## --- The old reliable: puts/fputs
 
 puts(s::AbstractMallocdMemory) = puts(pointer(s))

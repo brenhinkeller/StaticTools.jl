@@ -10,10 +10,11 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test stdinp() == fp != 0
 
-    name, mode = m"testfile.txt", m"w"
+    name, mode = m"testfile.txt", m"r"
     fp = fopen(name, mode)
     @test isa(fp, Ptr{StaticTools.FILE})
     @test fp != 0
+    @test getchar(fp) === UInt8('1')
     @test fclose(fp) == 0
     @test free(name) == 0
     @test free(mode) == 0
