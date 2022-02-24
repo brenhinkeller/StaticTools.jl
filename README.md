@@ -15,6 +15,7 @@ The stack-allocated statically-sized `StaticString`s in this package are heavily
 In addition to the exported names, Julia `Base` functions extended for StaticTools types (`StaticString`, `MallocString`, and `MallocArray`) include:
 * `print`, `println`, `error`,
 * `parse`,
+* `rand` (when using an `rng` initialied with `static_rng()`, `SplitMix64()`, or `Xoshiro256✴︎✴︎()` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
 ### Examples
