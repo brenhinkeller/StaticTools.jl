@@ -170,12 +170,14 @@ end
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
 
-        define i8 @main(i8* %fp) {
+        define dso_local i8 @main(i8* %fp) #0 {
         entry:
             %result = call i32 (i8*) @fgetc(i8* %fp)
             %c = trunc i32 %result to i8
             ret i8 %c
         }
+
+        attributes #0 = { nounwind uwtable }
         """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
     end
 

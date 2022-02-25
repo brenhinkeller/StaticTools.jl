@@ -10,6 +10,12 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test stdinp() == fp != 0
 
+    fp = fopen(c"testfile.txt", c"w")
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test fp != 0
+    @test putchar(fp, '1') == 0
+    @test fclose(fp) == 0
+
     name, mode = m"testfile.txt", m"r"
     fp = fopen(name, mode)
     @test isa(fp, Ptr{StaticTools.FILE})
