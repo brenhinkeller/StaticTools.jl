@@ -153,7 +153,7 @@ newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
 
 function getchar()
     Base.llvmcall(("""
-    ; External declaration of the fgetc function
+    ; External declaration of the getchar function
     declare i32 @getchar()
 
     define i8 @main() {
@@ -168,12 +168,12 @@ end
 
 function getchar(fp::Ptr{FILE})
     Base.llvmcall(("""
-    ; External declaration of the fgetc function
-    declare i32 @fgetc(i8*)
+    ; External declaration of the getc function
+    declare i32 @getc(i8*)
 
     define i8 @main(i8* %fp) {
     entry:
-        %result = call i32 (i8*) @fgetc(i8* %fp)
+        %result = call i32 (i8*) @getc(i8* %fp)
         %c = trunc i32 %result to i8
         ret i8 %c
     }
