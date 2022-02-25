@@ -116,14 +116,12 @@ end
 end
 
 
-@inline function strtod(s::AbstractMallocdMemory)
+
+@inline strtod(s::AbstractMallocdMemory) = strtod(pointer(s))
+@inline strtod(s) = GC.@preserve s strtod(pointer(s))
+@inline function strtod(p::Ptr{UInt8})
     pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve pbuf strtod(pointer(s), pointer(pbuf))
-    return num, pbuf
-end
-@inline function strtod(s)
-    pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve s pbuf strtod(pointer(s), pointer(pbuf))
+    num = GC.@preserve pbuf strtod(p, pointer(pbuf))
     return num, pbuf
 end
 @inline function strtod(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
@@ -142,17 +140,14 @@ end
 end
 
 
-@inline function strtol(s::AbstractMallocdMemory)
+@inline strtol(s::AbstractMallocdMemory) = strtol(pointer(s))
+@inline strtol(s) = GC.@preserve s strtol(pointer(s))
+@inline function strtol(p::Ptr{UInt8}, base::Int32=Int32(10))
     pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve pbuf strtol(pointer(s), pointer(pbuf))
+    num = GC.@preserve pbuf strtol(p, pointer(pbuf), base)
     return num, pbuf
 end
-@inline function strtol(s)
-    pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve s pbuf strtol(pointer(s), pointer(pbuf))
-    return num, pbuf
-end
-@inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
+@inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
     declare i64 @strtol(i8*, i8**, i32)
@@ -167,17 +162,14 @@ end
     """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
-@inline function strtoul(s::AbstractMallocdMemory)
+@inline strtoul(s::AbstractMallocdMemory) = strtoul(pointer(s))
+@inline strtoul(s) = GC.@preserve s strtoul(pointer(s))
+@inline function strtoul(p::Ptr{UInt8}, base::Int32=Int32(10))
     pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve pbuf strtoul(pointer(s), pointer(pbuf))
+    num = GC.@preserve pbuf strtoul(p, pointer(pbuf), base)
     return num, pbuf
 end
-@inline function strtoul(s)
-    pbuf = MemoryBuffer{1,Ptr{UInt8}}(undef)
-    num = GC.@preserve s pbuf strtoul(pointer(s), pointer(pbuf))
-    return num, pbuf
-end
-@inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32=Int32(10))
+@inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
     Base.llvmcall(("""
     ; External declaration of the `strtoul` function
     declare i64 @strtoul(i8*, i8**, i32)
@@ -193,24 +185,24 @@ end
 end
 
 
-@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
     num, pbuf = strtod(s)
     load(pointer(pbuf)) == Ptr{UInt8}(0) && return NaN
     return num
 end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: AbstractFloat} = T(parse(Float64, s))
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: AbstractFloat} = T(parse(Float64, s))
 
-@inline function Base.parse(::Type{Int64}, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{Int64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
     num, pbuf = strtol(s)
     return num
 end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Integer} = T(parse(Int64, s))
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: Integer} = T(parse(Int64, s))
 
-@inline function Base.parse(::Type{UInt64}, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{UInt64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
     num, pbuf = strtoul(s)
     return num
 end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString}) where {T <: Unsigned} = T(parse(UInt64, s))
+@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: Unsigned} = T(parse(UInt64, s))
 
 # Convenient parsing for argv (slight type piracy)
 @inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
