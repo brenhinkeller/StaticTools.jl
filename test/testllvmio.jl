@@ -140,13 +140,17 @@
         @test strlen(str) == 2
         @test str[1] == UInt8('1')
         @test free(str) == 0
+        @test frewind(fp) == 0
+        
+        @test getc(fp) === Int32('1')
+        @test getc(fp) === Int32('\n')
+
         @test fclose(fp) == 0
     end
-    fp = fopen(name, mode)
-    @static if fp != 0 && Sys.isapple()
-        @test getchar(fp) === UInt8('1')
-        @test getchar(fp) === UInt8('\n')
-        @test fclose(fp) == 0
-    end
+    # @static if fp != 0 && Sys.isapple()
+    #     @test getchar(fp) === UInt8('1')
+    #     @test getchar(fp) === UInt8('\n')
+    #     @test fclose(fp) == 0
+    # end
     @test free(name) == 0
     @test free(mode) == 0

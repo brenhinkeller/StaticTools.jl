@@ -31,6 +31,7 @@
     end
 
     # Seek in a file
+    frewind(fp::Ptr{FILE}) = fseek(fp, 0, SEEK_SET)
     function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
         Base.llvmcall(("""
         ; External declaration of the fseek function
@@ -183,21 +184,37 @@ end
         """, "main"), UInt8, Tuple{})
     end
 
-    function getchar(fp::Ptr{FILE})
+    # function getchar(fp::Ptr{FILE})
+    #     Base.llvmcall(("""
+    #     ; External declaration of the fgetc function
+    #     declare i32 @fgetc(i8*)
+    #
+    #     define dso_local i8 @main(i8* %fp) #0 {
+    #     entry:
+    #         %result = call i32 (i8*) @fgetc(i8* %fp)
+    #         %c = trunc i32 %result to i8
+    #         ret i8 %c
+    #     }
+    #
+    #     attributes #0 = { nounwind uwtable }
+    #     """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
+    # end
+
+    function getc(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
 
-        define dso_local i8 @main(i8* %fp) #0 {
+        define dso_local i32 @main(i8* %fp) #0 {
         entry:
-            %result = call i32 (i8*) @fgetc(i8* %fp)
-            %c = trunc i32 %result to i8
-            ret i8 %c
+            %c = call i32 (i8*) @fgetc(i8* %fp)
+            ret i32 %c
         }
 
         attributes #0 = { nounwind uwtable }
-        """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
+        """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
+    const EOF = Int32(-1)
 
 
 ## --- The old reliable: puts/fputs
