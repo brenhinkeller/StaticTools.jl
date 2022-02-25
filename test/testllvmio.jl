@@ -13,17 +13,7 @@
     fp = fopen(c"testfile.txt", c"w")
     @test isa(fp, Ptr{StaticTools.FILE})
     @test fp != 0
-    @test putchar(fp, '1') == 0
     @test fclose(fp) == 0
-
-    name, mode = m"testfile.txt", m"r"
-    fp = fopen(name, mode)
-    @test isa(fp, Ptr{StaticTools.FILE})
-    @test fp != 0
-    @test getchar(fp) === UInt8('1')
-    @test fclose(fp) == 0
-    @test free(name) == 0
-    @test free(mode) == 0
 
 
 ## -- Test low-level printing functions on a variety of arguments
@@ -133,3 +123,26 @@
     @test newline(fp) == 0
     @test StaticTools.system(c"echo Enough printing for now!") == 0
     @test fclose(fp) == 0
+
+## -- Reading from files
+
+    name, mode = m"testfile.txt", m"r"
+    fp = fopen(name, mode)
+    @test isa(fp, Ptr{StaticTools.FILE})
+    @test fp != 0
+    @static if fp != 0
+        str = MallocString(undef, 100)
+        @test gets!(str, fp) != C_NULL
+        @test strlen(str) == 2
+        @test str[1] == UInt8('1')
+        @test free(str) == 0
+        @test fclose(fp) == 0
+    end
+    fp = fopen(name, mode)
+    @static if fp != 0 && Sys.isapple()
+        @test getchar(fp) === UInt8('1')
+        @test getchar(fp) === UInt8('\n')
+        @test fclose(fp) == 0
+    end
+    @test free(name) == 0
+    @test free(mode) == 0

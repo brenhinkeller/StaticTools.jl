@@ -215,6 +215,24 @@ end
         newline(fp) # puts appends `\n`, but fputs doesn't (!)
     end
 
+## --- gets/fgets
+
+    function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+        Base.llvmcall(("""
+        ; External declaration of the gets function
+        declare i8* @fgets(i8*, i32, i8*)
+
+        define i8* @main(i8* %str, i8* %fp, i32 %n) #0 {
+        entry:
+            %status = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
+            ret i8* %status
+        }
+
+        attributes #0 = { noinline nounwind ssp uwtable }
+        """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Ptr{FILE}, Int32}, pointer(s), fp, n % Int32)
+    end
+
+
 ## --- printf/fprintf, just a string
 
     printf(s::MallocString) = printf(pointer(s))

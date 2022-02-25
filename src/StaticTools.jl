@@ -33,7 +33,7 @@ module StaticTools
     # Functions
     export malloc, free
     export newline, putchar, puts, printf
-    export getchar
+    export getchar, gets!
     export stdinp, stdoutp, stderrp, fopen, fclose # File pointers
     export unsafe_mallocstring, strlen, free
     export static_rng, StaticRNG, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64
