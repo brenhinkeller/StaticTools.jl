@@ -30,6 +30,24 @@
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
 
+    # Seek in a file
+    function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
+        Base.llvmcall(("""
+        ; External declaration of the fseek function
+        declare i32 @fseek(i8*, i64, i32)
+
+        define i32 @main(i8* %fp, i64 %offset, i32 %whence) {
+        entry:
+            %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
+            ret i32 %status
+        }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Int64, Int32}, fp, offset, whence)
+    end
+    const SEEK_SET = Int32(0)
+    const SEEK_CUR = Int32(1)
+    const SEEK_END = Int32(2)
+
+
 ## -- stdio pointers
 
     # Get pointer to stdout

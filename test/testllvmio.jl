@@ -135,6 +135,10 @@
         @test gets!(str, fp) != C_NULL
         @test strlen(str) == 2
         @test str[1] == UInt8('1')
+        @test fseek(fp, -2, SEEK_CUR) == 0
+        @test gets!(str, fp) != C_NULL
+        @test strlen(str) == 2
+        @test str[1] == UInt8('1')
         @test free(str) == 0
         @test fclose(fp) == 0
     end
