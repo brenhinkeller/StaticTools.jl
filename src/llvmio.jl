@@ -165,35 +165,19 @@ end
         """, "main"), UInt8, Tuple{})
     end
 
-@static if Sys.isapple()
     function getchar(fp::Ptr{FILE})
         Base.llvmcall(("""
-        ; External declaration of the getc function
-        declare i32 @getc(i8*)
+        ; External declaration of the fgetc function
+        declare i32 @fgetc(i8*)
 
         define i8 @main(i8* %fp) {
         entry:
-            %result = call i32 (i8*) @getc(i8* %fp)
+            %result = call i32 (i8*) @fgetc(i8* %fp)
             %c = trunc i32 %result to i8
             ret i8 %c
         }
         """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
     end
-else
-    function getchar(fp::Ptr{FILE})
-        Base.llvmcall(("""
-        ; External declaration of the getc function
-        declare i32 @_IO_getc(i8*)
-
-        define i8 @main(i8* %fp) {
-        entry:
-            %result = call i32 (i8*) @_IO_getc(i8* %fp)
-            %c = trunc i32 %result to i8
-            ret i8 %c
-        }
-        """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
-    end
-end
 
 
 ## --- The old reliable: puts/fputs
