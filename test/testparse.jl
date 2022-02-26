@@ -53,3 +53,15 @@
     argv = pointer(a)
     @test parse(Int64, argv, 1) === 1
     @test parse(Float64, argv, 2) === 2.0
+
+
+## --- Test parsedlm
+
+    fp = fopen(c"testfile.tsv", c"w")
+    m = (1:10) * (1:10)'
+    @test printf(fp, m) == 0
+    @test fclose(fp) == 0
+
+    m_parsed = parsedlm(Float64, c"testfile.tsv", '\t')
+    @test isa(m_parsed, MallocMatrix)
+    @test m_parsed == m

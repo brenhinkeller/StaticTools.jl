@@ -22,21 +22,20 @@ module StaticTools
     include("llvmio.jl")        # Best way to print things? LLVM IR obviously!
     include("llvmlibc.jl")      # strtod, strtol, parse, etc...
 
-    # higher-level printing
+    # higher-level printing, parsing, etc.
     include("printformats.jl")
-
+    include("parsedlm.jl")
 
     # Types
     export StaticString, MallocString, MallocArray, MallocMatrix, MallocVector
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export malloc, free
-    export newline, putchar, puts, printf
-    export getchar, getc, gets!
-    export stdinp, stdoutp, stderrp # File pointers
-    export fopen, fclose, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END
-    export unsafe_mallocstring, strlen, free
-    export static_rng, StaticRNG, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64
-
+    export malloc, free                                                         # Memory management
+    export stdinp, stdoutp, stderrp                                             # File pointers
+    export fopen, fclose, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END          # File open, close, seek
+    export newline, putchar, getchar, getc, puts, gets!, printf                 # Char & String IO
+    export unsafe_mallocstring, strlen                                          # String management
+    export parsedlm                                                             # File parsing
+    export static_rng, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64       # Random number generation
 end

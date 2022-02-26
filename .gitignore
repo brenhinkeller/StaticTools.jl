@@ -1,6 +1,7 @@
 .DS_Store
 Manifest.toml
 testfile.txt
+testfile.tsv
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
