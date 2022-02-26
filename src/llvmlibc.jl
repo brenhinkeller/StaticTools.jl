@@ -185,9 +185,14 @@ end
 end
 
 
-@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
+@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
     num, pbuf = strtod(s)
-    load(pointer(pbuf)) == Ptr{UInt8}(0) && return NaN
+    load(pointer(pbuf)) == pointer(s) && return NaN
+    return num
+end
+@inline function Base.parse(::Type{Float64}, s::Ptr{UInt8})
+    num, pbuf = strtod(s)
+    load(pointer(pbuf)) == s && return NaN
     return num
 end
 @inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: AbstractFloat} = T(parse(Float64, s))

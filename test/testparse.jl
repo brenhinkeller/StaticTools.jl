@@ -45,6 +45,7 @@
     @test parse(Float64, c"3 4 5") === 3.0
     @test parse(Float64, c"3asdfasdf") === 3.0
     @test parse(Float64, c"3 4 5") === 3.0
+    @test parse(Float64, c"asdfasdf") === NaN
 
 
     # Test parsing from Ptr{Ptr{UInt8}} as in argv
