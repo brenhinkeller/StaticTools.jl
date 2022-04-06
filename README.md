@@ -129,7 +129,7 @@ julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
 times_table (generic function with 1 method)
 
 julia> filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
-"/Users/user/times_table"
+"/Users/user/code/StaticTools.jl/times_table"
 
 shell> ./times_table 3 3
 1	2	3
@@ -144,4 +144,34 @@ The same array, reinterpreted as Int32:
 0	0	0
 3	6	9
 0	0	0
+```
+
+We also have random number generators:
+```julia
+julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
+          argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
+          rows = parse(Int64, argv, 2)            # First command-line argument
+          cols = parse(Int64, argv, 3)            # Second command-line argument
+
+          M = MallocArray{Float64}(undef, rows, cols)
+          rng = static_rng()
+          @inbounds for i=1:rows
+              for j=1:cols
+                  M[i,j] = rand(rng)
+              end
+          end
+          printf(M)
+          free(M)
+       end
+rand_matrix (generic function with 1 method)
+
+julia> compile_executable(rand_matrix, (Int64, Ptr{Ptr{UInt8}}), "./")
+"/Users/user/code/StaticTools.jl/rand_matrix"
+
+shell> ./rand_matrix 5 5
+7.890932e-01    7.532989e-01    8.593202e-01    4.790301e-01    6.464508e-01
+5.619692e-01    9.800402e-02    8.545220e-02    5.545224e-02    2.966089e-01
+7.021460e-01    4.587692e-01    9.316740e-01    8.736913e-01    8.271038e-01
+8.098993e-01    5.368138e-01    3.055373e-02    3.972266e-01    8.146640e-01
+8.241520e-01    7.532375e-01    2.969434e-01    9.436580e-01    2.819992e-01
 ```
