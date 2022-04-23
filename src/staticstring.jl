@@ -23,12 +23,12 @@
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
     @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
-    @inline Base.length(s::StaticString{N}) where N = N
+    @inline Base.length(s::StaticString{N}) where N = N-1
     @inline Base.:(==)(::StaticString, ::StaticString) = false
     @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
         GC.@preserve a b begin
             pa, pb = pointer(a), pointer(b)
-            for n in 0:N-1
+            for n ∈ 0:N-1
                 unsafe_load(pa + n) == unsafe_load(pb + n) || return false
             end
             return true
@@ -50,7 +50,8 @@
 
     # Implement some of the AbstractArray interface:
     @inline Base.firstindex(s::StaticString) = 1
-    @inline Base.lastindex(s::StaticString{N}) where N = N
+    @inline Base.lastindex(s::StaticString{N}) where {N} = N
+    @inline Base.eachindex(s::StaticString{N}) where {N} = 1:N
     @inline Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
     @inline Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
     @inline Base.getindex(s::StaticString, ::Colon) = s
@@ -64,8 +65,8 @@
         end
     end
     @inline function Base.setindex!(s::StaticString, x, ::Colon)
-        ix₀ = firstindex(x)-1
-        @inbounds for i = 1:length(s)
+        ix₀ = firstindex(x)-firstindex(s)
+        @inbounds for i ∈ eachindex(s)
             setindex!(s, x[i+ix₀], i)
         end
     end
@@ -78,15 +79,15 @@
     @inline Base.codeunit(s::StaticString) = UInt8
     @inline Base.codeunit(s::StaticString, i::Integer) = s[i]
     @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
-        N = length(a) + length(b) - 1
+        N = length(a) + length(b) + 1
         c = StaticString{N}(undef)
-        c[1:length(a)-1] = a
-        c[length(a):end-1] = b
+        c[1:length(a)] = a
+        c[length(a)+1:length(a)+length(b)] = b
         c[end] = 0x00 # Null-terminate
         return c
     end
     @inline function Base.:^(s::StaticString, n::Integer)       # Repetition
-        l = length(s)-1 # Excluding the null-termination
+        l = length(s) # Excluding the null-termination, remember
         N = n*l + 1
         c = StaticString{N}(undef)
         for i=1:n

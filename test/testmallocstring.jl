@@ -3,9 +3,8 @@
     # Test MallocString constructors
     str = m"Hello, world! 🌍"
     @test isa(str, MallocString)
-    @test length(str) == 19
     @test sizeof(str) == 19
-    @test StaticTools.strlen(str) == 18
+    @test StaticTools.strlen(str) == length(str) == 18
 
     # Test basic string operations
     @test str == m"Hello, world! 🌍"
@@ -15,7 +14,7 @@
     @test free(p) == 0
     @test codeunit(str) === UInt8
     @test codeunit(str, 5) == UInt8('o')
-    @test ncodeunits(str) == length(str)
+    @test ncodeunits(str) == length(str)+1
     @test codeunits(str) == codeunits(c"Hello, world! 🌍")
     @test codeunits(c"Hello, world! 🌍") == codeunits(str)
 
@@ -37,14 +36,14 @@
     # Test ascii escaping
     many_escapes = m"\"\0\a\b\f\n\r\t\v\'\"\\"
     @test isa(many_escapes, MallocString)
-    @test length(many_escapes) == 13
+    @test length(many_escapes) == 12
     @test codeunits(many_escapes) == codeunits("\"\0\a\b\f\n\r\t\v'\"\\\0")
 
     # Test unsafe_mallocstring
     s = "Hello there!"
     m = unsafe_mallocstring(pointer(s))
     @test isa(m, MallocString)
-    @test length(m) == 13
+    @test length(m) == 12
     @test codeunits(m) == codeunits(c"Hello there!")
     @test free(m) == 0
 
@@ -54,3 +53,8 @@
     argv = pointer(a)
     @test MallocString(argv,1) == c"Hello"
     @test MallocString(argv,2) == c"there"
+
+    # Test consistency with base strings
+    abc = m"abc"
+    @test abc == "abc"
+    free(abc)
