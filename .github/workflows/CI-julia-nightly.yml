@@ -1,4 +1,4 @@
-name: CI
+name: CI (Julia nightly)
 on:
   push:
     branches:
@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '~1.8.0-0'
+          - 'nightly'
         os:
           - ubuntu-latest
         arch:
