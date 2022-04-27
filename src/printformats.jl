@@ -24,7 +24,7 @@ Optionally, a C-style format specifier string `fmt` may be provided as well.
 
 Returns `0` on success.
 
-### Examples
+## Examples
 ```julia
 julia> printf(1)
 1
@@ -54,7 +54,7 @@ pointer `fp`, defaulting to the current standard output `stdout` if not specifie
 
 Returns `0` on success.
 
-### Examples
+## Examples
 ```julia
 julia> printf(rand(5,5))
 5.500186e-02    8.425572e-01    3.871220e-01    5.442254e-01    5.990694e-02

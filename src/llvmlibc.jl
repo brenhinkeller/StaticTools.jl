@@ -1,3 +1,22 @@
+"""
+```julia
+malloc(size::Integer)
+```
+Libc `malloc` function, accessed by direct `llvmcall`.
+
+Allocate `size` bytes of memory and return a pointer to that memory.
+
+See also: `free`.
+
+## Examples
+```julia
+julia> p = malloc(500)
+Ptr{UInt8} @0x00007ff0e9e74290
+
+julia> free(p)
+0
+```
+"""
 @inline malloc(size::Integer) = malloc(Int64(size))
 @inline function malloc(size::Int64)
     Base.llvmcall(("""
@@ -29,7 +48,25 @@ end
     """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
 end
 
+"""
+```julia
+free(ptr::Ptr)
+```
+Libc `free` function, accessed by direct `llvmcall`.
 
+Free memory that has been previously allocated with `malloc`.
+
+See also: `free`.
+
+## Examples
+```julia
+julia> p = malloc(500)
+Ptr{UInt8} @0x00007ff0e9e74290
+
+julia> free(p)
+0
+```
+"""
 @inline free(ptr::Ptr) = free(Ptr{UInt8}(ptr))
 @inline function free(ptr::Ptr{UInt8})
     Base.llvmcall(("""

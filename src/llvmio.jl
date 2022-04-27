@@ -20,7 +20,7 @@
 
     See also: `fclose`, `fseek`
 
-    ### Examples
+    ## Examples
     ```julia
     julia> fp = fopen(c"testfile.txt", c"w")
     Ptr{StaticTools.FILE} @0x00007fffc92bd0b0
@@ -61,7 +61,7 @@
 
     See also: `fopen`, `fseek`
 
-    ### Examples
+    ## Examples
     ```julia
     julia> fp = fopen(c"testfile.txt", c"w")
     Ptr{StaticTools.FILE} @0x00007fffc92bd0b0
@@ -115,7 +115,7 @@
 
     See also: `fopen`, `fclose`
 
-    ### Examples
+    ## Examples
     ```julia
     julia> fp = fopen(c"testfile.txt", c"w+")
     Ptr{StaticTools.FILE} @0x00007fffc92bd148
@@ -160,7 +160,7 @@
     Zero-argument function which returns a raw pointer to the current standard
     output filestream, `stdout`.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> stdoutp()
     Ptr{StaticTools.FILE} @0x00007fffc92b91a8
@@ -205,7 +205,7 @@ end
     Zero-argument function which returns a raw pointer to the current standard
     error filestream, `stderr`.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> stderrp()
     Ptr{StaticTools.FILE} @0x00007fffc92b9240
@@ -250,7 +250,7 @@ end
     Zero-argument function which returns a raw pointer to the current standard
     input filestream, `stdin`.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> stdinp()
     Ptr{StaticTools.FILE} @0x00007fffc92b9110
@@ -297,7 +297,7 @@ end
 
     Returns `0` on success.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> putchar('C')
     0
@@ -347,7 +347,7 @@ end
 
     Returns `0` on success.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> putchar('C')
     0
@@ -371,7 +371,7 @@ end
 
     Reads a single character from standard input `stdin`, returning as `UInt8`.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> getchar()
     c
@@ -417,7 +417,7 @@ end
     Reads a single character from file pointer `fp`, returning as `Int32`
     (`-1` on EOF).
 
-    ### Examples
+    ## Examples
     ```julia
     julia> getc(stdinp())
     c
@@ -457,7 +457,7 @@ end
 
     Returns `0` on success.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> puts(c"Hello there!")
     Hello there!
@@ -506,7 +506,7 @@ end
     Read up to `n` characters from the filestream specified by file pointer `fp`
     to the MallocString `s`.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> s = MallocString(undef, 100)
     m""
@@ -552,7 +552,7 @@ end
 
     Returns the number of characters printed on success.
 
-    ### Examples
+    ## Examples
     ```julia
     julia> printf(c"Hello there!\n")
     Hello there!
