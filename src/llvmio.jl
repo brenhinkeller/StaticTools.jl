@@ -67,6 +67,7 @@
     julia> printf(stdoutp(), c"Hi there!\n")
     Hi there!
     10
+    ```
     """
 @static if Sys.isapple()
     function stdoutp()
@@ -183,6 +184,28 @@ end
 
 ## --- The basics of basics: putchar/fputc
 
+    """
+    ```julia
+    putchar([fp::Ptr{FILE}], c::Union{Char,UInt8})
+    ```
+    Libc `putchar` / `fputc` function, accessed by direct `llvmcall`.
+
+    Prints a single character `c` (either a `Char` or a raw `UInt8`) to a file
+    pointer `fp`, defaulting `stdout` if not specified. Returns 0 on success.
+
+    ### Examples
+    ```julia
+    julia> putchar('C')
+    0
+
+    julia> putchar(0x63)
+    0
+
+    julia> putchar('\n') # Newline, flushes stdout
+    Cc
+    0
+    ```
+    """
     putchar(c::Char) = putchar(UInt8(c))
     function putchar(c::UInt8)
         Base.llvmcall(("""
@@ -210,12 +233,45 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
     end
 
+
+    """
+    ```julia
+    newline([fp::Ptr{FILE}])
+    ```
+    Prints a single newline (`\n`) to a file pointer `fp`, defaulting  to `stdout`
+    if not specified. Returns 0 on success.
+
+    ### Examples
+    ```julia
+    julia> putchar('C')
+    0
+
+    julia> newline() # flushes stdout
+    C
+    0
+    ```
+    """
     newline() = putchar(0x0a)
     newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
 
 ## --- getchar / getc
 
 
+    """
+    ```julia
+    getchar()
+    ```
+    Libc `getchar` function, accessed by direct `llvmcall`.
+
+    Reads a single character from standard input `stdin`, returning as `UInt8`.
+
+    ### Examples
+    ```julia
+    julia> getchar()
+    c
+    0x63
+    ```
+    """
     function getchar()
         Base.llvmcall(("""
         ; External declaration of the getchar function
@@ -246,6 +302,22 @@ end
     #     """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
     # end
 
+    """
+    ```julia
+    getc(fp::Ptr{FILE})
+    ```
+    Libc `getc` function, accessed by direct `llvmcall`.
+
+    Reads a single character from file pointer `fp`, returning as `Int32`.
+    Yields `-1` on EOF.
+
+    ### Examples
+    ```julia
+    julia> getc(stdinp())
+    c
+    99
+    ```
+    """
     function getc(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the fgetc function
