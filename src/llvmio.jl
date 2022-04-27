@@ -1,6 +1,40 @@
 ## --- File IO primitives
 
     # Open a file
+    """
+    ```julia
+    fopen(name, mode)
+    ```
+    Libc `fopen` function, accessed by direct `llvmcall`.
+
+    Returns a file pointer to a file at location specified by `name` opened for
+    reading, writing, or both as specified by `mode`. Valid modes include:
+
+      c"r": Read, from an existing file.
+
+      c"w": Write. If the file exists, it will be overwritten.
+
+      c"a": Append, to the end of an existing file.
+
+    as well as `"r+"`, `c"w+"`, and `"a+"`, which enable both reading and writing.
+
+    See also: `fclose`, `fseek`
+
+    ### Examples
+    ```julia
+    julia> fp = fopen(c"testfile.txt", c"w")
+    Ptr{StaticTools.FILE} @0x00007fffc92bd0b0
+
+    julia> printf(fp, c"Here is a string")
+    16
+
+    julia> fclose(fp)
+    0
+
+    shell> cat testfile.txt
+    Here is a string
+    ```
+    """
     fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
     fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
     function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
@@ -17,6 +51,31 @@
     end
 
     # Close a file
+    """
+    ```julia
+    fclose(fp::Ptr{FILE})
+    ```
+    Libc `fclose` function, accessed by direct `llvmcall`.
+
+    Closes a file that has been previously opened by `fopen`, given a file pointer.
+
+    See also: `fopen`, `fseek`
+
+    ### Examples
+    ```julia
+    julia> fp = fopen(c"testfile.txt", c"w")
+    Ptr{StaticTools.FILE} @0x00007fffc92bd0b0
+
+    julia> printf(fp, c"Here is a string")
+    16
+
+    julia> fclose(fp)
+    0
+
+    shell> cat testfile.txt
+    Here is a string
+    ```
+    """
     function fclose(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the fclose function
@@ -32,6 +91,48 @@
 
     # Seek in a file
     frewind(fp::Ptr{FILE}) = fseek(fp, 0, SEEK_SET)
+
+    """
+    ```julia
+    fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
+    ```
+    Libc `fseek` function, accessed by direct `llvmcall`.
+
+    Move position within a file given a file pointer `fp` obtained from `fopen`.
+    The new position will be `offset` bytes (or characters, in the event that all
+    characters are non-unicode ASCII characters encoded as `UInt8`s) away from the
+    position specified by `whence`.
+
+    The position reference `whence` can take on values of either:
+
+      SEEK_SET = Int32(0)           File start
+
+      SEEK_CUR = Int32(1)           Current position
+
+      SEEK_END = Int32(2)           File end
+
+    where `SEEK_CUR` is the default value.
+
+    See also: `fopen`, `fclose`
+
+    ### Examples
+    ```julia
+    julia> fp = fopen(c"testfile.txt", c"w+")
+    Ptr{StaticTools.FILE} @0x00007fffc92bd148
+
+    julia> printf(fp, c"Here is a string!")
+    17
+
+    julia> fseek(fp, -2)
+    0
+
+    julia> Char(getc(fp))
+    'g': ASCII/Unicode U+0067 (category Ll: Letter, lowercase)
+
+    julia> fclose(fp)
+    0
+    ```
+    """
     function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
         Base.llvmcall(("""
         ; External declaration of the fseek function
