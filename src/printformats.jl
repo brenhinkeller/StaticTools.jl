@@ -11,12 +11,60 @@
 @inline printfmt(::Type{<:Union{MallocString, StaticString}}) = c"\"%s\"" # Can I offer you a string in this trying time?
 
 # Top-level formats, single numbers
+"""
+```julia
+printf([fp::Ptr{FILE}], [fmt], n::Number)
+```
+Libc `printf` function, accessed by direct `llvmcall`.
+
+Prints a number `n` to a filestream specified by the file pointer `fp`,
+defaulting to the current standard output `stdout` if not specified.
+
+Optionally, a C-style format specifier string `fmt` may be provided as well.
+
+Returns `0` on success.
+
+### Examples
+```julia
+julia> printf(1)
+1
+0
+
+julia> printf(1/3)
+3.333333e-01
+0
+
+julia> printf(c"%f\n", 1/3)
+0.333333
+0
+```
+"""
 @inline function printf(n::T) where T <: Union{Number, Ptr}
     printf(printfmt(T), n)
     newline()
 end
 
 # Print a vector
+"""
+```julia
+printf([fp::Ptr{FILE}], a::AbstractArray{<:Number})
+```
+Print a matrix or vector of numbers `a` to a filestream specified by the file
+pointer `fp`, defaulting to the current standard output `stdout` if not specified.
+
+Returns `0` on success.
+
+### Examples
+```julia
+julia> printf(rand(5,5))
+5.500186e-02    8.425572e-01    3.871220e-01    5.442254e-01    5.990694e-02
+5.848425e-01    6.714915e-01    5.616896e-01    6.668248e-01    2.643873e-01
+9.156712e-01    1.276033e-01    3.350369e-01    6.513146e-01    9.999104e-01
+3.301038e-01    6.027120e-01    5.139433e-01    2.219796e-01    4.057417e-01
+2.821340e-01    9.258760e-01    7.950481e-01    1.152236e-01    7.949463e-01
+0
+```
+"""
 @inline function printf(v::AbstractVector{T}) where T <: Union{Number, Ptr, StaticString}
     fmt = printfmt(T)
     p = pointer(fmt)

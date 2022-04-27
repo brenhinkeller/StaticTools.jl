@@ -348,18 +348,19 @@ end
     ```
     Libc `puts`/`fputs` function, accessed by direct `llvmcall`.
 
-    Prints a string `s` (specified either as a raw `Ptr{UInt8}` or else a string
-    type such as `StaticString` or `MallocString` for which a valid pointer can
-    be obtained) to a filestream specified by the file pointer `fp`, defaulting
-    to the current standard output `stdout` if not specified.
+    Prints a string `s` (specified either as a raw `Ptr{UInt8}` to a valid
+    null-terminated string in memory or elseor else a string type such as
+    `StaticString` or `MallocString` for which a valid pointer can be obtained)
+    followed by a newline (`\n`) to a filestream specified by the file pointer
+    `fp`, defaulting to the current standard output `stdout` if not specified.
 
     Returns `0` on success.
 
     ### Examples
     ```julia
-    julia> getchar()
-    c
-    0x63
+    julia> puts(c"Hello there!")
+    Hello there!
+    0
     ```
     """
     puts(s::AbstractMallocdMemory) = puts(pointer(s))
@@ -434,6 +435,29 @@ end
 
 ## --- printf/fprintf, just a string
 
+    """
+    ```julia
+    printf([fp::Ptr{FILE}], [fmt], s)
+    ```
+    Libc `printf` function, accessed by direct `llvmcall`.
+
+    Prints a string `s` (specified either as a raw `Ptr{UInt8}` to a valid
+    null-terminated string in memory or else a string type such as `StaticString`
+    or `MallocString` for which a valid pointer can be obtained) to a filestream
+    specified by the file pointer `fp`, defaulting to the current standard output
+    `stdout` if not specified.
+
+    Optionally, a C-style format specifier string `fmt` may be provided as well.
+
+    Returns the number of characters printed on success.
+
+    ### Examples
+    ```julia
+    julia> printf(c"Hello there!\n")
+    Hello there!
+    13
+    ```
+    """
     printf(s::MallocString) = printf(pointer(s))
     printf(s) = GC.@preserve s printf(pointer(s))
     printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
@@ -493,6 +517,7 @@ end
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Ptr{UInt8}}, fp, fmt, s)
     end
+
 
 
     printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
