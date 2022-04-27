@@ -191,7 +191,10 @@ end
     Libc `putchar` / `fputc` function, accessed by direct `llvmcall`.
 
     Prints a single character `c` (either a `Char` or a raw `UInt8`) to a file
-    pointer `fp`, defaulting `stdout` if not specified. Returns 0 on success.
+    pointer `fp`, defaulting to the current standard output `stdout` if not
+    specified.
+
+    Returns `0` on success.
 
     ### Examples
     ```julia
@@ -239,7 +242,9 @@ end
     newline([fp::Ptr{FILE}])
     ```
     Prints a single newline (`\n`) to a file pointer `fp`, defaulting  to `stdout`
-    if not specified. Returns 0 on success.
+    if not specified.
+
+    Returns `0` on success.
 
     ### Examples
     ```julia
@@ -308,8 +313,8 @@ end
     ```
     Libc `getc` function, accessed by direct `llvmcall`.
 
-    Reads a single character from file pointer `fp`, returning as `Int32`.
-    Yields `-1` on EOF.
+    Reads a single character from file pointer `fp`, returning as `Int32`
+    (`-1` on EOF).
 
     ### Examples
     ```julia
@@ -337,6 +342,26 @@ end
 
 ## --- The old reliable: puts/fputs
 
+    """
+    ```julia
+    puts([fp::Ptr{FILE}], s)
+    ```
+    Libc `puts`/`fputs` function, accessed by direct `llvmcall`.
+
+    Prints a string `s` (specified either as a raw `Ptr{UInt8}` or else a string
+    type such as `StaticString` or `MallocString` for which a valid pointer can
+    be obtained) to a filestream specified by the file pointer `fp`, defaulting
+    to the current standard output `stdout` if not specified.
+
+    Returns `0` on success.
+
+    ### Examples
+    ```julia
+    julia> getchar()
+    c
+    0x63
+    ```
+    """
     puts(s::AbstractMallocdMemory) = puts(pointer(s))
     puts(s) = GC.@preserve s puts(pointer(s))
     function puts(s::Ptr{UInt8})
@@ -370,6 +395,27 @@ end
 
 ## --- gets/fgets
 
+    """
+    ```julia
+    gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+    ```
+    Libc `fgets` function, accessed by direct `llvmcall`.
+
+    Read up to `n` characters from the filestream specified by file pointer `fp`
+    to the MallocString `s`.
+
+    ### Examples
+    ```julia
+    julia> s = MallocString(undef, 100)
+    m""
+
+    julia> gets!(s, stdinp(), 3)
+    Ptr{UInt8} @0x00007fb15afce550
+
+    julia> s
+    m"\n"
+    ```
+    """
     function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
         Base.llvmcall(("""
         ; External declaration of the gets function
