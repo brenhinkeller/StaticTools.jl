@@ -52,6 +52,22 @@
 ## -- stdio pointers
 
     # Get pointer to stdout
+    """
+    ```julia
+    stdoutp()
+    ```
+    Zero-argument function which returns a raw pointer to the current standard
+    output filestream, `stdout`.
+
+    ### Examples
+    ```julia
+    julia> stdoutp()
+    Ptr{StaticTools.FILE} @0x00007fffc92b91a8
+
+    julia> printf(stdoutp(), c"Hi there!\n")
+    Hi there!
+    10
+    """
 @static if Sys.isapple()
     function stdoutp()
         Base.llvmcall(("""
@@ -80,6 +96,23 @@ end
 
 
     # Get pointer to stderr
+    """
+    ```julia
+    stderrp()
+    ```
+    Zero-argument function which returns a raw pointer to the current standard
+    error filestream, `stderr`.
+
+    ### Examples
+    ```julia
+    julia> stderrp()
+    Ptr{StaticTools.FILE} @0x00007fffc92b9240
+
+    julia> printf(stderrp(), c"Hi there!\n")
+    Hi there!
+    10
+    ```
+    """
 @static if Sys.isapple()
     function stderrp()
         Base.llvmcall(("""
@@ -108,6 +141,19 @@ end
 
 
     # Get pointer to stdin
+    """
+    ```julia
+    stdinp()
+    ```
+    Zero-argument function which returns a raw pointer to the current standard
+    input filestream, `stdin`.
+
+    ### Examples
+    ```julia
+    julia> stdinp()
+    Ptr{StaticTools.FILE} @0x00007fffc92b9110
+    ```
+    """
 @static if Sys.isapple()
     function stdinp()
         Base.llvmcall(("""
