@@ -14,6 +14,21 @@
     end
 
     # String macro to create null-terminated `StaticString`s
+    """
+    ```julia
+    @c_str -> StaticString
+    ```
+    Construct a null-terminated StaticString, such as `c"Foo"`.
+
+    ## Examples
+    ```julia
+    julia> c"Hello there!"
+    c"Hello there!"
+
+    julia> c"foo" == "foo"
+    true
+    ```
+    """
     macro c_str(s)
         n = _unsafe_unescape!(s)
         t = Expr(:tuple, codeunits(s[1:n])..., 0x00)

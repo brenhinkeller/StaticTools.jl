@@ -19,6 +19,24 @@
     @inline MallocString(argv::Ptr{Ptr{UInt8}}, n::Integer) = MallocString(unsafe_load(argv, n))
 
     # String macro to create null-terminated `MallocStrings`s
+    """
+    ```julia
+    @m_str -> MallocString
+    ```
+    Construct a null-terminated MallocString, such as `m"Foo"`.
+
+    ## Examples
+    ```julia
+    julia> s = m"Hello there!"
+    m"Hello there!"
+
+    julia> s == "Hello there!"
+    true
+
+    julia> free(s)
+    0
+    ```
+    """
     macro m_str(s)
         n = _unsafe_unescape!(s)
         t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
