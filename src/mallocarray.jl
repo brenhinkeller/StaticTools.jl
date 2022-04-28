@@ -2,6 +2,17 @@
     const MaybePointer = Union{Ptr, UndefInitializer}
 
     # Definition and constructors:
+    """
+    ```julia
+    MallocArray{T,N} <: AbstractArray{T,N}
+    ```
+    `N`-dimensional dense heap-allocated array with elements of type `T`.
+
+    Much like `Base.Array`, except (1) backed by memory that is not tracked by
+    the Julia garbage collector (is directly allocated with `malloc`) so is
+    StaticCompiler-safe, (2) should be `free`d when no longer in use, and
+    (3) indexing returns views rather than copies.
+    """
     struct MallocArray{T,N} <: DenseArray{T,N}
         pointer::Ptr{T}
         length::Int
@@ -9,6 +20,44 @@
     end
     const MallocMatrix{T} = MallocArray{T,2}
     const MallocVector{T} = MallocArray{T,1}
+
+    """
+    ```julia
+    MallocArray{T}(undef, dims)
+    MallocArray{T,N}(undef, dims)
+    ```
+    Construct an uninitialized `N`-dimensional `MallocArray` containing elements
+    of type `T`. `N` can either be supplied explicitly, as in `Array{T,N}(undef, dims)`,
+    or be determined by the length or number of `dims`. `dims` may be a tuple or
+    a series of integer arguments corresponding to the lengths in each dimension.
+    If the rank `N` is supplied explicitly, then it must match the length or
+    number of `dims`. Here `undef` is the `UndefInitializer`.
+
+    ## Examples
+    ```julia
+    julia> A = MallocArray{Float64}(undef, 3,3) # implicit N
+    3×3 MallocMatrix{Float64}:
+     3.10504e231   6.95015e-310   2.12358e-314
+     1.73061e-77   6.95015e-310   5.56271e-309
+     6.95015e-310  0.0           -1.29074e-231
+
+    julia> free(A)
+    0
+
+    julia> A = MallocArray{Float64, 3}(undef, 2,2,2) # explicit N
+    2×2×2 MallocArray{Float64, 3}:
+    [:, :, 1] =
+     3.10504e231  2.0e-323
+     2.32036e77   6.94996e-310
+
+    [:, :, 2] =
+     6.95322e-310  5.0e-324
+     6.95322e-310  5.56271e-309
+
+    julia> free(A)
+    0
+    ```
+    """
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
