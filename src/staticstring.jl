@@ -18,7 +18,11 @@
     ```julia
     @c_str -> StaticString
     ```
-    Construct a null-terminated StaticString, such as `c"Foo"`.
+    Construct a `StaticString`, such as `c"Foo"`.
+
+    A `StaticString` should generally behave like a base Julia `String`, but is
+    explicitly null-terminated, mutable, and standalone-StaticCompiler safe (does
+    not require libjulia).
 
     ## Examples
     ```julia

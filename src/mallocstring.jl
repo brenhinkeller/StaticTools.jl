@@ -23,7 +23,12 @@
     ```julia
     @m_str -> MallocString
     ```
-    Construct a null-terminated MallocString, such as `m"Foo"`.
+    Construct a `MallocString`, such as `m"Foo"`.
+
+    A `MallocString` should generally behave like a base Julia `String`, but is
+    explicitly null-terminated, mutable, standalone-StaticCompiler-safe (does not
+    require libjulia) and is backed by `malloc`ed memory which is not tracked by
+    the GC and should be `free`d when no longer in use.
 
     ## Examples
     ```julia
