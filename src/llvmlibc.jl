@@ -2,7 +2,7 @@
 ```julia
 malloc(size::Integer)
 ```
-Libc `malloc` function, accessed by direct `llvmcall`.
+Libc `malloc` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Allocate `size` bytes of memory and return a pointer to that memory.
 
@@ -52,7 +52,7 @@ end
 ```julia
 free(ptr::Ptr)
 ```
-Libc `free` function, accessed by direct `llvmcall`.
+Libc `free` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Free memory that has been previously allocated with `malloc`.
 
@@ -70,7 +70,7 @@ julia> free(p)
 @inline free(ptr::Ptr) = free(Ptr{UInt8}(ptr))
 @inline function free(ptr::Ptr{UInt8})
     Base.llvmcall(("""
-    ; External declaration of the `malloc` function
+    ; External declaration of the `free` function
     declare void @free(i8*)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
@@ -84,12 +84,38 @@ julia> free(p)
 end
 
 
+"""
+```julia
+memcpy!(a, b, n=length(b))
+```
+Libc `memcpy` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Copy `n` elements from array `b` to array `a`.
+
+## Examples
+```julia
+julia> a = rand(3)
+3-element Vector{Float64}:
+ 0.8559883493421137
+ 0.4203692766310769
+ 0.5728354965961716
+
+julia> StaticTools.memcpy!(a, ones(3))
+0
+
+julia> a
+3-element Vector{Float64}:
+ 1.0
+ 1.0
+ 1.0
+```
+"""
 @inline memcpy!(a, b) = memcpy!(a, b, length(b))
 @inline memcpy!(a, b, n::Int64) = GC.@preserve a b memcpy!(pointer(a), pointer(b), n)
 @inline memcpy!(dst::Ptr, src::Ptr{T}, n::Int64) where {T} = memcpy!(Ptr{UInt8}(dst), Ptr{UInt8}(src), n*sizeof(T))
 @inline function memcpy!(dst::Ptr{UInt8}, src::Ptr{UInt8}, nbytes::Int64)
     Base.llvmcall(("""
-    ; External declaration of the `malloc` function
+    ; External declaration of the `memcpy` function
     ; Function Attrs: argmemonly nounwind
     declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
 
@@ -104,6 +130,21 @@ end
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, dst, src, nbytes)
 end
 
+"""
+```julia
+time()
+```
+Libc `time` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Return, as an `Int64`, the current time in seconds since the beginning of the
+current Unix epoch on 00:00:00 UTC, January 1, 1970.
+
+## Examples
+```julia
+julia> StaticTools.time()
+1651105298
+```
+"""
 @inline function time()
     Base.llvmcall(("""
     ; External declaration of the `time` function
@@ -117,6 +158,28 @@ end
     """, "main"), Int64, Tuple{}, size)
 end
 
+"""
+```julia
+system(s)
+```
+Libc `system` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Pass the null-terminated string (or pointer thereto) `s` to the libc `system`
+function for evaluation.
+
+Returns `0` on success.
+
+## Examples
+```julia
+julia> StaticTools.system(c"time echo hello")
+hello
+
+real    0m0.001s
+user    0m0.000s
+sys 0m0.000s
+0
+```
+"""
 @inline system(s::AbstractMallocdMemory) = system(pointer(s))
 @inline system(s) = GC.@preserve s system(pointer(s))
 @inline function system(s::Ptr{UInt8})
@@ -134,7 +197,24 @@ end
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end
 
+"""
+```julia
+strlen(s)
+```
+Libc `strlen` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
+Returns the length in bytes of the null-terminated string `s`, not counting the
+terminating null character.
+
+## Examples
+```julia
+julia> strlen("foo") # Not documented, but Julia strings are null-terminated in practice every time I've checked
+3
+
+julia> strlen(c"foo")
+3
+```
+"""
 @inline strlen(s::AbstractMallocdMemory) = strlen(pointer(s))
 @inline strlen(s) = GC.@preserve s strlen(pointer(s))
 @inline function strlen(s::Ptr{UInt8})
@@ -153,7 +233,24 @@ end
 end
 
 
+"""
+```julia
+strtod(s)
+```
+Libc `strtod` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
+Returns a `Float64` ("double") containing the number written out in decimal form
+in null-terminated string `s`.
+
+## Examples
+```julia
+julia> num, pbuf = StaticTools.strtod(c"3.1415")
+(3.1415, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000010aeee946,)))
+
+julia> num, pbuf = StaticTools.strtod(c"5")
+(5.0, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000010d8f2bb1,)))
+```
+"""
 @inline strtod(s::AbstractMallocdMemory) = strtod(pointer(s))
 @inline strtod(s) = GC.@preserve s strtod(pointer(s))
 @inline function strtod(p::Ptr{UInt8})
@@ -176,7 +273,24 @@ end
     """, "main"), Float64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}}, s, p)
 end
 
+"""
+```julia
+strtol(s)
+```
+Libc `strtol` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
+Returns an `Int64` ("long") containing the number written out in decimal form in
+null-terminated string `s`.
+
+## Examples
+```julia
+julia> num, pbuf = StaticTools.strtol(c"3.1415")
+(3, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000010dd827f1,)))
+
+julia> num, pbuf = StaticTools.strtol(c"5")
+(5, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000015dbdda41,)))
+```
+"""
 @inline strtol(s::AbstractMallocdMemory) = strtol(pointer(s))
 @inline strtol(s) = GC.@preserve s strtol(pointer(s))
 @inline function strtol(p::Ptr{UInt8}, base::Int32=Int32(10))
@@ -199,6 +313,24 @@ end
     """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
+"""
+```julia
+strtoul(s)
+```
+Libc `strtol` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Returns an `UInt64` ("unsigned long") containing the number written out in decimal
+form in null-terminated string `s`.
+
+## Examples
+```julia
+julia> num, pbuf = StaticTools.strtoul(c"3.1415")
+(0x0000000000000003, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000010d6976a1,)))
+
+julia> num, pbuf = StaticTools.strtoul(c"5")
+(0x0000000000000005, ManualMemory.MemoryBuffer{1, Ptr{UInt8}}((Ptr{UInt8} @0x000000015ed45d11,)))
+```
+"""
 @inline strtoul(s::AbstractMallocdMemory) = strtoul(pointer(s))
 @inline strtoul(s) = GC.@preserve s strtoul(pointer(s))
 @inline function strtoul(p::Ptr{UInt8}, base::Int32=Int32(10))
@@ -222,6 +354,21 @@ end
 end
 
 
+"""
+```julia
+parse(::Type{T}, s::Union{StaticString, MallocString})
+```
+Parse a number from a `StaticString` or `MallocString` `s`.
+
+## Examples
+```julia
+julia> parse(Float64, c"3.141592")
+3.141592
+
+julia> parse(Int64, c"3.141592")
+3
+```
+"""
 @inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
     num, pbuf = strtod(s)
     load(pointer(pbuf)) == pointer(s) && return NaN
