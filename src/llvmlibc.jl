@@ -151,6 +151,7 @@ julia> memcmp(c"foo", c"bar", 3)
 ```
 """
 @inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
+@inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcpy!(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
 @inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
     Base.llvmcall(("""
     ; External declaration of the `memcmp` function
