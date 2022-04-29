@@ -18,8 +18,23 @@
         length::Int
         size::NTuple{N, Int}
     end
+    """
+    ```julia
+    MallocMatrix{T} <: AbstractMatrix{T}
+    ```
+    Two-dimensional dense heap-allocated array with elements of type `T`.
+    As `Base.Matrix` is to `Base.Array`, but with `MallocArray`.
+    """
     const MallocMatrix{T} = MallocArray{T,2}
+    """
+    ```julia
+    MallocVector{T} <: AbstractVector{T}
+    ```
+    Two-dimensional dense heap-allocated array with elements of type `T`.
+    As `Base.Vector` is to `Base.Array`, but with `MallocArray`.
+    """
     const MallocVector{T} = MallocArray{T,1}
+
 
     """
     ```julia

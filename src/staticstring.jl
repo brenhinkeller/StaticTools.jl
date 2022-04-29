@@ -3,6 +3,29 @@
     # Define the StaticString type, backed by an NTuple
 
     # Definition and constructors:
+    """
+    ```julia
+    StaticString{N}
+    ```
+    A stringy type which should generally behave like a base Julia `String`, but
+    is explicitly null-terminated, mutable, and standalone-StaticCompiler safe
+    (does not require libjulia).
+
+    ---
+
+    ```julia
+    StaticString(data::NTuple{N,UInt8})
+    ```
+    Construct a `StaticString` containing the `N` bytes specified by `data`.
+
+    ## Examples
+    ```julia
+    julia> data = (0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x00);
+
+    julia> StaticString(data)
+    c"Hello, world!"
+    ```
+    """
     mutable struct StaticString{N}
         data::NTuple{N,UInt8}
         @inline function StaticString{N}(::UndefInitializer) where N

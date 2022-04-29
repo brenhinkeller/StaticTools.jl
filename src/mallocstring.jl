@@ -3,13 +3,64 @@
     # Define the MallocString type, backed by a malloc'd heap of memory
 
     # Definition and constructors:
+    """
+    ```julia
     struct MallocString
         pointer::Ptr{UInt8}
         length::Int
     end
+    ```
+    A stringy object that contains `length` bytes (i.e., `UInt8`s, and including
+    the final null-termination) at a location in memory specified by `pointer`.
+
+    A `MallocString` should generally behave like a base Julia `String`, but is
+    explicitly null-terminated, mutable, standalone-StaticCompiler-safe (does not
+    require libjulia) and backed by `malloc`ed memory which is not tracked by
+    the GC and should be `free`d when no longer in use.
+
+    Can be constructed with the `m"..."` string macro.
+    """
+    struct MallocString
+        pointer::Ptr{UInt8}
+        length::Int
+    end
+
+    """
+    ```julia
+    MallocString(undef, N)
+    ```
+    Construct an uninitialized `N`-byte (including null-termination!) `MallocString`.
+    Here `undef` is the `UndefInitializer`.
+
+    ## Examples
+    ```julia
+    julia> s = MallocString(undef, 10)
+    m""
+
+    julia> free(s)
+    0
+    ```
+    """
     @inline function MallocString(::UndefInitializer, N::Int)
         MallocString(Ptr{UInt8}(malloc(N)), N)
     end
+    """
+    ```julia
+    MallocString(data::NTuple{N, UInt8})
+    ```
+    Construct a `MallocString` containing the `N` bytes specified by `data`.
+
+    ## Examples
+    ```julia
+    julia> data = (0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x00);
+
+    julia> MallocString(data)
+    m"Hello, world!"
+
+    julia> free(ans)
+    0
+    ```
+    """
     @inline function MallocString(data::NTuple{N, UInt8}) where N
         s = MallocString(Ptr{UInt8}(malloc(N)), N)
         s[:] = data
