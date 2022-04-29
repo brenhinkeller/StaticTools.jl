@@ -15,12 +15,13 @@
 ## ---- Memcpy, memcmp, etc.
 
     a = MallocArray{Float64}(undef, 100)
-    @test StaticTools.memcpy!(a, ones(100)) == 0
+    @test memcpy!(a, ones(100)) == 0
     @test a == ones(100)
     free(a)
 
     @test memcmp(c"foo", c"foo", 3) === Int32(0)
     @test memcmp(c"foo", c"bar", 3) === Int32(4)
+    @test memcmp(c"foo", "foo", 3) === Int32(0)
 
     @test isa(StaticTools.time(), Int64)
     @test StaticTools.time() > 10^9
