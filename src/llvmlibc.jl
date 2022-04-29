@@ -132,7 +132,7 @@ end
 
 """
 ```julia
-memcpy!(a, b, n)
+memcmp(a, b, n::Int64)
 ```
 Libc `memcmp` function, accessed by direct StaticCompiler-safe `llvmcall`.
 

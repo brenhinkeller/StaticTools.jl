@@ -17,11 +17,13 @@
     a = MallocArray{Float64}(undef, 100)
     @test memcpy!(a, ones(100)) == 0
     @test a == ones(100)
+
+    @test memcmp(a, a, 100) === Int32(0)
+    @test memcmp(c"foo", c"foo", 3) === Int32(0)
+    @test memcmp(c"foo", "foo", 3) === Int32(0)
+    @test memcmp(c"foo", c"bar", 3) != 0
     free(a)
 
-    @test memcmp(c"foo", c"foo", 3) === Int32(0)
-    @test memcmp(c"foo", c"bar", 3) === Int32(4)
-    @test memcmp(c"foo", "foo", 3) === Int32(0)
 
     @test isa(StaticTools.time(), Int64)
     @test StaticTools.time() > 10^9
