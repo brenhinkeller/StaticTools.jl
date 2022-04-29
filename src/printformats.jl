@@ -156,6 +156,22 @@ end
 ## -- Print errors
 
 @inline Base.error(s::Union{StaticString,MallocString}) = (perror(c"ERROR: "); perror(s))
+
+"""
+```julia
+perror(s)
+```
+Print the string `s` to the standard error filestream, `stderr`.
+
+Returns `0` on success.
+
+## Examples
+```julia
+julia> StaticTools.perror(c"ERROR: could not do thing\n")
+ERROR: could not do thing
+0
+```
+"""
 @inline perror(s::MallocString) = perror(pointer(s))
 @inline perror(s::StaticString) = GC.@preserve s perror(pointer(s))
 @inline function perror(s::Ptr{UInt8})
