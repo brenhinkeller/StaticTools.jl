@@ -10,8 +10,9 @@
         length::Int
     end
     ```
-    A stringy object that contains `length` bytes (i.e., `UInt8`s, and including
-    the final null-termination) at a location in memory specified by `pointer`.
+    A stringy object that contains `length` bytes (i.e., `UInt8`s), including
+    the final null-termination (`0x00`), at a location in memory specified by
+    `pointer`.
 
     A `MallocString` should generally behave like a base Julia `String`, but is
     explicitly null-terminated, mutable, standalone-StaticCompiler-safe (does not
@@ -52,12 +53,15 @@
 
     ## Examples
     ```julia
-    julia> data = (0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x00);
+    julia> data = (0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x00);
 
-    julia> MallocString(data)
-    m"Hello, world!"
+    julia> s = MallocString(data)
+    m"Hello world!"
 
-    julia> free(ans)
+    julia> s[8:12] = c"there"; s
+    m"Hello there!"
+
+    julia> free(s)
     0
     ```
     """
@@ -78,7 +82,7 @@
 
     A `MallocString` should generally behave like a base Julia `String`, but is
     explicitly null-terminated, mutable, standalone-StaticCompiler-safe (does not
-    require libjulia) and is backed by `malloc`ed memory which is not tracked by
+    require libjulia) and is backed by `malloc`d memory which is not tracked by
     the GC and should be `free`d when no longer in use.
 
     ## Examples
