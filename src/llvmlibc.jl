@@ -132,6 +132,43 @@ end
 
 """
 ```julia
+memcpy!(a, b, n)
+```
+Libc `memcmp` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Compare the first `n` bytes of `a` and `b`, returning
+* a positive value if the first `n` bytes of `a` are greater than the first `n` bytes of `b`
+* a negative value if the first `n` bytes of `a` are less than the first `n` bytes of `b`
+* `0` the first `n` bytes of `a` are equal to the first `n` bytes of `b`
+
+## Examples
+```julia
+julia> memcmp(c"foo", c"foo", 3)
+0
+
+julia> memcmp(c"foo", c"bar", 3)
+4
+```
+"""
+@inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
+@inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
+    Base.llvmcall(("""
+    ; External declaration of the `memcmp` function
+    declare i32 @memcmp(i8*, i8*, i64)
+
+    ; Function Attrs: noinline nounwind ssp uwtable
+    define dso_local i32 @main(i8* %a, i8* %b, i64 %nbytes) #0 {
+      %cmp = call i32 @memcmp(i8* %a, i8* %b, i64 %nbytes)
+      ret i32 %cmp
+    }
+
+    attributes #0 = { noinline nounwind ssp uwtable }
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, a, b, nbytes)
+end
+
+
+"""
+```julia
 time()
 ```
 Libc `time` function, accessed by direct StaticCompiler-safe `llvmcall`.
