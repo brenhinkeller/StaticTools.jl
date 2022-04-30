@@ -110,9 +110,10 @@
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::MallocString) where {T} = Ptr{T}(s.pointer)
     @inline Base.pointer(s::MallocString) = s.pointer
-    @inline Base.length(s::MallocString) = s.length-1       # For consistency with base
+    @inline Base.length(s::MallocString) = s.length - 1     # For consistency with base
     @inline Base.sizeof(s::MallocString) = s.length         # Thou shalt not lie
-    @inline function Base.:(==)(a::MallocString, b::MallocString)
+    const NullTerminatedString = Union{StaticString, MallocString}
+    @inline function Base.:(==)(a::NullTerminatedString, b::NullTerminatedString)
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
         for n ∈ 0:N
@@ -120,11 +121,19 @@
         end
         return true
     end
-    const NullTerminatedString = Union{StaticString, MallocString}
-    const AnyString = Union{NullTerminatedString, AbstractString}
-    @inline function Base.:(==)(a::AnyString, b::AnyString)
+    @inline function Base.:(==)(a::NullTerminatedString, b::AbstractString)
         GC.@preserve a b begin
-            (N = length(a)) == length(b) || return false
+            (N = length(a)) == sizeof(b) || return false
+            pa, pb = pointer(a), pointer(b)
+            for n in 0:N-1
+                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+            end
+            return true
+        end
+    end
+    @inline function Base.:(==)(a::AbstractString, b::NullTerminatedString)
+        GC.@preserve a b begin
+            (N = sizeof(a)) == length(b) || return false
             pa, pb = pointer(a), pointer(b)
             for n in 0:N-1
                 unsafe_load(pa + n) == unsafe_load(pb + n) || return false
@@ -170,7 +179,7 @@
         end
     end
     @inline function Base.copy(s::MallocString)
-        new_s = MallocString(undef, ncodeunits(s))
+        new_s = MallocString(undef, sizeof(s))
         new_s[:] = s
         return new_s
     end

@@ -100,7 +100,7 @@ julia> a = rand(3)
  0.4203692766310769
  0.5728354965961716
 
-julia> StaticTools.memcpy!(a, ones(3))
+julia> memcpy!(a, ones(3))
 0
 
 julia> a
