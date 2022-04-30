@@ -10,8 +10,8 @@
         length::Int
     end
     ```
-    A stringy object that contains `length` bytes (i.e., `UInt8`s), including
-    the final null-termination (`0x00`), at a location in memory specified by
+    A stringy object that contains `length` bytes (i.e., `UInt8`s, including
+    the final null-termination `0x00`), at a location in memory specified by
     `pointer`.
 
     A `MallocString` should generally behave like a base Julia `String`, but is
@@ -20,6 +20,11 @@
     the GC and should be `free`d when no longer in use.
 
     Can be constructed with the `m"..."` string macro.
+
+    Unlike base Julia `String`s, slicing does not create a copy, but rather a view.
+    You are responsible for ensuring that any such views are null-terminated if you
+    wish to pass them to any functions (including most libc/system IO) that expect
+    null-termination.
     """
     struct MallocString
         pointer::Ptr{UInt8}

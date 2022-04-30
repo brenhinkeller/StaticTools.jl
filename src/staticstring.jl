@@ -13,6 +13,11 @@
 
     Can be constructed with the `c"..."` string macro.
 
+    Unlike base Julia `String`s, slicing does not create a copy, but rather a view.
+    You are responsible for ensuring that any such views are null-terminated if you
+    wish to pass them to any functions (including most system IO) that expect
+    null-termination.
+
     ---
 
     ```julia
