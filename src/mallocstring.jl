@@ -43,13 +43,16 @@
     ```
     """
     @inline function MallocString(::UndefInitializer, N::Int)
-        MallocString(Ptr{UInt8}(malloc(N)), N)
+        s = MallocString(Ptr{UInt8}(malloc(N)), N)
+        s[end] = 0x00
+        return s
     end
     """
     ```julia
     MallocString(data::NTuple{N, UInt8})
     ```
     Construct a `MallocString` containing the `N` bytes specified by `data`.
+    To yield a valid string, `data` must be null-terminated, i.e., end in `0x00`.
 
     ## Examples
     ```julia
