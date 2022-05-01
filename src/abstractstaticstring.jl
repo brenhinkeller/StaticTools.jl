@@ -36,7 +36,7 @@
     @inline function Base.:(==)(a::AbstractStaticString, b::AbstractStaticString)
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
-        for n ∈ 0:N
+        for n in 0:N-1
             unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
         return true

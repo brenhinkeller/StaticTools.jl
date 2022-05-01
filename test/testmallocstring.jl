@@ -59,7 +59,10 @@
     @test MallocString(argv,1) == c"Hello"
     @test MallocString(argv,2) == c"there"
 
-    # Test consistency with base strings
+    # Test consistency with other string types
     abc = m"abc"
     @test abc == "abc"
+    @test abc == c"abc"
+    @test abc == abc[1:3]
+    @test abc[1:3] == "abc"
     free(abc)

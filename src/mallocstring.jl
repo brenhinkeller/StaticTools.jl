@@ -153,6 +153,14 @@
 
     # Fundamentals -- where overriding AbstractStaticString defaults
     @inline Base.length(s::MallocString) = s.length - 1     # For consistency with base
+    @inline function Base.:(==)(a::Union{StaticString,MallocString}, b::Union{StaticString,MallocString})
+        (N = length(a)) == length(b) || return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:N
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+        end
+        return true
+    end
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::MallocString)
@@ -161,7 +169,7 @@
         Base.print(io, "\"")
     end
 
-    # Some of the AbstractString interface
+    # Some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline function Base.:*(a::MallocString, b::AbstractStaticString)  # Concatenation
         N = length(a) + length(b) + 1
         c = MallocString(undef, N)
@@ -188,10 +196,7 @@
 
     # As Base.unsafe_string, but loading to a MallocString instead
     @inline function unsafe_mallocstring(p::Ptr{UInt8})
-        len = 1
-        while unsafe_load(p, len) != 0x00
-            len +=1
-        end
+        len = strlen(p)+1
         s = MallocString(undef, len)
         for i=1:len
             s[i] = unsafe_load(p, i)

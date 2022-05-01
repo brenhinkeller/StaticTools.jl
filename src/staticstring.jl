@@ -107,7 +107,7 @@
         :(StaticString($t))
     end
 
-    # Fundamentals -- where differing from AbstractStaticString:
+    # Fundamentals -- where overriding AbstractStaticString defaults
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
     @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
     @inline Base.length(s::StaticString{N}) where N = N-1
@@ -129,7 +129,7 @@
         Base.print(io, "\"")
     end
 
-    # Implement some of the AbstractArray interface -- where differing from AbstractStaticString:
+    # Implement some of the AbstractArray interface -- where overriding AbstractStaticString defaults
     @inline Base.firstindex(s::StaticString) = 1
     @inline Base.lastindex(s::StaticString{N}) where {N} = N
     @inline Base.eachindex(s::StaticString{N}) where {N} = 1:N
@@ -137,7 +137,7 @@
     @inline Base.copy(s::StaticString) = StaticString(codeunits(s))
 
 
-    # Implement some of the AbstractString interface -- where differing from AbstractStaticString:
+    # Implement some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
     @inline function Base.:*(a::AbstractStaticString, b::AbstractStaticString)  # Concatenation

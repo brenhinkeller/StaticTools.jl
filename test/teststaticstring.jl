@@ -36,5 +36,9 @@
     @test length(many_escapes) == 12
     @test all(codeunits(many_escapes) .== codeunits("\"\0\a\b\f\n\r\t\v'\"\\\0"))
 
-    # Test consistency with base strings
-    @test c"abc" == "abc"
+    # Test consistency with other strings
+    abc = c"abc"
+    @test abc == "abc"
+    @test abc == c"abc"
+    @test abc == abc[1:3]
+    @test abc[1:3] == "abc"
