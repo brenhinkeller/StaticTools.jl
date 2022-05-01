@@ -17,6 +17,24 @@
     You are responsible for ensuring that any such views are null-terminated if you
     wish to pass them to any functions (including most system IO) that expect
     null-termination.
+
+    ## Examples
+    ```julia
+    julia> s = c"Hello world!"
+    c"Hello world!"
+
+    julia> s[8:12] = c"there"; s
+    c"Hello there!"
+
+    julia> s[1:5]
+    StringView: "Hello"
+
+    julia> s[1:5] == "Hello"
+    true
+
+    julia> StaticString(s[1:5])
+    c"Hello"
+    ```
     """
     mutable struct StaticString{N} <: AbstractStaticString
         data::NTuple{N,UInt8}
@@ -52,8 +70,8 @@
     julia> s = StaticString(data)
     c"Hello world!"
 
-    julia> s[8:12] = c"there"; s
-    c"Hello there!"
+    julia> StaticString(s[1:5])
+    c"Hello"
     ```
     """
     @inline function StaticString(s::AbstractStaticString)

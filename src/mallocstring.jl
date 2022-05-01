@@ -25,6 +25,27 @@
     You are responsible for ensuring that any such views are null-terminated if you
     wish to pass them to any functions (including most libc/system IO) that expect
     null-termination.
+
+    ## Examples
+    ```julia
+    julia> s = m"Hello world!"
+    m"Hello world!"
+
+    julia> s[8:12] = c"there"; s
+    m"Hello there!"
+
+    julia> s[1:5]
+    StringView: "Hello"
+
+    julia> s[1:5] == "Hello"
+    true
+
+    julia> StaticString(s[1:5])
+    c"Hello"
+
+    julia> free(s)
+    0
+    ```
     """
     struct MallocString <: AbstractPointerString
         pointer::Ptr{UInt8}
@@ -59,6 +80,11 @@
     Construct a `MallocString` containing the `N` bytes specified by `data`.
     To yield a valid string, `data` must be null-terminated, i.e., end in `0x00`.
 
+    ```julia
+    MallocString(s::AbstractStaticString)
+    ```
+    Construct a `MallocString` containing the same data as the existing string `s`
+
     ## Examples
     ```julia
     julia> data = (0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x00);
@@ -66,10 +92,13 @@
     julia> s = MallocString(data)
     m"Hello world!"
 
-    julia> s[8:12] = c"there"; s
-    m"Hello there!"
+    julia> s2 = MallocString(s[1:5])
+    m"Hello"
 
     julia> free(s)
+    0
+
+    julia> free(s2)
     0
     ```
     """
