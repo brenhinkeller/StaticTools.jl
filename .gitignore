@@ -6,3 +6,8 @@ testfile.tsv
 *.jl.cov
 *.jl.mem
 /docs/build/
+*.o
+*.c
+*.ll
+test/times_table
+test/rand_matrix
