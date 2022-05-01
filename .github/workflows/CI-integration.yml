@@ -1,4 +1,4 @@
-name: CI
+name: CI (Integration)
 on:
   push:
     branches:
@@ -34,7 +34,7 @@ jobs:
         arch:
           - x64
         group:
-          - Core
+          - Integration
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
