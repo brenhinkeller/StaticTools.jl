@@ -28,7 +28,8 @@ module StaticTools
     include("parsedlm.jl")
 
     # Types
-    export StaticString, MallocString, MallocArray, MallocMatrix, MallocVector
+    export StaticString, MallocString, StringView, AbstractStaticString
+    export MallocArray, MallocMatrix, MallocVector
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions

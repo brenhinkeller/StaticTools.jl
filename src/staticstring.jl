@@ -17,14 +17,33 @@
     You are responsible for ensuring that any such views are null-terminated if you
     wish to pass them to any functions (including most system IO) that expect
     null-termination.
+    """
+    mutable struct StaticString{N} <: AbstractStaticString
+        data::NTuple{N,UInt8}
+        @inline function StaticString{N}(::UndefInitializer) where N
+            new{N}()
+        end
+        @inline function StaticString(data::NTuple{N,UInt8}) where N
+            new{N}(data)
+        end
+    end
 
-    ---
+    """
+    ```julia
+    StaticString{N}(undef)
+    ```
+    Construct an uninitialized `N`-byte `StaticString`
 
     ```julia
     StaticString(data::NTuple{N,UInt8})
     ```
     Construct a `StaticString` containing the `N` bytes specified by `data`.
     To yield a valid string, `data` must be null-terminated, i.e., end in `0x00`.
+
+    ```julia
+    StaticString(s::AbstractStaticString)
+    ```
+    Construct a `StaticString` containing the same data as the input string `s`.
 
     ## Examples
     ```julia
@@ -37,14 +56,11 @@
     c"Hello there!"
     ```
     """
-    mutable struct StaticString{N} <: AbstractStaticString
-        data::NTuple{N,UInt8}
-        @inline function StaticString{N}(::UndefInitializer) where N
-            new{N}()
-        end
-        @inline function StaticString(data::NTuple{N,UInt8}) where N
-            new{N}(data)
-        end
+    @inline function StaticString(s::AbstractStaticString)
+        c = StaticString{length(s)+1}(undef)
+        c[1:length(s)] = s
+        c[end] = 0x00
+        return c
     end
 
     # String macro to create null-terminated `StaticString`s
@@ -106,16 +122,16 @@
     # Implement some of the AbstractString interface -- where differing from AbstractStaticString:
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
-    @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
-        N = length(a) + length(b) + 1
+    @inline function Base.:*(a::AbstractStaticString, b::AbstractStaticString)  # Concatenation
+        N = length(a) + length(b) + 1 # n.b. `length` excludes null-termination
         c = StaticString{N}(undef)
         c[1:length(a)] = a
         c[length(a)+1:length(a)+length(b)] = b
         c[end] = 0x00 # Null-terminate
         return c
     end
-    @inline function Base.:^(s::StaticString, n::Integer)       # Repetition
-        l = length(s) # Excluding the null-termination, remember
+    @inline function Base.:^(s::AbstractStaticString, n::Integer)       # Repetition
+        l = length(s) # Excluding null-termination
         N = n*l + 1
         c = StaticString{N}(undef)
         for i=1:n

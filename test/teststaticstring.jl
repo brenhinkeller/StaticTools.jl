@@ -5,6 +5,8 @@
     @test isa(str, StaticString{19})
     @test sizeof(str) == 19
     @test StaticTools.strlen(str) == length(str) == 18
+    str1 = StaticString(str[1:end])
+    @test isa(str1, StaticString{19})
 
     # Test basic string operations
     @test str == c"Hello, world! 🌍"
@@ -21,6 +23,7 @@
     @test str[8] == 0x77 # w
 
     # Test indexing
+    @test isa(str[1:end], StringView)
     @test str == str[1:end]
     @test str == str[:]
     @test str[1:2] == str[1:2]
