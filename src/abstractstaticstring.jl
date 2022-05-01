@@ -17,7 +17,7 @@
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StringView)
-        Base.print(io, "\"")
+        Base.print(io, "StringView: \"")
         Base.escape_string(io, Base.unsafe_string(pointer(s), length(s)))
         Base.print(io, "\"")
     end
@@ -36,7 +36,7 @@
     @inline function Base.:(==)(a::AbstractStaticString, b::AbstractStaticString)
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
-        for n ∈ 0:N
+        for n ∈ 0:Na
             unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
         return true
