@@ -11,6 +11,7 @@ module StaticTools
     include("staticrng.jl")
 
     # String handling
+    include("abstractstaticstring.jl")  # Shared string infrastructure
     include("unescape.jl")      # You don't want to know
     include("staticstring.jl")  # StaticCompiler-safe stack-allocated strings
     include("mallocstring.jl")  # StaticCompiler-safe heap-allocated strings

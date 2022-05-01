@@ -25,7 +25,7 @@
     @test str[8] == 0x77 # w
 
     # Test indexing
-    @test str === str[1:end]
+    @test str == str[1:end]
     @test str === str[:]
     @test str[1:2] === str[1:2]
     @test str[1:2] != str[1:3]
