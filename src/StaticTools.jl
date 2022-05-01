@@ -11,6 +11,7 @@ module StaticTools
     include("staticrng.jl")
 
     # String handling
+    include("abstractstaticstring.jl")  # Shared string infrastructure
     include("unescape.jl")      # You don't want to know
     include("staticstring.jl")  # StaticCompiler-safe stack-allocated strings
     include("mallocstring.jl")  # StaticCompiler-safe heap-allocated strings
@@ -27,7 +28,8 @@ module StaticTools
     include("parsedlm.jl")
 
     # Types
-    export StaticString, MallocString, MallocArray, MallocMatrix, MallocVector
+    export StaticString, MallocString, StringView, AbstractStaticString
+    export MallocArray, MallocMatrix, MallocVector
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions

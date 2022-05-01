@@ -5,9 +5,11 @@
     @test isa(str, MallocString)
     @test sizeof(str) == 19
     @test StaticTools.strlen(str) == length(str) == 18
+    str1 = MallocString(c"Hello, world! 🌍")
+    @test isa(str1, MallocString)
 
     # Test basic string operations
-    @test str == m"Hello, world! 🌍"
+    @test str == str1
     m, p = str*str, str^2
     @test m == p
     @test free(m) == 0
@@ -25,13 +27,16 @@
     @test str[8] == 0x77 # w
 
     # Test indexing
-    @test str === str[1:end]
+    @test isa(str[1:end], StringView)
+    @test str == str[1:end]
     @test str === str[:]
     @test str[1:2] === str[1:2]
     @test str[1:2] != str[1:3]
     strc = copy(str)
     @test strc == str
     free(str)
+    free(str1)
+    free(strc)
 
     # Test ascii escaping
     many_escapes = m"\"\0\a\b\f\n\r\t\v\'\"\\"
@@ -54,7 +59,10 @@
     @test MallocString(argv,1) == c"Hello"
     @test MallocString(argv,2) == c"there"
 
-    # Test consistency with base strings
+    # Test consistency with other string types
     abc = m"abc"
     @test abc == "abc"
+    @test abc == c"abc"
+    @test abc == abc[1:3]
+    @test abc[1:3] == "abc"
     free(abc)

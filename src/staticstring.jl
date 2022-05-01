@@ -18,13 +18,50 @@
     wish to pass them to any functions (including most system IO) that expect
     null-termination.
 
-    ---
+    ## Examples
+    ```julia
+    julia> s = c"Hello world!"
+    c"Hello world!"
+
+    julia> s[8:12] = c"there"; s
+    c"Hello there!"
+
+    julia> s[1:5]
+    StringView: "Hello"
+
+    julia> s[1:5] == "Hello"
+    true
+
+    julia> StaticString(s[1:5])
+    c"Hello"
+    ```
+    """
+    mutable struct StaticString{N} <: AbstractStaticString
+        data::NTuple{N,UInt8}
+        @inline function StaticString{N}(::UndefInitializer) where N
+            new{N}()
+        end
+        @inline function StaticString(data::NTuple{N,UInt8}) where N
+            new{N}(data)
+        end
+    end
+
+    """
+    ```julia
+    StaticString{N}(undef)
+    ```
+    Construct an uninitialized `N`-byte `StaticString`
 
     ```julia
     StaticString(data::NTuple{N,UInt8})
     ```
     Construct a `StaticString` containing the `N` bytes specified by `data`.
     To yield a valid string, `data` must be null-terminated, i.e., end in `0x00`.
+
+    ```julia
+    StaticString(s::AbstractStaticString)
+    ```
+    Construct a `StaticString` containing the same data as the input string `s`.
 
     ## Examples
     ```julia
@@ -33,18 +70,15 @@
     julia> s = StaticString(data)
     c"Hello world!"
 
-    julia> s[8:12] = c"there"; s
-    c"Hello there!"
+    julia> StaticString(s[1:5])
+    c"Hello"
     ```
     """
-    mutable struct StaticString{N}
-        data::NTuple{N,UInt8}
-        @inline function StaticString{N}(::UndefInitializer) where N
-            new{N}()
-        end
-        @inline function StaticString(data::NTuple{N,UInt8}) where N
-            new{N}(data)
-        end
+    @inline function StaticString(s::AbstractStaticString)
+        c = StaticString{length(s)+1}(undef)
+        c[1:length(s)] = s
+        c[end] = 0x00
+        return c
     end
 
     # String macro to create null-terminated `StaticString`s
@@ -73,7 +107,7 @@
         :(StaticString($t))
     end
 
-    # Fundamentals
+    # Fundamentals -- where overriding AbstractStaticString defaults
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
     @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
     @inline Base.length(s::StaticString{N}) where N = N-1
@@ -88,12 +122,6 @@
         end
     end
 
-    # Custom printing
-    @inline Base.print(s::StaticString) = printf(s)
-    @inline Base.println(s::StaticString) = puts(s)
-    @inline Base.print(fp::Ptr{FILE}, s::StaticString) = printf(fp, s)
-    @inline Base.println(fp::Ptr{FILE}, s::StaticString) = puts(fp, s)
-
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StaticString)
         Base.print(io, "c\"")
@@ -101,46 +129,27 @@
         Base.print(io, "\"")
     end
 
-    # Implement some of the AbstractArray interface:
+    # Implement some of the AbstractArray interface -- where overriding AbstractStaticString defaults
     @inline Base.firstindex(s::StaticString) = 1
     @inline Base.lastindex(s::StaticString{N}) where {N} = N
     @inline Base.eachindex(s::StaticString{N}) where {N} = 1:N
     @inline Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
-    @inline Base.getindex(s::StaticString, r::AbstractArray{Int}) = StaticString(codeunits(s)[r]) # Should probably null-terminate
-    @inline Base.getindex(s::StaticString, ::Colon) = s
-    @inline Base.setindex!(s::StaticString, x::UInt8, i::Int) = unsafe_store!(pointer(s)+(i-1), x)
-    @inline Base.setindex!(s::StaticString, x, i::Int) = unsafe_store!(pointer(s)+(i-1), convert(UInt8, x))
-    @inline function Base.setindex!(s::StaticString, x, r::UnitRange{Int})
-        is₀ = first(r)-1
-        ix₀ = firstindex(x)-1
-        @inbounds for i = 1:length(r)
-            setindex!(s, x[i+ix₀], i+is₀)
-        end
-    end
-    @inline function Base.setindex!(s::StaticString, x, ::Colon)
-        ix₀ = firstindex(x)-firstindex(s)
-        @inbounds for i ∈ eachindex(s)
-            setindex!(s, x[i+ix₀], i)
-        end
-    end
     @inline Base.copy(s::StaticString) = StaticString(codeunits(s))
 
 
-    # Implement some of the AbstractString interface
+    # Implement some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
-    @inline Base.codeunit(s::StaticString) = UInt8
-    @inline Base.codeunit(s::StaticString, i::Integer) = s[i]
-    @inline function Base.:*(a::StaticString, b::StaticString)  # Concatenation
-        N = length(a) + length(b) + 1
+    @inline function Base.:*(a::AbstractStaticString, b::AbstractStaticString)  # Concatenation
+        N = length(a) + length(b) + 1 # n.b. `length` excludes null-termination
         c = StaticString{N}(undef)
         c[1:length(a)] = a
         c[length(a)+1:length(a)+length(b)] = b
         c[end] = 0x00 # Null-terminate
         return c
     end
-    @inline function Base.:^(s::StaticString, n::Integer)       # Repetition
-        l = length(s) # Excluding the null-termination, remember
+    @inline function Base.:^(s::AbstractStaticString, n::Integer)       # Repetition
+        l = length(s) # Excluding null-termination
         N = n*l + 1
         c = StaticString{N}(undef)
         for i=1:n

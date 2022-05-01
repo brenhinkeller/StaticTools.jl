@@ -1,4 +1,4 @@
-name: CI
+name: CI (Integration)
 on:
   push:
     branches:
@@ -30,11 +30,11 @@ jobs:
         version:
           - '1.8.0-beta3'
         os:
-          - ubuntu-latest
+          - macos-latest
         arch:
           - x64
         group:
-          - Core
+          - Integration
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
@@ -50,22 +50,3 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: '1'
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-      - run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using StaticTools
-            DocMeta.setdocmeta!(StaticTools, :DocTestSetup, :(using StaticTools); recursive=true)
-            doctest(StaticTools)'
