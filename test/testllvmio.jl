@@ -103,6 +103,17 @@
     @test printf(m"%s \n", str) >= 0
     show(str)
 
+    # Print StringView
+    sview = str[1:5]
+    @test puts(sview) === Int32(0)
+    @test puts(fp, sview) === Int32(0)
+    @test printf(sview) === Int32(5)
+    @test printf(fp, sview) === Int32(5)
+    @test print(sview) === Int32(5)
+    @test println(sview) === Int32(0)
+    @test print(fp, sview) === Int32(5)
+    @test println(fp, sview) === Int32(0)
+
 ## --- Printing errors
 
     @test error(c"This is a test\n") == 0
@@ -141,7 +152,7 @@
         @test str[1] == UInt8('1')
         @test free(str) == 0
         @test frewind(fp) == 0
-        
+
         @test getc(fp) === Int32('1')
         @test getc(fp) === Int32('\n')
 

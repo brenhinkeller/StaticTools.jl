@@ -17,7 +17,7 @@
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StringView)
-        Base.print(io, "StringView: \"")
+        Base.print(io, "$(length(s))-byte StringView:\n \"")
         Base.escape_string(io, Base.unsafe_string(pointer(s), length(s)))
         Base.print(io, "\"")
     end

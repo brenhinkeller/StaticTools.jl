@@ -494,6 +494,8 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
         newline(fp) # puts appends `\n`, but fputs doesn't (!)
     end
+    puts(s::StringView) = (printf(s); newline())
+    puts(fp::Ptr{FILE}, s::StringView) = (printf(fp, s); newline(fp))
 
 ## --- gets/fgets
 
@@ -586,6 +588,18 @@ end
             ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+    end
+    function printf(s::StringView)
+        for i ∈ eachindex(s)
+            putchar(s[i])
+        end
+        return length(s) % Int32
+    end
+    function printf(fp::Ptr{FILE}, s::StringView)
+        for i ∈ eachindex(s)
+            putchar(fp, s[i])
+        end
+        return length(s) % Int32
     end
 
 ## --- printf/fprintf, with a format string, just like in C
