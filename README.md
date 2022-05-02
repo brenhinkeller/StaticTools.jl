@@ -2,6 +2,7 @@
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://brenhinkeller.github.io/StaticTools.jl/dev)
 [![CI](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![CI (Integration)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/)
 [![CI (Julia nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Julia%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions?query=workflow%3A%22CI+%28Julia+nightly%29%22)
 [![Coverage](https://codecov.io/gh/brenhinkeller/StaticTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/brenhinkeller/StaticTools.jl)
 

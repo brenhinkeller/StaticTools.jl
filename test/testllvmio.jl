@@ -165,3 +165,7 @@
     # end
     @test free(name) == 0
     @test free(mode) == 0
+
+## --- clean up
+
+    rm("testfile.txt")

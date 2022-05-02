@@ -66,3 +66,6 @@
     m_parsed = parsedlm(Float64, c"testfile.tsv", '\t')
     @test isa(m_parsed, MallocMatrix)
     @test m_parsed == m
+
+    # Clean up
+    rm("testfile.tsv")
