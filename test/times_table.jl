@@ -18,5 +18,3 @@ end
 
 # Attempt to compile
 path = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
-
-exit()

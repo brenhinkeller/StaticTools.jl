@@ -19,5 +19,3 @@ end
 
 # Attempt to compile
 path = compile_executable(rand_matrix, (Int64, Ptr{Ptr{UInt8}}), "./")
-
-exit()
