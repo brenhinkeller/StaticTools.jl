@@ -3,7 +3,7 @@ testpath = pwd()
 scratch = tempdir()
 cd(scratch)
 
-## --- Times table:
+## --- Times table, file IO, mallocarray
 
 # Attempt to compile
 # We have to start a new Julia process to get around the fact that Pkg.test
@@ -18,6 +18,7 @@ println("5x5 times table:")
 status = run(`./times_table 5 5`)
 @test isa(status, Base.Process)
 @test status.exitcode == 0
+@test parsedlm(Int64, c"table.tsv", '\t') == (1:5)*(1:5)'
 
 ## --- Random number generation
 
@@ -38,3 +39,9 @@ status = run(`./rand_matrix 5 5`)
 ## ---
 
 cd(testpath)
+
+## ---
+
+
+
+## ---

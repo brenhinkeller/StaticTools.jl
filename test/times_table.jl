@@ -12,7 +12,13 @@ function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
            M[i,j] = i*j
         end
     end
+    # Print to stdout
     printf(M)
+    # Also print to file
+    fp = fopen(c"table.tsv",c"w")
+    printf(fp, M)
+    fclose(fp)
+    # Clean up matrix
     free(M)
 end
 
