@@ -9,7 +9,7 @@ cd(scratch)
 # We have to start a new Julia process to get around the fact that Pkg.test
 # disables `@inbounds`, but ironically we can use `--compile=min` to make that
 # faster.
-status = run(`julia --compile=min $testpath/compile_scripts/times_table.jl`)
+status = run(`julia --compile=min $testpath/scripts/times_table.jl`)
 @test isa(status, Base.Process)
 @test status.exitcode == 0
 
@@ -26,7 +26,7 @@ status = run(`./times_table 5 5`)
 # We have to start a new Julia process to get around the fact that Pkg.test
 # disables `@inbounds`, but ironically we can use `--compile=min` to make that
 # faster.
-status = run(`julia --compile=min $testpath/compile_scripts/rand_matrix.jl`)
+status = run(`julia --compile=min $testpath/scripts/rand_matrix.jl`)
 @test isa(status, Base.Process)
 @test status.exitcode == 0
 
@@ -35,6 +35,20 @@ println("5x5 random matrix:")
 status = run(`./rand_matrix 5 5`)
 @test isa(status, Base.Process)
 @test status.exitcode == 0
+
+## --- Test LoopVectorization integration
+
+status = run(`julia --compile=min $testpath/scripts/loopvec_product.jl`)
+@test isa(status, Base.Process)
+@test status.exitcode == 0
+
+# Attempt to run
+println("10x10 table sum:")
+status = run(`./loopvec_product 10 10`)
+@test isa(status, Base.Process)
+@test status.exitcode == 0
+@test parsedlm(c"product.tsv",'\t')[] == 3025
+
 
 ## ---
 
