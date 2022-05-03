@@ -10,7 +10,7 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work).
 
-[![Mandelbrot Set in the terminal with compiled Julia](https://img.youtube.com/vi/YsNC4oO0rLA/0.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/YsNC4oO0rLA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Since this package requires Julia 1.8 which is still in beta, new releases need to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`.
 
