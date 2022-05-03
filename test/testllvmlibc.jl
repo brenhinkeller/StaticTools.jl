@@ -24,6 +24,7 @@
     @test memcmp(c"foo", c"bar", 3) != 0
     free(a)
 
+    @test usleep(1000) === Int32(0)
 
     @test isa(StaticTools.time(), Int64)
     @test StaticTools.time() > 10^9

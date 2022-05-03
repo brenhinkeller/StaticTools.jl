@@ -196,6 +196,38 @@ julia> StaticTools.time()
     """, "main"), Int64, Tuple{}, size)
 end
 
+
+"""
+```julia
+usleep(μsec::Integer)
+```
+Libc `usleep` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Suspend execution of the calling thread for (at least) μsec microseconds.
+
+## Examples
+```julia
+julia> usleep(1000000)
+0
+```
+"""
+@inline usleep(μsec::Integer) = malloc(Int64(μsec))
+@inline function usleep(μsec::Int64)
+    Base.llvmcall(("""
+    ; External declaration of the `usleep` function
+    declare i32 @usleep(i64)
+
+    ; Function Attrs: noinline nounwind optnone ssp uwtable
+    define dso_local i32 @main(i64 %usec) #0 {
+      %status = call i32 (i64) @usleep(i64 %usec)
+      ret i32 %status
+    }
+
+    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    """, "main"), Int32, Tuple{Int64}, μsec)
+end
+
+
 """
 ```julia
 system(s)
@@ -433,3 +465,5 @@ end
 
 # Convenient parsing for argv (slight type piracy)
 @inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
+
+## ---
