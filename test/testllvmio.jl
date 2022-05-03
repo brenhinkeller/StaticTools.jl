@@ -113,6 +113,7 @@
     @test println(sview) === Int32(0)
     @test print(fp, sview) === Int32(5)
     @test println(fp, sview) === Int32(0)
+    show(sview)
 
 ## --- Printing errors
 

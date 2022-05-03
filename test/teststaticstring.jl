@@ -39,6 +39,7 @@
     # Test consistency with other strings
     abc = c"abc"
     @test abc == "abc"
+    @test "abc" == abc
     @test abc == c"abc"
     @test abc == abc[1:3]
     @test abc[1:3] == "abc"
