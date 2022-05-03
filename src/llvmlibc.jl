@@ -6,7 +6,7 @@ Libc `malloc` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Allocate `size` bytes of memory and return a pointer to that memory.
 
-See also: `free`.
+See also: `calloc`, `free`.
 
 ## Examples
 ```julia
@@ -48,6 +48,58 @@ end
     """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
 end
 
+
+"""
+```julia
+calloc([n], size::Integer)
+```
+Libc `calloc` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Allocate `size` bytes of zero-initialized memory and return a pointer to that memory.
+As `malloc`, but initializes the memory to all zero.
+
+See also: `malloc`, `free`.
+
+## Examples
+```julia
+julia> p = calloc(100*sizeof(Int64))
+Ptr{UInt8} @0x00007fb74ff04360
+
+julia> MallocArray{Int64}(p, 10, 10)
+10×10 MallocMatrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0
+
+julia> free(p)
+0
+```
+"""
+@inline calloc(size::Integer) = calloc(Int64(size))
+@inline calloc(size::Int64) = calloc(1, size)
+@inline function calloc(n::Int64, size::Int64)
+    Base.llvmcall(("""
+    ; External declaration of the `calloc` function
+    declare i8* @calloc(i64, i64)
+
+    ; Function Attrs: noinline nounwind optnone ssp uwtable
+    define dso_local i8* @main(i64 %n, i64 %size) #0 {
+      %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
+      ret i8* %ptr
+    }
+
+    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
+end
+
+
 """
 ```julia
 free(ptr::Ptr)
@@ -56,7 +108,7 @@ Libc `free` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Free memory that has been previously allocated with `malloc`.
 
-See also: `free`.
+See also: `calloc`, `malloc`.
 
 ## Examples
 ```julia

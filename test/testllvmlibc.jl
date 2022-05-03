@@ -12,6 +12,11 @@
     @test isa(p, Ptr)
     @test free(p) == 0
 
+    p = calloc(100*sizeof(Int64))
+    @test isa(p, Ptr)
+    @test MallocArray{Int64}(p, 10, 10) == fill(0,10,10)
+    @test free(p) == 0
+
 ## ---- Memcpy, memcmp, etc.
 
     a = MallocArray{Float64}(undef, 100)
