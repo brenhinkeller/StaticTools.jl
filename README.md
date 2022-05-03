@@ -10,11 +10,7 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work).
 
-[![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
-
-Since this package requires Julia 1.8 which is still in beta, new releases need to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`.
-
-Caution: this package should be considered somewhat experimental at present, and involves a lot of juggling of pointers.
+Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such.
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
@@ -25,6 +21,8 @@ In addition to the exported names, Julia `Base` functions extended for StaticToo
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
 ### Examples
+[![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
+
 ```julia
 # This is all StaticCompiler-friendly
 using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
