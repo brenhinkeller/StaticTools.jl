@@ -2,7 +2,7 @@
     # General string interface
 
     # Supertype for all strings in this package
-    abstract type AbstractStaticString end
+    abstract type AbstractStaticString <: AbstractString end
 
     # A subtype for strings that are backed by a pointer and a length alone
     abstract type AbstractPointerString <: AbstractStaticString end
