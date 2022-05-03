@@ -8,7 +8,7 @@
 
 Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code to standalone native binaries by eliding GC allocations and `llvmcall`-ing all the things.
 
-This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work).
+This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run on x86-64 linux and mac; other platforms may or may not work but will depend on StaticCompiler.jl support.
 
 Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such.
 
