@@ -10,7 +10,7 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run on x86-64 linux and mac; other platforms may or may not work but will depend on StaticCompiler.jl support.
 
-Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such.
+Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl have to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might check out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such.
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
@@ -179,3 +179,14 @@ shell> ./rand_matrix 5 5
 8.098993e-01    5.368138e-01    3.055373e-02    3.972266e-01    8.146640e-01
 8.241520e-01    7.532375e-01    2.969434e-01    9.436580e-01    2.819992e-01
 ```
+
+### Other notes:
+In order to be standalone-compileable without linking to libjulia, you need to avoid
+* GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (`alloca`, via various tricks) are all fine though.
+* Type instability.
+* Anything that could cause an `InexactError` or `OverflowError` (so `x % Int32` may work in some cases when `Int32(x)` may not).
+* Anything that could cause a `BoundsError` (so `@inbounds` is mandatory).
+
+On the other hand, a surprising range of higher-order language features _will_ work (e.g., multiple dispatch, metaprogramming) as long as they can happen before compile-time.
+
+This package can help you with avoiding some of the above pitfalls, but you'll still need to be quite careful in how you write your code! I'd recommend starting small and adding features slowly.
