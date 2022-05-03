@@ -49,8 +49,19 @@ status = run(`./loopvec_product 10 10`)
 @test status.exitcode == 0
 @test parsedlm(c"product.tsv",'\t')[] == 3025
 
+## --- Test string handling
 
-## ---
+status = run(`julia --compile=min $testpath/scripts/print_args.jl`)
+@test isa(status, Base.Process)
+@test status.exitcode == 0
+
+# Attempt to run
+println("String indexing and handling:")
+status = run(`./print_args foo bar`)
+@test isa(status, Base.Process)
+@test status.exitcode == 0
+
+## --- Clean up
 
 cd(testpath)
 
