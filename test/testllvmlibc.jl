@@ -17,7 +17,7 @@
     @test MallocArray{Int64}(p, 10, 10) == fill(0,10,10)
     @test free(p) == 0
 
-## ---- Memcpy, memcmp, etc.
+## --- memcpy, memcmp, etc.
 
     a = MallocArray{Float64}(undef, 100)
     @test memcpy!(a, ones(100)) == 0
@@ -27,7 +27,13 @@
     @test memcmp(c"foo", c"foo", 3) === Int32(0)
     @test memcmp(c"foo", "foo", 3) === Int32(0)
     @test memcmp(c"foo", c"bar", 3) != 0
+
+    @test memset!(a, 0) === Int32(0)
+    @test a == zeros(100)
+
     free(a)
+
+## --- Other libc utility functions
 
     @test usleep(1000) === Int32(0)
 

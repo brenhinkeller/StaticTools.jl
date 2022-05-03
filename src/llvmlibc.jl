@@ -138,6 +138,59 @@ end
 
 """
 ```julia
+memset!(a, char::Integer, nbytes::Integer=sizeof(a))
+```
+Libc `memset` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Set `nbytes` bytes of the array or memory region `a` to the `Char`/`UInt8`
+conversion of the integer `char`.
+
+## Examples
+```julia
+julia> a = rand(5,5)
+5×5 Matrix{Float64}:
+ 0.252808   0.6125    0.947215   0.0966341  0.637651
+ 0.736149   0.527729  0.928291   0.725644   0.832734
+ 0.704827   0.990302  0.0380948  0.768337   0.891583
+ 0.0826808  0.833624  0.364925   0.230345   0.366826
+ 0.301975   0.113886  0.329196   0.772636   0.0156762
+
+julia> memset!(a, 0)
+0
+
+julia> a
+5×5 Matrix{Float64}:
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+```
+"""
+@inline memset!(a, char, nbytes=sizeof(a)) = GC.@preserve a memset!(pointer(a), char, nbytes)
+@inline memset!(a::AbstractMallocdMemory, char, nbytes=sizeof(a)) = memset!(pointer(a), char, nbytes)
+@inline memset!(ptr::Ptr, char::Integer, nbytes::Integer) = memset!(Ptr{UInt8}(ptr), char, nbytes)
+@inline memset!(ptr::Ptr{UInt8}, char::Integer, nbytes::Integer) = memset!(ptr, Int64(char), Int64(nbytes))
+@inline function memset!(ptr::Ptr{UInt8}, char::Int64, nbytes::Int64)
+    Base.llvmcall(("""
+    ; External declaration of the `memset` function
+    ; Function Attrs: argmemonly nounwind
+    declare void @memset(i8* nocapture writeonly, i64, i64) #0
+
+    ; Function Attrs: noinline nounwind ssp uwtable
+    define dso_local i32 @main(i8* %ptr, i64 %value, i64 %n) #1 {
+      call void @memset(i8* %ptr, i64 %value, i64 %n)
+      ret i32 0
+    }
+
+    attributes #0 = { argmemonly nounwind }
+    attributes #1 = { noinline nounwind ssp uwtable }
+    """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
+end
+
+
+"""
+```julia
 memcpy!(a, b, n=length(b))
 ```
 Libc `memcpy` function, accessed by direct StaticCompiler-safe `llvmcall`.

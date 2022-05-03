@@ -33,7 +33,7 @@ module StaticTools
     # Macros
     export @c_str, @m_str, @mm_str
     # Functions
-    export malloc, calloc, free, memcmp, memcpy!                                # Memory management
+    export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management
     export stdinp, stdoutp, stderrp                                             # File pointers
     export fopen, fclose, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END          # File open, close, seek
     export usleep                                                               # Other libc utility functions
