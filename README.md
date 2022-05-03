@@ -10,9 +10,11 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8+ (in particular, 1.8.0-beta3 is known to work).
 
-You probably also want to check out the latest main branch of this package rather than the latest registered version (since the package requires 1.8, new releases need to be merged manually in the general registry until the registry switches over to 1.8, so I'm holding off to spare registry maintainers the workload)
+[![Mandelbrot Set in the terminal with compiled Julia](https://img.youtube.com/vi/YsNC4oO0rLA/0.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
 
-Caution: this package should be considered experimental at present, and involves a lot of juggling of pointers
+Since this package requires Julia 1.8 which is still in beta, new releases need to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might add out the main branch directly with `] add StaticTools#main`.
+
+Caution: this package should be considered somewhat experimental at present, and involves a lot of juggling of pointers.
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
