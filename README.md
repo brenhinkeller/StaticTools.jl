@@ -6,7 +6,7 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8 (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run on x86-64 linux and mac; other platforms may or may not work but will depend on StaticCompiler.jl support.
 
-Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl have to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might check out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such.
+Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl have to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might check out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should probably still be considered somewhat experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia").
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
@@ -29,7 +29,7 @@ This package can help you with avoiding some of the above, but you'll still need
 
 On the other hand, a surprising range of higher-order language features _will_ work (e.g., multiple dispatch, metaprogramming) as long as they can happen before compile-time.
 
-While, as noted above, manually allocating your own memory on the heap with `malloc` or `calloc` and operating on that memory via pointers will work just fine (as is done in `MallocArray`s and `MallocString`s), by doing this we have effectively stepped into a subset of Julia which we might call "unsafe Julia" -- the same subset you step into when you interact with C objects in Julia, but also one which means you're dealing with objects that don't follow the normal Julia object model.
+While, as noted above, manually allocating your own memory on the heap with `malloc` or `calloc` and operating on that memory via pointers will work just fine (as is done in `MallocArray`s and `MallocString`s), by doing this we have effectively stepped into a subset of Julia which we might call "unsafe Julia" -- the same subset you step into when you interact with C objects in Julia, but also one which means you're dealing with objects that don't follow the normal Julia object model. 👻
 
 
 ### Examples
