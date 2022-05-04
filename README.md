@@ -29,9 +29,7 @@ This package can help you with avoiding some of the above, but you'll still need
 
 On the other hand, a surprising range of higher-order language features _will_ work (e.g., multiple dispatch, metaprogramming) as long as they can happen before compile-time.
 
-Objects that the Jula compiler can figure out how to put on the stack will generally be fine too.
-
-While, as noted above, manually allocating your own heap with `malloc` or `calloc` and operating on those pointers will work just fine (as in `MallocArray`s and `MallocString`s) by doing this we have effectively stepped into a subset of Julia which we might call "unsafe Julia" -- the same subset you step into when you interact with C objects in Julia, but also one which means you're dealing with objects that don't follow the normal Julia object model.
+While, as noted above, manually allocating your own memory on the heap with `malloc` or `calloc` and operating on that memory via pointers will work just fine (as is done in `MallocArray`s and `MallocString`s), by doing this we have effectively stepped into a subset of Julia which we might call "unsafe Julia" -- the same subset you step into when you interact with C objects in Julia, but also one which means you're dealing with objects that don't follow the normal Julia object model.
 
 
 ### Examples
