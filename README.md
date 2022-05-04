@@ -185,9 +185,9 @@ In order to be standalone-compileable without linking to libjulia, you need to a
 * GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (`alloca`, via various tricks) are all fine though.
 * Non-`const`ant global variables
 * Type instability.
-* Anything that could cause an `InexactError` or `OverflowError` (so `x % Int32` may work in some cases when `Int32(x)` may not).
-* Anything that could cause a `BoundsError` (so `@inbounds` is mandatory).
-* Any functions that don't want to inline (feel free to use `@inline` liberally).
+* Anything that could cause an `InexactError` or `OverflowError` -- so `x % Int32` may work in some cases when `Int32(x)` may not.
+* Anything that could cause a `BoundsError` -- so `@inbounds` (or else `julia --check-bounds=no`) is mandatory.
+* Functions that don't want to inline (can cause sneaky allocations) -- feel free to use `@inline` liberally to avoid.
 
 On the other hand, a surprising range of higher-order language features _will_ work (e.g., multiple dispatch, metaprogramming) as long as they can happen before compile-time.
 
