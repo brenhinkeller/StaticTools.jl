@@ -183,6 +183,7 @@ shell> ./rand_matrix 5 5
 ### Other notes:
 In order to be standalone-compileable without linking to libjulia, you need to avoid
 * GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (`alloca`, via various tricks) are all fine though.
+* Non-`const`ant global variables
 * Type instability.
 * Anything that could cause an `InexactError` or `OverflowError` (so `x % Int32` may work in some cases when `Int32(x)` may not).
 * Anything that could cause a `BoundsError` (so `@inbounds` is mandatory).
