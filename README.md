@@ -32,7 +32,7 @@ On the other hand, a surprising range of higher-order language features _will_ w
 
 While, as noted above, manually allocating your own memory on the heap with `malloc` or `calloc` and operating on that memory via pointers will work just fine (as is done in `MallocArray`s and `MallocString`s), by doing this we have effectively stepped into a subset of Julia which we might call "unsafe Julia" -- the same subset you step into when you interact with C objects in Julia, but also one which means you're dealing with objects that don't follow the normal Julia object model. 👻
 
-On the other hand, going to all this trouble does have some side benefits besides compileability:
+Fortunately, going to all this trouble does have some side benefits besides compileability:
 * Type instability is one of the biggest sources of unnecessarily bad performance in naive Julia code, especially when you're new to multiple dispatch -- well, won't be able to make that mistake by accident here!
 * No GC means no GC pauses
 * Since we're only including what we need, binaries can be quite small (e.g. 8.3K for Hello World)
