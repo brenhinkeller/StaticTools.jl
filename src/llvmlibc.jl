@@ -18,35 +18,9 @@ julia> free(p)
 ```
 """
 @inline malloc(size::Integer) = malloc(Int64(size))
-@inline function malloc(size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
-    }
-
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
-end
+@inline malloc(size::Int64) = ccall(:malloc, Ptr{UInt8}, (Int64,), size)
 @inline malloc(size::Unsigned) = malloc(UInt64(size))
-@inline function malloc(size::UInt64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
-    }
-
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
-end
+@inline malloc(size::UInt64) = ccall(:malloc, Ptr{UInt8}, (UInt64,), size)
 
 
 """
@@ -84,20 +58,7 @@ julia> free(p)
 """
 @inline calloc(size::Integer) = calloc(Int64(size))
 @inline calloc(size::Int64) = calloc(1, size)
-@inline function calloc(n::Int64, size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `calloc` function
-    declare i8* @calloc(i64, i64)
-
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %n, i64 %size) #0 {
-      %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
-      ret i8* %ptr
-    }
-
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
-end
+@inline calloc(n::Int64, size::Int64) = ccall(:calloc, Ptr{UInt8}, (Int64, Int64), n, size)
 
 
 """
