@@ -1,8 +1,6 @@
 name: CI (Integration)
 on:
   push:
-    branches:
-      - main
     paths-ignore:
       - 'LICENSE.md'
       - 'README.md'

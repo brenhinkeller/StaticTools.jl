@@ -1,8 +1,6 @@
 name: CI (Julia nightly)
 on:
   push:
-    branches:
-      - main
     paths-ignore:
       - 'LICENSE.md'
       - 'README.md'
