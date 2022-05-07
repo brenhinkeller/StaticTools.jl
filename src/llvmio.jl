@@ -568,7 +568,7 @@ end
     function printf(s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8* %str) {
         entry:
@@ -611,7 +611,7 @@ end
     function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, i8*) {
         entry:
@@ -644,7 +644,7 @@ end
     function printf(fmt::Ptr{UInt8}, n::Float64)
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, double) {
         entry:
@@ -674,7 +674,7 @@ end
     function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, i64) {
         entry:
@@ -699,7 +699,7 @@ end
     function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, i32) {
         entry:
@@ -724,7 +724,7 @@ end
     function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, i16) {
         entry:
@@ -749,7 +749,7 @@ end
     function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8*, ...)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i8*, i8) {
         entry:
