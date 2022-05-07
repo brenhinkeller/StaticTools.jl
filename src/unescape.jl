@@ -1,6 +1,6 @@
 # Process any ASCII escape sequences in a raw string captured by string macro
 function _unsafe_unescape!(c)
-    n = length(c)
+    n = ncodeunits(c)
     a = Base.unsafe_wrap(Array, pointer(c)::Ptr{UInt8}, n)
     for i = 1:n
         if a[i] == 0x5c # \

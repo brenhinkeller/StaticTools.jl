@@ -615,7 +615,7 @@ end
 
         define i32 @main(i8*, i8*) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
@@ -648,7 +648,7 @@ end
 
         define i32 @main(i8*, double) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, double %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, double %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
@@ -660,8 +660,8 @@ end
 
         define i32 @main(i8* %fp, i8* %fmt, double %n) {
         entry:
-            %call = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
-            ret i32 %call
+            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
+            ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Float64}, fp, fmt, n)
     end
@@ -678,7 +678,7 @@ end
 
         define i32 @main(i8*, i64) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, i64 %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, i64 %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -690,8 +690,8 @@ end
 
         define i32 @main(i8* %fp, i8* %fmt, i64 %n) {
         entry:
-            %call = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
-            ret i32 %call
+            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
+            ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
@@ -703,7 +703,7 @@ end
 
         define i32 @main(i8*, i32) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, i32 %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, i32 %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -715,8 +715,8 @@ end
 
         define i32 @main(i8* %fp, i8* %fmt, i32 %n) {
         entry:
-            %call = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
-            ret i32 %call
+            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
+            ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
@@ -728,7 +728,7 @@ end
 
         define i32 @main(i8*, i16) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, i16 %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, i16 %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -740,8 +740,8 @@ end
 
         define i32 @main(i8* %fp, i8* %fmt, i16 %n) {
         entry:
-            %call = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
-            ret i32 %call
+            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
+            ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
@@ -753,7 +753,7 @@ end
 
         define i32 @main(i8*, i8) {
         entry:
-            %call = call i32 (i8*, ...) @printf(i8* %0, i8 %1)
+            %status = call i32 (i8*, ...) @printf(i8* %0, i8 %1)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -765,8 +765,8 @@ end
 
         define i32 @main(i8* %fp, i8* %fmt, i8 %n) {
         entry:
-            %call = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
-            ret i32 %call
+            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
+            ret i32 %status
         }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
