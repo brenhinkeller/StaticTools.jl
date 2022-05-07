@@ -107,13 +107,13 @@
         s[:] = data
         return s
     end
-    @inline function MallocString(s::AbstractStaticString)
-        N = length(s) + 1 # Add room for null-termination
-        c = MallocString(Ptr{UInt8}(malloc(N)), N)
-        c[1:length(s)] = s
-        c[end] = 0x00
-        return c
-    end
+@inline function MallocString(s::AbstractStaticString)
+    N = length(s) + 1 # Add room for null-termination
+    c = MallocString(Ptr{UInt8}(malloc(N)), N)
+    c[1:length(s)] = s
+    c[end] = 0x00
+    return c
+end
     @inline MallocString(p::Ptr{UInt8}) = MallocString(p, strlen(p)+1)
     @inline MallocString(argv::Ptr{Ptr{UInt8}}, n::Integer) = MallocString(unsafe_load(argv, n))
 
@@ -143,7 +143,7 @@
     """
     macro m_str(s)
         n = _unsafe_unescape!(s)
-        t = Expr(:tuple, codeunits(s[1:n])..., 0x00)
+        t = Expr(:tuple, codeunits(s)[1:n]..., 0x00)
         :(MallocString($t))
     end
 
