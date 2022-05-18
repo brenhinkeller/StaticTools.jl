@@ -1,16 +1,18 @@
 name: CI (Integration)
 on:
   push:
+    branches:
+      - '**'
     paths-ignore:
       - 'LICENSE'
       - 'README.md'
-    tags: '*'
   pull_request:
     branches:
       - main
     paths-ignore:
       - 'LICENSE'
-      - 'README.md'concurrency:
+      - 'README.md'
+concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
   group: ${{ github.workflow }}-${{ github.ref }}
