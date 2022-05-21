@@ -457,7 +457,7 @@ end
           ret i32 %c
         }
 
-        attributes #0 = { nounwind uwtable }
+        attributes #0 = { nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
     const EOF = Int32(-1)
