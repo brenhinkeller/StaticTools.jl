@@ -42,8 +42,10 @@
         ; External declaration of the fopen function
         declare i8* @fopen(i8*, i8*)
 
-        define i8* @main(i8* %name, i8* %mode) {
+        define i8* @main(i64 %jlname, i64 %jlmode) {
         entry:
+            %name = inttoptr i64 %jlname to i8*
+            %mode = inttoptr i64 %jlmode to i8*
             %fp = call i8* (i8*, i8*) @fopen(i8* %name, i8* %mode)
             ret i8* %fp
         }
@@ -316,9 +318,9 @@ end
         ; External declaration of the putchar function
         declare i32 @putchar(i8 nocapture) nounwind
 
-        define i32 @main(i8) {
+        define i32 @main(i8 %c) {
         entry:
-            %status = call i32 (i8) @putchar(i8 %0)
+            %status = call i32 (i8) @putchar(i8 %c)
             ret i32 0
         }
         """, "main"), Int32, Tuple{UInt8}, c)
@@ -471,9 +473,10 @@ end
         ; External declaration of the puts function
         declare i32 @puts(i8* nocapture) nounwind
 
-        define i32 @main(i8*) {
+        define i32 @main(i64 %jls) {
         entry:
-            %status = call i32 (i8*) @puts(i8* %0)
+            %str = inttoptr i64 %jls to i8*
+            %status = call i32 (i8*) @puts(i8* %str)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
@@ -486,8 +489,9 @@ end
         ; External declaration of the puts function
         declare i32 @fputs(i8*, i8*) nounwind
 
-        define i32 @main(i8* %fp, i8* %str) {
+        define i32 @main(i8* %fp, i64 %jls) {
         entry:
+            %str = inttoptr i64 %jls to i8*
             %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
             ret i32 0
         }
@@ -525,8 +529,9 @@ end
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
 
-        define i8* @main(i8* %str, i8* %fp, i32 %n) #0 {
+        define i8* @main(i64 %jls, i8* %fp, i32 %n) #0 {
         entry:
+            %str = inttoptr i64 %jls to i8*
             %status = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
             ret i8* %status
         }
@@ -570,8 +575,9 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8* %str) {
+        define i32 @main(i64 %jls) {
         entry:
+            %str = inttoptr i64 %jls to i8*
             %status = call i32 (i8*, ...) @printf(i8* %str)
             ret i32 %status
         }
@@ -582,8 +588,9 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, i8*)
 
-        define i32 @main(i8* %fp, i8* %str) {
+        define i32 @main(i8* %fp, i64 %jls) {
         entry:
+            %str = inttoptr i64 %jls to i8*
             %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
             ret i32 %status
         }
@@ -613,9 +620,11 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i8*) {
+        define i32 @main(i64 %jlf, i64 %jls) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %str = inttoptr i64 %jls to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, i8* %str)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
@@ -625,8 +634,10 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i8* %str) {
+        define i32 @main(i8* %fp, i64 %jlf, i64 %jls) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
+            %str = inttoptr i64 %jls to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8* %str)
             ret i32 %status
         }
@@ -646,9 +657,10 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, double) {
+        define i32 @main(i64 %jlf, double %d) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, double %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, double %d)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
@@ -658,8 +670,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, double %n) {
+        define i32 @main(i8* %fp, i64 %jlf, double %n) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
             ret i32 %status
         }
@@ -676,9 +689,10 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i64) {
+        define i32 @main(i64 %jlf, i64 %n) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i64 %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, i64 %n)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -688,8 +702,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i64 %n) {
+        define i32 @main(i8* %fp, i64 %jlf, i64 %n) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
             ret i32 %status
         }
@@ -701,9 +716,10 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i32) {
+        define i32 @main(i64 %jlf, i32 %n) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i32 %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, i32 %n)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -713,8 +729,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i32 %n) {
+        define i32 @main(i8* %fp, i64 %jlf, i32 %n) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
             ret i32 %status
         }
@@ -726,9 +743,10 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i16) {
+        define i32 @main(i64 %jlf, i16 %n) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i16 %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, i16 %n)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -738,8 +756,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i16 %n) {
+        define i32 @main(i8* %fp, i64 %jlf, i16 %n) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
             ret i32 %status
         }
@@ -751,9 +770,10 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i8) {
+        define i32 @main(i64 %jlf, i8 %n) {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i8 %1)
+            %fmt = inttoptr i64 %jlf to i8*
+            %status = call i32 (i8*, ...) @printf(i8* %fmt, i8 %n)
             ret i32 0
         }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
@@ -763,8 +783,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i8 %n) {
+        define i32 @main(i8* %fp, i64 %jlf, i8 %n) {
         entry:
+            %fmt = inttoptr i64 %jlf to i8*
             %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
             ret i32 %status
         }
