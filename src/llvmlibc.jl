@@ -375,7 +375,7 @@ sys 0m0.000s
     define dso_local i32 @main(i64 %jlstr) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %status = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
-      ret i32 0
+      ret i32 %status
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
