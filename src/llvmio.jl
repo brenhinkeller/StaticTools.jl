@@ -450,7 +450,7 @@ end
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
 
-        define dso_local i32 @main(i64 %jlfp) #0 {
+        define i32 @main(i64 %jlfp) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %c = call i32 (i8*) @fgetc(i8* %fp)

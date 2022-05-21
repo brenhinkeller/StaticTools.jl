@@ -24,7 +24,7 @@ julia> free(p)
     declare i8* @malloc(i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %size) #0 {
+    define i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
       %jlp = ptrtoint i8* %ptr to i64
       ret i64 %jlp
@@ -40,7 +40,7 @@ end
     declare i8* @malloc(i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %size) #0 {
+    define i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
       %jlp = ptrtoint i8* %ptr to i64
       ret i64 %jlp
@@ -92,7 +92,7 @@ julia> free(p)
     declare i8* @calloc(i64, i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %n, i64 %size) #0 {
+    define i64 @main(i64 %n, i64 %size) #0 {
       %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
       %jlp = ptrtoint i8* %ptr to i64
       ret i64 %jlp
@@ -129,7 +129,7 @@ julia> free(p)
     declare void @free(i8*)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %jlp) #0 {
+    define i32 @main(i64 %jlp) #0 {
       %ptr = inttoptr i64 %jlp to i8*
       call void (i8*) @free(i8* %ptr)
       ret i32 0
@@ -182,7 +182,7 @@ julia> a
     declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
+    define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
       %ptr = inttoptr i64 %jlp to i8*
       call void @memset(i8* %ptr, i64 %value, i64 %n)
       ret i32 0
@@ -230,7 +230,7 @@ julia> a
     declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %jldest, i64 %jlsrc, i64 %nbytes) #1 {
+    define i32 @main(i64 %jldest, i64 %jlsrc, i64 %nbytes) #1 {
       %dest = inttoptr i64 %jldest to i8*
       %src = inttoptr i64 %jlsrc to i8*
       call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dest, i8* %src, i64 %nbytes, i1 false)
@@ -270,7 +270,7 @@ julia> memcmp(c"foo", c"bar", 3)
     declare i32 @memcmp(i8*, i8*, i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %jla, i64 %jlb, i64 %nbytes) #0 {
+    define i32 @main(i64 %jla, i64 %jlb, i64 %nbytes) #0 {
       %a = inttoptr i64 %jla to i8*
       %b = inttoptr i64 %jlb to i8*
       %cmp = call i32 @memcmp(i8* %a, i8* %b, i64 %nbytes)
@@ -303,7 +303,7 @@ julia> StaticTools.time()
     declare i64 @time(i64*)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main() {
+    define i64 @main() {
       %time = call i64 @time(i64* null)
       ret i64 %time
     }
@@ -332,7 +332,7 @@ julia> usleep(1000000)
     declare i32 @usleep(i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %usec) #0 {
+    define i32 @main(i64 %usec) #0 {
       %status = call i32 (i64) @usleep(i64 %usec)
       ret i32 %status
     }
@@ -372,7 +372,7 @@ sys 0m0.000s
     declare i32 @system(...)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i32 @main(i64 %jlstr) #0 {
+    define i32 @main(i64 %jlstr) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %status = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
       ret i32 %status
@@ -408,7 +408,7 @@ julia> strlen(c"foo")
     declare i64 @strlen(i8*)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %jlstr) #0 {
+    define i64 @main(i64 %jlstr) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %li = call i64 (i8*) @strlen (i8* %str)
       ret i64 %li
@@ -450,7 +450,7 @@ end
     declare double @strtod(i8*, i8**)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local double @main(i64 %jlstr, i64 %jlp) #0 {
+    define double @main(i64 %jlstr, i64 %jlp) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %ptr = inttoptr i64 %jlp to i8**
       %d = call double (i8*, i8**) @strtod (i8* %str, i8** %ptr)
@@ -492,7 +492,7 @@ end
     declare i64 @strtol(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
@@ -534,7 +534,7 @@ end
     declare i64 @strtoul(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
-    define dso_local i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
       %str = inttoptr i64 %jlstr to i8*
       %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
