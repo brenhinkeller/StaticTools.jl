@@ -182,7 +182,8 @@ julia> a
     declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
     ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %ptr, i64 %value, i64 %n) #1 {
+    define dso_local i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
+      %ptr = inttoptr i64 %jlp to i8*
       call void @memset(i8* %ptr, i64 %value, i64 %n)
       ret i32 0
     }
@@ -229,7 +230,9 @@ julia> a
     declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
 
     ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %dest, i8* %src, i64 %nbytes) #1 {
+    define dso_local i32 @main(i64 %jldest, i64 %jlsrc, i64 %nbytes) #1 {
+      %dest = inttoptr i64 %jldest to i8*
+      %src = inttoptr i64 %jlsrc to i8*
       call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dest, i8* %src, i64 %nbytes, i1 false)
       ret i32 0
     }
@@ -267,7 +270,9 @@ julia> memcmp(c"foo", c"bar", 3)
     declare i32 @memcmp(i8*, i8*, i64)
 
     ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %a, i8* %b, i64 %nbytes) #0 {
+    define dso_local i32 @main(i64 %jla, i64 %jlb, i64 %nbytes) #0 {
+      %a = inttoptr i64 %jla to i8*
+      %b = inttoptr i64 %jlb to i8*
       %cmp = call i32 @memcmp(i8* %a, i8* %b, i64 %nbytes)
       ret i32 %cmp
     }
@@ -367,8 +372,9 @@ sys 0m0.000s
     declare i32 @system(...)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i32 @main(i8* %str) #0 {
-      %1 = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
+    define dso_local i32 @main(i64 %jlstr) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %status = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
       ret i32 0
     }
 
@@ -402,7 +408,8 @@ julia> strlen(c"foo")
     declare i64 @strlen(i8*)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str) #0 {
+    define dso_local i64 @main(i64 %jlstr) #0 {
+      %str = inttoptr i64 %jlstr to i8*
       %li = call i64 (i8*) @strlen (i8* %str)
       ret i64 %li
     }
