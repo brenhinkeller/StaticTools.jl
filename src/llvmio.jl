@@ -536,7 +536,7 @@ end
           ret i8* %status
         }
 
-        attributes #0 = { noinline nounwind ssp uwtable }
+        attributes #0 = { nounwind ssp uwtable }
         """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Ptr{FILE}, Int32}, pointer(s), fp, n % Int32)
     end
 
