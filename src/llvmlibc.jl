@@ -450,7 +450,9 @@ end
     declare double @strtod(i8*, i8**)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local double @main(i8* %str, i8** %ptr) #0 {
+    define dso_local double @main(i64 %jlstr, i64 %jlp) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %d = call double (i8*, i8**) @strtod (i8* %str, i8** %ptr)
       ret double %d
     }
@@ -490,7 +492,9 @@ end
     declare i64 @strtol(i8*, i8**, i32)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+    define dso_local i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
@@ -530,7 +534,9 @@ end
     declare i64 @strtoul(i8*, i8**, i32)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+    define dso_local i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
