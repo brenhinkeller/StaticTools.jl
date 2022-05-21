@@ -24,9 +24,10 @@ julia> free(p)
     declare i8* @malloc(i64)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
+    define dso_local i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
@@ -39,9 +40,10 @@ end
     declare i8* @malloc(i64)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
+    define dso_local i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
@@ -90,9 +92,10 @@ julia> free(p)
     declare i8* @calloc(i64, i64)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %n, i64 %size) #0 {
+    define dso_local i64 @main(i64 %n, i64 %size) #0 {
       %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
     attributes #0 = { noinline nounwind optnone ssp uwtable }
@@ -126,7 +129,8 @@ julia> free(p)
     declare void @free(i8*)
 
     ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i32 @main(i8* %ptr) #0 {
+    define dso_local i32 @main(i64 %jlp) #0 {
+      %ptr = inttoptr i64 %jlp to i8*
       call void (i8*) @free(i8* %ptr)
       ret i32 0
     }
