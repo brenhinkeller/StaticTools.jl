@@ -42,12 +42,13 @@
         ; External declaration of the fopen function
         declare i8* @fopen(i8*, i8*)
 
-        define i8* @main(i64 %jlname, i64 %jlmode) #0 {
+        define i64 @main(i64 %jlname, i64 %jlmode) #0 {
         entry:
           %name = inttoptr i64 %jlname to i8*
           %mode = inttoptr i64 %jlmode to i8*
           %fp = call i8* (i8*, i8*) @fopen(i8* %name, i8* %mode)
-          ret i8* %fp
+          %jlfp = ptrtoint i8* %fp to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -85,8 +86,9 @@
         ; External declaration of the fclose function
         declare i32 @fclose(i8*)
 
-        define i32 @main(i8* %fp) #0 {
+        define i32 @main(i64 %jlfp) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %status = call i32 (i8*) @fclose(i8* %fp)
           ret i32 %status
         }
@@ -144,8 +146,9 @@
         ; External declaration of the fseek function
         declare i32 @fseek(i8*, i64, i32)
 
-        define i32 @main(i8* %fp, i64 %offset, i32 %whence) #0 {
+        define i32 @main(i64 %jlfp, i64 %offset, i32 %whence) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
           ret i32 %status
         }
@@ -183,10 +186,11 @@
         Base.llvmcall(("""
         @__stdoutp = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @__stdoutp, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -197,10 +201,11 @@ else
         Base.llvmcall(("""
         @stdout = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @stdout, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -232,10 +237,11 @@ end
         Base.llvmcall(("""
         @__stderrp = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @__stderrp, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -246,10 +252,11 @@ else
         Base.llvmcall(("""
         @stderr = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @stderr, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -277,10 +284,11 @@ end
         Base.llvmcall(("""
         @__stdinp = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @__stdinp, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -291,10 +299,11 @@ else
         Base.llvmcall(("""
         @stdin = external global i8*
 
-        define i8* @main() #0 {
+        define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @stdin, align 8
-          ret i8* %ptr
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
 
         attributes #0 = { nounwind ssp uwtable }
@@ -351,8 +360,9 @@ end
         ; External declaration of the fputc function
         declare i32 @fputc(i8, i8*) nounwind
 
-        define i32 @main(i8* %fp, i8 %c) #0 {
+        define i32 @main(i64 %jlfp, i8 %c) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
           ret i32 0
         }
@@ -418,21 +428,6 @@ end
         """, "main"), UInt8, Tuple{})
     end
 
-    # function getchar(fp::Ptr{FILE})
-    #     Base.llvmcall(("""
-    #     ; External declaration of the fgetc function
-    #     declare i32 @fgetc(i8*)
-    #
-    #     define dso_local i8 @main(i8* %fp) #0 {
-    #     entry:
-    #         %result = call i32 (i8*) @fgetc(i8* %fp)
-    #         %c = trunc i32 %result to i8
-    #         ret i8 %c
-    #     }
-    #
-    #     attributes #0 = { nounwind uwtable }
-    #     """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
-    # end
 
     """
     ```julia
@@ -455,8 +450,9 @@ end
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
 
-        define dso_local i32 @main(i8* %fp) #0 {
+        define dso_local i32 @main(i64 %jlfp) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %c = call i32 (i8*) @fgetc(i8* %fp)
           ret i32 %c
         }
@@ -515,8 +511,9 @@ end
         ; External declaration of the puts function
         declare i32 @fputs(i8*, i8*) nounwind
 
-        define i32 @main(i8* %fp, i64 %jls) #0 {
+        define i32 @main(i64 %jlfp, i64 %jls) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %str = inttoptr i64 %jls to i8*
           %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
           ret i32 0
@@ -557,9 +554,10 @@ end
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
 
-        define i8* @main(i64 %jls, i8* %fp, i32 %n) #0 {
+        define i8* @main(i64 %jls, i64 %jlfp, i32 %n) #0 {
         entry:
           %str = inttoptr i64 %jls to i8*
+          %fp = inttoptr i64 %jlfp to i8*
           %status = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
           ret i8* %status
         }
@@ -618,8 +616,9 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, i8*)
 
-        define i32 @main(i8* %fp, i64 %jls) #0 {
+        define i32 @main(i64 %jlfp, i64 %jls) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %str = inttoptr i64 %jls to i8*
           %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
           ret i32 %status
@@ -668,8 +667,9 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, i64 %jls) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %jls) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %str = inttoptr i64 %jls to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8* %str)
@@ -708,8 +708,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, double %n) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, double %n) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
           ret i32 %status
@@ -744,8 +745,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, i64 %n) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %n) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
           ret i32 %status
@@ -775,8 +777,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, i32 %n) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, i32 %n) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
           ret i32 %status
@@ -806,8 +809,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, i16 %n) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, i16 %n) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
           ret i32 %status
@@ -837,8 +841,9 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i64 %jlf, i8 %n) #0 {
+        define i32 @main(i64 %jlfp, i64 %jlf, i8 %n) #0 {
         entry:
+          %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
           ret i32 %status
