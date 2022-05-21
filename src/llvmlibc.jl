@@ -23,13 +23,14 @@ julia> free(p)
     ; External declaration of the `malloc` function
     declare i8* @malloc(i64)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
 end
 @inline malloc(size::Unsigned) = malloc(UInt64(size))
@@ -38,13 +39,14 @@ end
     ; External declaration of the `malloc` function
     declare i8* @malloc(i64)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %size) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %size) #0 {
       %ptr = call i8* (i64) @malloc(i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
 end
 
@@ -89,13 +91,14 @@ julia> free(p)
     ; External declaration of the `calloc` function
     declare i8* @calloc(i64, i64)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i8* @main(i64 %n, i64 %size) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %n, i64 %size) #0 {
       %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
-      ret i8* %ptr
+      %jlp = ptrtoint i8* %ptr to i64
+      ret i64 %jlp
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
 end
 
@@ -125,13 +128,14 @@ julia> free(p)
     ; External declaration of the `free` function
     declare void @free(i8*)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i32 @main(i8* %ptr) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %jlp) #0 {
+      %ptr = inttoptr i64 %jlp to i8*
       call void (i8*) @free(i8* %ptr)
       ret i32 0
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, ptr)
 end
 
@@ -177,14 +181,15 @@ julia> a
     ; Function Attrs: argmemonly nounwind
     declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
-    ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %ptr, i64 %value, i64 %n) #1 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
+      %ptr = inttoptr i64 %jlp to i8*
       call void @memset(i8* %ptr, i64 %value, i64 %n)
       ret i32 0
     }
 
     attributes #0 = { argmemonly nounwind }
-    attributes #1 = { noinline nounwind ssp uwtable }
+    attributes #1 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
 end
 
@@ -224,14 +229,16 @@ julia> a
     ; Function Attrs: argmemonly nounwind
     declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
 
-    ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %dest, i8* %src, i64 %nbytes) #1 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %jldest, i64 %jlsrc, i64 %nbytes) #1 {
+      %dest = inttoptr i64 %jldest to i8*
+      %src = inttoptr i64 %jlsrc to i8*
       call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dest, i8* %src, i64 %nbytes, i1 false)
       ret i32 0
     }
 
     attributes #0 = { argmemonly nounwind }
-    attributes #1 = { noinline nounwind ssp uwtable }
+    attributes #1 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, dst, src, nbytes)
 end
 
@@ -262,13 +269,15 @@ julia> memcmp(c"foo", c"bar", 3)
     ; External declaration of the `memcmp` function
     declare i32 @memcmp(i8*, i8*, i64)
 
-    ; Function Attrs: noinline nounwind ssp uwtable
-    define dso_local i32 @main(i8* %a, i8* %b, i64 %nbytes) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %jla, i64 %jlb, i64 %nbytes) #0 {
+      %a = inttoptr i64 %jla to i8*
+      %b = inttoptr i64 %jlb to i8*
       %cmp = call i32 @memcmp(i8* %a, i8* %b, i64 %nbytes)
       ret i32 %cmp
     }
 
-    attributes #0 = { noinline nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, a, b, nbytes)
 end
 
@@ -293,8 +302,8 @@ julia> StaticTools.time()
     ; External declaration of the `time` function
     declare i64 @time(i64*)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main() {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main() {
       %time = call i64 @time(i64* null)
       ret i64 %time
     }
@@ -322,13 +331,13 @@ julia> usleep(1000000)
     ; External declaration of the `usleep` function
     declare i32 @usleep(i64)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i32 @main(i64 %usec) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %usec) #0 {
       %status = call i32 (i64) @usleep(i64 %usec)
       ret i32 %status
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Int64}, μsec)
 end
 
@@ -362,13 +371,14 @@ sys 0m0.000s
     ; External declaration of the `system` function
     declare i32 @system(...)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i32 @main(i8* %str) #0 {
-      %1 = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
-      ret i32 0
+    ; Function Attrs: nounwind ssp uwtable
+    define i32 @main(i64 %jlstr) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %status = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
+      ret i32 %status
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end
 
@@ -397,13 +407,14 @@ julia> strlen(c"foo")
     ; External declaration of the `strlen` function
     declare i64 @strlen(i8*)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %jlstr) #0 {
+      %str = inttoptr i64 %jlstr to i8*
       %li = call i64 (i8*) @strlen (i8* %str)
       ret i64 %li
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int64, Tuple{Ptr{UInt8}}, s)
 end
 
@@ -438,13 +449,15 @@ end
     ; External declaration of the `strtod` function
     declare double @strtod(i8*, i8**)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local double @main(i8* %str, i8** %ptr) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define double @main(i64 %jlstr, i64 %jlp) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %d = call double (i8*, i8**) @strtod (i8* %str, i8** %ptr)
       ret double %d
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Float64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}}, s, p)
 end
 
@@ -478,13 +491,15 @@ end
     ; External declaration of the `strtol` function
     declare i64 @strtol(i8*, i8**, i32)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
@@ -518,13 +533,15 @@ end
     ; External declaration of the `strtoul` function
     declare i64 @strtoul(i8*, i8**, i32)
 
-    ; Function Attrs: noinline nounwind optnone ssp uwtable
-    define dso_local i64 @main(i8* %str, i8** %ptr, i32 %base) #0 {
+    ; Function Attrs: nounwind ssp uwtable
+    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
+      %str = inttoptr i64 %jlstr to i8*
+      %ptr = inttoptr i64 %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
 
-    attributes #0 = { noinline nounwind optnone ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), UInt64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 

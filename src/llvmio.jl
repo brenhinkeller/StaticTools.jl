@@ -42,11 +42,16 @@
         ; External declaration of the fopen function
         declare i8* @fopen(i8*, i8*)
 
-        define i8* @main(i8* %name, i8* %mode) {
+        define i64 @main(i64 %jlname, i64 %jlmode) #0 {
         entry:
-            %fp = call i8* (i8*, i8*) @fopen(i8* %name, i8* %mode)
-            ret i8* %fp
+          %name = inttoptr i64 %jlname to i8*
+          %mode = inttoptr i64 %jlmode to i8*
+          %fp = call i8* (i8*, i8*) @fopen(i8* %name, i8* %mode)
+          %jlfp = ptrtoint i8* %fp to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{Ptr{UInt8}, Ptr{UInt8}}, name, mode)
     end
 
@@ -81,11 +86,14 @@
         ; External declaration of the fclose function
         declare i32 @fclose(i8*)
 
-        define i32 @main(i8* %fp) {
+        define i32 @main(i64 %jlfp) #0 {
         entry:
-            %status = call i32 (i8*) @fclose(i8* %fp)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %status = call i32 (i8*) @fclose(i8* %fp)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
 
@@ -138,11 +146,14 @@
         ; External declaration of the fseek function
         declare i32 @fseek(i8*, i64, i32)
 
-        define i32 @main(i8* %fp, i64 %offset, i32 %whence) {
+        define i32 @main(i64 %jlfp, i64 %offset, i32 %whence) #0 {
         entry:
-            %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Int64, Int32}, fp, offset, whence)
     end
     const SEEK_SET = Int32(0)
@@ -175,11 +186,14 @@
         Base.llvmcall(("""
         @__stdoutp = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @__stdoutp, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @__stdoutp, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -187,11 +201,14 @@ else
         Base.llvmcall(("""
         @stdout = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @stdout, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @stdout, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -220,11 +237,14 @@ end
         Base.llvmcall(("""
         @__stderrp = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @__stderrp, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @__stderrp, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -232,11 +252,14 @@ else
         Base.llvmcall(("""
         @stderr = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @stderr, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @stderr, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -261,11 +284,14 @@ end
         Base.llvmcall(("""
         @__stdinp = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @__stdinp, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @__stdinp, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -273,11 +299,14 @@ else
         Base.llvmcall(("""
         @stdin = external global i8*
 
-        define i8* @main() {
+        define i64 @main() #0 {
         entry:
-            %ptr = load i8*, i8** @stdin, align 8
-            ret i8* %ptr
+          %ptr = load i8*, i8** @stdin, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -316,11 +345,13 @@ end
         ; External declaration of the putchar function
         declare i32 @putchar(i8 nocapture) nounwind
 
-        define i32 @main(i8) {
+        define i32 @main(i8 %c) #0 {
         entry:
-            %status = call i32 (i8) @putchar(i8 %0)
-            ret i32 0
+          %status = call i32 (i8) @putchar(i8 %c)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{UInt8}, c)
     end
     putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
@@ -329,11 +360,14 @@ end
         ; External declaration of the fputc function
         declare i32 @fputc(i8, i8*) nounwind
 
-        define i32 @main(i8* %fp, i8 %c) {
+        define i32 @main(i64 %jlfp, i8 %c) #0 {
         entry:
-            %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
-            ret i32 0
+          %fp = inttoptr i64 %jlfp to i8*
+          %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
     end
 
@@ -383,30 +417,17 @@ end
         ; External declaration of the getchar function
         declare i32 @getchar()
 
-        define i8 @main() {
+        define i8 @main() #0 {
         entry:
-            %result = call i32 @getchar()
-            %c = trunc i32 %result to i8
-            ret i8 %c
+          %result = call i32 @getchar()
+          %c = trunc i32 %result to i8
+          ret i8 %c
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), UInt8, Tuple{})
     end
 
-    # function getchar(fp::Ptr{FILE})
-    #     Base.llvmcall(("""
-    #     ; External declaration of the fgetc function
-    #     declare i32 @fgetc(i8*)
-    #
-    #     define dso_local i8 @main(i8* %fp) #0 {
-    #     entry:
-    #         %result = call i32 (i8*) @fgetc(i8* %fp)
-    #         %c = trunc i32 %result to i8
-    #         ret i8 %c
-    #     }
-    #
-    #     attributes #0 = { nounwind uwtable }
-    #     """, "main"), UInt8, Tuple{Ptr{FILE}}, fp)
-    # end
 
     """
     ```julia
@@ -429,13 +450,14 @@ end
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
 
-        define dso_local i32 @main(i8* %fp) #0 {
+        define i32 @main(i64 %jlfp) #0 {
         entry:
-            %c = call i32 (i8*) @fgetc(i8* %fp)
-            ret i32 %c
+          %fp = inttoptr i64 %jlfp to i8*
+          %c = call i32 (i8*) @fgetc(i8* %fp)
+          ret i32 %c
         }
 
-        attributes #0 = { nounwind uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
     const EOF = Int32(-1)
@@ -471,11 +493,14 @@ end
         ; External declaration of the puts function
         declare i32 @puts(i8* nocapture) nounwind
 
-        define i32 @main(i8*) {
+        define i32 @main(i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*) @puts(i8* %0)
-            ret i32 0
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*) @puts(i8* %str)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
 
@@ -486,11 +511,15 @@ end
         ; External declaration of the puts function
         declare i32 @fputs(i8*, i8*) nounwind
 
-        define i32 @main(i8* %fp, i8* %str) {
+        define i32 @main(i64 %jlfp, i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
-            ret i32 0
+          %fp = inttoptr i64 %jlfp to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
         newline(fp) # puts appends `\n`, but fputs doesn't (!)
     end
@@ -525,13 +554,16 @@ end
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
 
-        define i8* @main(i8* %str, i8* %fp, i32 %n) #0 {
+        define i64 @main(i64 %jls, i64 %jlfp, i32 %n) #0 {
         entry:
-            %status = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
-            ret i8* %status
+          %str = inttoptr i64 %jls to i8*
+          %fp = inttoptr i64 %jlfp to i8*
+          %stp = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
+          %status = ptrtoint i8* %stp to i64
+          ret i64 %status
         }
 
-        attributes #0 = { noinline nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Ptr{FILE}, Int32}, pointer(s), fp, n % Int32)
     end
 
@@ -570,11 +602,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8* %str) {
+        define i32 @main(i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %str)
-            ret i32 %status
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %str)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
     function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
@@ -582,11 +617,15 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, i8*)
 
-        define i32 @main(i8* %fp, i8* %str) {
+        define i32 @main(i64 %jlfp, i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
     end
     function printf(s::StringView)
@@ -613,11 +652,15 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i8*) {
+        define i32 @main(i64 %jlf, i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i8* %str)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
@@ -625,11 +668,16 @@ end
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i8* %str) {
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %jls) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8* %str)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8* %str)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Ptr{UInt8}}, fp, fmt, s)
     end
 
@@ -646,11 +694,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, double) {
+        define i32 @main(i64 %jlf, double %d) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, double %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, double %d)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
@@ -658,11 +709,15 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, double %n) {
+        define i32 @main(i64 %jlfp, i64 %jlf, double %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Float64}, fp, fmt, n)
     end
 
@@ -676,11 +731,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i64) {
+        define i32 @main(i64 %jlf, i64 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i64 %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i64 %n)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
@@ -688,11 +746,15 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i64 %n) {
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -701,11 +763,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i32) {
+        define i32 @main(i64 %jlf, i32 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i32 %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i32 %n)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
@@ -713,11 +778,15 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i32 %n) {
+        define i32 @main(i64 %jlfp, i64 %jlf, i32 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -726,11 +795,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i16) {
+        define i32 @main(i64 %jlf, i16 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i16 %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i16 %n)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
@@ -738,11 +810,15 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i16 %n) {
+        define i32 @main(i64 %jlfp, i64 %jlf, i16 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -751,11 +827,14 @@ end
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8*, i8) {
+        define i32 @main(i64 %jlf, i8 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @printf(i8* %0, i8 %1)
-            ret i32 0
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i8 %n)
+          ret i32 0
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
@@ -763,11 +842,15 @@ end
         ; External declaration of the printf function
         declare i32 @fprintf(i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %fmt, i8 %n) {
+        define i32 @main(i64 %jlfp, i64 %jlf, i8 %n) #0 {
         entry:
-            %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
-            ret i32 %status
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
+          ret i32 %status
         }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
