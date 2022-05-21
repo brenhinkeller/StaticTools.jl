@@ -51,7 +51,7 @@
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{Ptr{UInt8}, Ptr{UInt8}}, name, mode)
     end
 
@@ -93,7 +93,7 @@
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
 
@@ -153,7 +153,7 @@
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Int64, Int32}, fp, offset, whence)
     end
     const SEEK_SET = Int32(0)
@@ -193,7 +193,7 @@
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -208,7 +208,7 @@ else
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -244,7 +244,7 @@ end
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -259,7 +259,7 @@ else
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -291,7 +291,7 @@ end
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
@@ -306,7 +306,7 @@ else
           ret i64 %jlfp
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
 end
@@ -351,7 +351,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{UInt8}, c)
     end
     putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
@@ -367,7 +367,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
     end
 
@@ -424,7 +424,7 @@ end
           ret i8 %c
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), UInt8, Tuple{})
     end
 
@@ -457,7 +457,7 @@ end
           ret i32 %c
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
     const EOF = Int32(-1)
@@ -500,7 +500,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
 
@@ -519,7 +519,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
         newline(fp) # puts appends `\n`, but fputs doesn't (!)
     end
@@ -563,7 +563,7 @@ end
           ret i64 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Ptr{FILE}, Int32}, pointer(s), fp, n % Int32)
     end
 
@@ -609,7 +609,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
     function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
@@ -625,7 +625,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
     end
     function printf(s::StringView)
@@ -660,7 +660,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
@@ -677,7 +677,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Ptr{UInt8}}, fp, fmt, s)
     end
 
@@ -701,7 +701,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
@@ -717,7 +717,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Float64}, fp, fmt, n)
     end
 
@@ -738,7 +738,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
@@ -754,7 +754,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -770,7 +770,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
@@ -786,7 +786,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -802,7 +802,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
@@ -818,7 +818,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
@@ -834,7 +834,7 @@ end
           ret i32 0
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
@@ -850,7 +850,7 @@ end
           ret i32 %status
         }
 
-        attributes #0 = { nounwind ssp uwtable }
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 

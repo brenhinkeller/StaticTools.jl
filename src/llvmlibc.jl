@@ -30,7 +30,7 @@ julia> free(p)
       ret i64 %jlp
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
 end
 @inline malloc(size::Unsigned) = malloc(UInt64(size))
@@ -46,7 +46,7 @@ end
       ret i64 %jlp
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
 end
 
@@ -98,7 +98,7 @@ julia> free(p)
       ret i64 %jlp
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
 end
 
@@ -135,7 +135,7 @@ julia> free(p)
       ret i32 0
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, ptr)
 end
 
@@ -189,7 +189,7 @@ julia> a
     }
 
     attributes #0 = { argmemonly nounwind }
-    attributes #1 = { nounwind ssp uwtable }
+    attributes #1 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
 end
 
@@ -238,7 +238,7 @@ julia> a
     }
 
     attributes #0 = { argmemonly nounwind }
-    attributes #1 = { nounwind ssp uwtable }
+    attributes #1 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, dst, src, nbytes)
 end
 
@@ -277,7 +277,7 @@ julia> memcmp(c"foo", c"bar", 3)
       ret i32 %cmp
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int64}, a, b, nbytes)
 end
 
@@ -337,7 +337,7 @@ julia> usleep(1000000)
       ret i32 %status
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Int64}, μsec)
 end
 
@@ -378,7 +378,7 @@ sys 0m0.000s
       ret i32 %status
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
 end
 
@@ -414,7 +414,7 @@ julia> strlen(c"foo")
       ret i64 %li
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int64, Tuple{Ptr{UInt8}}, s)
 end
 
@@ -457,7 +457,7 @@ end
       ret double %d
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Float64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}}, s, p)
 end
 
@@ -499,7 +499,7 @@ end
       ret i64 %li
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
@@ -541,7 +541,7 @@ end
       ret i64 %li
     }
 
-    attributes #0 = { nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), UInt64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
