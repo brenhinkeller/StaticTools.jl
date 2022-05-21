@@ -554,12 +554,13 @@ end
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
 
-        define i8* @main(i64 %jls, i64 %jlfp, i32 %n) #0 {
+        define i64 @main(i64 %jls, i64 %jlfp, i32 %n) #0 {
         entry:
           %str = inttoptr i64 %jls to i8*
           %fp = inttoptr i64 %jlfp to i8*
-          %status = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
-          ret i8* %status
+          %stp = call i8* (i8*, i32, i8*) @fgets(i8* %str, i32 %n, i8* %fp)
+          %status = ptrtoint i8* %stp to i64
+          ret i64 %status
         }
 
         attributes #0 = { nounwind ssp uwtable }
