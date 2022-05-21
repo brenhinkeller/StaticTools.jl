@@ -140,11 +140,12 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 @inline function xoshiro256✴︎✴︎(state::Ptr{UInt64})
     Base.llvmcall(("""
     ; Function Attrs: noinline nounwind ssp uwtable
-    define i64 @next(i64*) #0 {
+    define i64 @next(i64) #0 {
+      %ptr = inttoptr i64 %0 to i64*
       %2 = alloca i64*, align 8
       %3 = alloca i64, align 8
       %4 = alloca i64, align 8
-      store i64* %0, i64** %2, align 8
+      store i64* %ptr, i64** %2, align 8
       %5 = load i64*, i64** %2, align 8
       %6 = getelementptr inbounds i64, i64* %5, i64 1
       %7 = load i64, i64* %6, align 8
