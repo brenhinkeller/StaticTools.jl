@@ -2,7 +2,7 @@ using StaticCompiler
 using StaticTools
 using LoopVectorization
 
-@inbounds function mul!(C::MallocArray, A::MallocArray, B::MallocArray)
+@inline function mul!(C::MallocArray, A::MallocArray, B::MallocArray)
     @turbo for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
         Cmn = zero(eltype(C))
         for k ∈ indices((A,B), (2,1))
