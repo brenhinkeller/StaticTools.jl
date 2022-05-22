@@ -6,13 +6,11 @@
 [![CI (Integration nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml)
 [![Coverage](https://codecov.io/gh/brenhinkeller/StaticTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/brenhinkeller/StaticTools.jl)
 
-Warning: experimental. If I've made any mistakes there may be undefined behavior herein! 👻
+Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things. Warning: experimental! 🐛
 
-Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things.
+This package currently requires Julia 1.8 for best results (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run with Julia 1.8 on x86-64 linux and mac; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
 
-This package currently requires Julia 1.8 (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run on x86-64 linux and mac; other platforms may or may not work but will depend on StaticCompiler.jl support.
-
-Since this package requires Julia 1.8 which is still in beta, new releases of StaticTools.jl have to be merged manually in the general registry, so I'm only registering new versions when there are a lot of major changes (no patch releases). So if there are new features you want that aren't in a release yet, you might check out the main branch directly with `] add StaticTools#main`. While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia").
+While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If I've made errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior.
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
