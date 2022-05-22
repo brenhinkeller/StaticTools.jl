@@ -10,7 +10,7 @@ Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 
 This package currently requires Julia 1.8 for best results (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run with Julia 1.8 on x86-64 linux and mac; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
 
-While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If I've made errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior.
+While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If I've made errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. PRs welcome!
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
@@ -22,7 +22,7 @@ In addition to the exported names, Julia `Base` functions extended for StaticToo
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
 
-## Limitations:
+### Limitations:
 In order to be standalone-compileable without linking to libjulia, you need to avoid (among probably other things):
 * GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (by convincing the Julia compiler to use `alloca` and put your object on the stack) are all fine though.
 * Non-`const`ant global variables
@@ -41,14 +41,14 @@ While, as noted above, manually allocating your own memory on the heap with `mal
 Fortunately, going to all this trouble does have some side benefits besides compileability:
 * Type instability is one of the biggest sources of unnecessarily bad performance in naive Julia code, especially when you're new to multiple dispatch -- well, won't be able to make that mistake by accident here!
 * No GC means no GC pauses
-* Since we're only including what we need, binaries can be quite small (e.g. 8.3K for Hello World)
+* Since we're only including what we need, binaries can be quite small (e.g. 8.4K for Hello World)
 
 ## Examples
 
 #### Simple command-line executable with variable arguments:
 ```julia
 # This is all StaticCompiler-friendly
-using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
+using StaticTools
 
 function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
     # c"..." lets you construct statically-sized, stack allocated `StaticString`s
@@ -66,13 +66,13 @@ function print_args(argc::Int, argv::Ptr{Ptr{UInt8}})
 end
 
 # Compile executable
-using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest
+using StaticCompiler
 filepath = compile_executable(print_args, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 and...
 ```
 shell> ls -lh $filepath
-  -rwxr-xr-x  1 user  staff   8.5K Feb 10 02:36 print_args
+  -rwxr-xr-x  1 user  staff   8.4K May 22 13:58 print_args
 
 shell> ./print_args 1 2 3 4 5.0 foo
 Argument count is 7:
@@ -87,15 +87,16 @@ That was fun, see you next time!
 
 shell> hyperfine './print_args hello there'
 Benchmark 1: ./print_args hello there
-  Time (mean ± σ):       2.2 ms ±   0.5 ms    [User: 0.8 ms, System: 0.0 ms]
-  Range (min … max):     1.5 ms …   5.5 ms    564 runs
+  Time (mean ± σ):       2.6 ms ±   0.5 ms    [User: 0.9 ms, System: 0.0 ms]
+  Range (min … max):     1.8 ms …   5.9 ms    542 runs
 
   Warning: Command took less than 5 ms to complete. Results might be inaccurate.
 ```
+Note that the resulting executable is only 8.4kb in size!
 
 #### MallocArrays with size determined at runtime:
 ```julia
-using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
+using StaticTools
 function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
     argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
     rows = parse(Int64, argv, 2)            # First command-line argument
@@ -111,13 +112,13 @@ function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
     free(M)
 end
 
-using StaticCompiler # `] add https://github.com/tshort/StaticCompiler.jl` to get latest
+using StaticCompiler
 filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 which gives us...
 ```
 shell> ls -lh $filepath
--rwxr-xr-x  1 user  staff   8.9K Feb 15 14:58 times_table
+-rwxr-xr-x  1 user  staff   8.6K May 22 14:00 times_table
 
 shell> ./times_table 12, 7
 1   2   3   4   5   6   7
@@ -134,7 +135,7 @@ shell> ./times_table 12, 7
 12  24  36  48  60  72  84
 ```
 
-`MallocArray`s can be `reshape`d and `reinterpret`ed  without causing any new allocations. Unlike base `Array`s, `getindex` produces fast views by default when indexing memory-contiguous slices.
+These `MallocArray`s can be `reshape`d and `reinterpret`ed  without causing any new allocations. Unlike base `Array`s, `getindex` produces fast views by default when indexing memory-contiguous slices.
 ```julia
 julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
            argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
@@ -156,7 +157,7 @@ julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
 times_table (generic function with 1 method)
 
 julia> filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
-"/Users/user/code/StaticTools.jl/times_table"
+"/Users/user/times_table"
 
 shell> ./times_table 3 3
 1	2	3
@@ -193,7 +194,7 @@ julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
 rand_matrix (generic function with 1 method)
 
 julia> compile_executable(rand_matrix, (Int64, Ptr{Ptr{UInt8}}), "./")
-"/Users/user/code/StaticTools.jl/rand_matrix"
+"/Users/user/rand_matrix"
 
 shell> ./rand_matrix 5 5
 7.890932e-01    7.532989e-01    8.593202e-01    4.790301e-01    6.464508e-01
@@ -201,4 +202,14 @@ shell> ./rand_matrix 5 5
 7.021460e-01    4.587692e-01    9.316740e-01    8.736913e-01    8.271038e-01
 8.098993e-01    5.368138e-01    3.055373e-02    3.972266e-01    8.146640e-01
 8.241520e-01    7.532375e-01    2.969434e-01    9.436580e-01    2.819992e-01
+
+shell> hyperfine './rand_matrix 5 5'
+Benchmark 1: ./rand_matrix 5 5
+  Time (mean ± σ):       2.6 ms ±   0.4 ms    [User: 0.9 ms, System: 0.0 ms]
+  Range (min … max):     1.8 ms …   4.2 ms    501 runs
+
+  Warning: Command took less than 5 ms to complete. Results might be inaccurate.
+
+shell> ls -alh rand_matrix
+-rwxr-xr-x  1 user  staff   8.8K May 22 14:02 rand_matrix
 ```
