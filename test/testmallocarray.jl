@@ -73,8 +73,7 @@
     @test free(C) == 0
 
     # The end
-    @test free(A) == 0
-    @test free(B) == 0
+    @test free(A, B) == 0
 
     # Text constructor in higher dims
     B = MallocMatrix{Float32}(undef, 10, 10)

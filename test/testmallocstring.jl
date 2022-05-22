@@ -12,8 +12,7 @@
     @test str == str1
     m, p = str*str, str^2
     @test m == p
-    @test free(m) == 0
-    @test free(p) == 0
+    @test free(m, p) == 0
     @test codeunit(str) === UInt8
     @test codeunit(str, 5) == UInt8('o')
     @test ncodeunits(str) == length(str)+1
@@ -34,9 +33,7 @@
     @test str[1:2] != str[1:3]
     strc = copy(str)
     @test strc == str
-    free(str)
-    free(str1)
-    free(strc)
+    @test free(str, str1, strc) == 0
 
     # Test ascii escaping
     many_escapes = m"\"\0\a\b\f\n\r\t\v\'\"\\"

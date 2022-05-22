@@ -18,6 +18,7 @@ module StaticTools
 
     # Union of things that don't need GC.@protect
     const AbstractMallocdMemory = Union{MallocString, MallocArray}
+    free(a::AbstractMallocdMemory, b...) = free(a) + free(b...)
 
     # Here there be `llvmcall`s
     include("llvmio.jl")        # Best way to print things? LLVM IR obviously!
