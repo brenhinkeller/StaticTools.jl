@@ -164,7 +164,8 @@
     #     @test getchar(fp) === UInt8('\n')
     #     @test fclose(fp) == 0
     # end
-    @test free(name, mode) == 0
+    @test free(name) == 0
+    @test free(mode) == 0
 
 ## --- clean up
 
