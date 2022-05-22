@@ -20,7 +20,9 @@ In addition to the exported names, Julia `Base` functions extended for StaticToo
 * `rand` (when using an `rng` initialied with `static_rng()`, `SplitMix64()`, or `Xoshiro256✴︎✴︎()` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
-### Limitations:
+[![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
+
+## Limitations:
 In order to be standalone-compileable without linking to libjulia, you need to avoid (among probably other things):
 * GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (by convincing the Julia compiler to use `alloca` and put your object on the stack) are all fine though.
 * Non-`const`ant global variables
@@ -41,9 +43,9 @@ Fortunately, going to all this trouble does have some side benefits besides comp
 * No GC means no GC pauses
 * Since we're only including what we need, binaries can be quite small (e.g. 8.3K for Hello World)
 
-### Examples
-[![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
+## Examples
 
+#### Simple command-line executable with variable arguments:
 ```julia
 # This is all StaticCompiler-friendly
 using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
@@ -91,7 +93,7 @@ Benchmark 1: ./print_args hello there
   Warning: Command took less than 5 ms to complete. Results might be inaccurate.
 ```
 
-Or, for an example with arrays:
+#### MallocArrays with size determined at runtime:
 ```julia
 using StaticTools # `] add https://github.com/brenhinkeller/StaticTools.jl` to get latest main
 function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
@@ -171,7 +173,7 @@ The same array, reinterpreted as Int32:
 0	0	0
 ```
 
-We also have random number generators:
+#### Random number generation:
 ```julia
 julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
           argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
