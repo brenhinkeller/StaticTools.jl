@@ -71,9 +71,6 @@ filepath = compile_executable(print_args, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 and...
 ```
-shell> ls -lh $filepath
-  -rwxr-xr-x  1 user  staff   8.4K May 22 13:58 print_args
-
 shell> ./print_args 1 2 3 4 5.0 foo
 Argument count is 7:
 ./print_args
@@ -91,8 +88,11 @@ Benchmark 1: ./print_args hello there
   Range (min … max):     1.8 ms …   5.9 ms    542 runs
 
   Warning: Command took less than 5 ms to complete. Results might be inaccurate.
+
+shell> ls -lh $filepath
+  -rwxr-xr-x  1 user  staff   8.4K May 22 13:58 print_args
 ```
-Note that the resulting executable is only 8.4kb in size!
+Note that the resulting executable is only 8.4 kilobytes in size!
 
 #### MallocArrays with size determined at runtime:
 ```julia
@@ -211,5 +211,76 @@ Benchmark 1: ./rand_matrix 5 5
   Warning: Command took less than 5 ms to complete. Results might be inaccurate.
 
 shell> ls -alh rand_matrix
--rwxr-xr-x  1 user  staff   8.8K May 22 14:02 rand_matrix
+  -rwxr-xr-x  1 user  staff   8.8K May 22 14:02 rand_matrix
+```
+
+#### LoopVectoriztion.jl compatibility!
+```julia
+using StaticCompiler
+using StaticTools
+using LoopVectorization
+
+@inline function mul!(C::MallocArray, A::MallocArray, B::MallocArray)
+    @turbo for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+        Cmn = zero(eltype(C))
+        for k ∈ indices((A,B), (2,1))
+            Cmn += A[m,k] * B[k,n]
+        end
+        C[m,n] = Cmn
+    end
+    return C
+end
+
+function loopvec_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
+    argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
+    rows = parse(Int64, argv, 2)            # First command-line argument
+    cols = parse(Int64, argv, 3)            # Second command-line argument
+
+    # LHS
+    A = MallocArray{Float64}(undef, rows, cols)
+    @turbo for i ∈ axes(A, 1)
+        for j ∈ axes(A, 2)
+           A[i,j] = i*j
+        end
+    end
+
+    # RHS
+    B = MallocArray{Float64}(undef, cols, rows)
+    @turbo for i ∈ axes(B, 1)
+        for j ∈ axes(B, 2)
+           B[i,j] = i*j
+        end
+    end
+
+    # # Matrix multiplication
+    C = MallocArray{Float64}(undef, cols, cols)
+    mul!(C, B, A)
+
+    # Print to stdout
+    printf(C)
+
+    # Clean up matrices
+    free(A)
+    free(B)
+    free(C)
+end
+
+# Attempt to compile
+path = compile_executable(loopvec_matrix, (Int64, Ptr{Ptr{UInt8}}), "./")
+```
+which gives us a 21k executable that allocates, fills, multiplies two 100x100
+matrices and prints results in 6.3 ms singlethreaded
+```
+shell> ./loopvec_matrix 10 3
+3.850000e+02	7.700000e+02	1.155000e+03
+7.700000e+02	1.540000e+03	2.310000e+03
+1.155000e+03	2.310000e+03	3.465000e+03
+
+shell> hyperfine './loopvec_matrix 100 100'
+Benchmark 1: ./loopvec_matrix 100 100
+  Time (mean ± σ):       6.2 ms ±   0.6 ms    [User: 4.1 ms, System: 0.0 ms]
+  Range (min … max):     5.2 ms …   8.5 ms    337 runs
+
+shell> ls -alh loopvec_matrix
+-rwxr-xr-x  1 cbkeller  staff    21K May 22 14:11 loopvec_matrix
 ```
