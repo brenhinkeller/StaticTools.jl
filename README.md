@@ -3,6 +3,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://brenhinkeller.github.io/StaticTools.jl/dev) [![CI](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml)
 [![CI (Integration)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration.yml)
 [![CI (Julia nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Julia%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-julia-nightly.yml)
+[![CI (Integration nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml)
 [![Coverage](https://codecov.io/gh/brenhinkeller/StaticTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/brenhinkeller/StaticTools.jl)
 
 Warning: experimental. If I've made any mistakes there may be undefined behavior herein! 👻

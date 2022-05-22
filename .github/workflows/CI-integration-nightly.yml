@@ -1,4 +1,4 @@
-name: CI (Julia nightly)
+name: CI (Integration nightly)
 on:
   push:
     branches:
@@ -16,7 +16,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  test-julia-nightly:
+  test-integration-nightly:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -25,11 +25,12 @@ jobs:
         version:
           - 'nightly'
         os:
+          - macos-latest
           - ubuntu-latest
         arch:
           - x64
         group:
-          - Core
+          - Integration
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
