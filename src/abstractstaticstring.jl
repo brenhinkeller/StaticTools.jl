@@ -30,7 +30,7 @@
 
 
     # Fundamentals
-    @inline Base.unsafe_convert(::Type{Ptr{T}}, m::AbstractPointerString) where {T} = Ptr{T}(s.pointer)
+    @inline Base.unsafe_convert(::Type{Ptr{T}}, s::AbstractPointerString) where {T} = Ptr{T}(s.pointer)
     @inline Base.pointer(s::AbstractPointerString) = s.pointer
     @inline Base.sizeof(s::AbstractPointerString) = s.length
     @inline function Base.:(==)(a::AbstractStaticString, b::AbstractStaticString)
