@@ -100,7 +100,7 @@
     @inline free(a::MallocArray) = free(a.pointer)
 
     # Fundamentals
-    @inline Base.unsafe_convert(::Type{Ptr{T}}, m::MallocArray) where {T} = Ptr{T}(a.pointer)
+    @inline Base.unsafe_convert(::Type{Ptr{T}}, a::MallocArray) where {T} = Ptr{T}(a.pointer)
     @inline Base.pointer(a::MallocArray) = a.pointer
     @inline Base.length(a::MallocArray) = a.length
     @inline Base.sizeof(a::MallocArray{T}) where {T} = a.length * sizeof(T)
