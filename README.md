@@ -45,6 +45,8 @@ Fortunately, going to all this trouble does have some side benefits besides comp
 
 ## Examples
 
+### Compiled command-line executables
+
 #### Simple command-line executable with variable arguments:
 ```julia
 # This is all StaticCompiler-friendly
@@ -95,6 +97,8 @@ shell> ls -lh $filepath
 Note that the resulting executable is only 8.4 kilobytes in size!
 
 #### MallocArrays with size determined at runtime:
+If we want to have dynamically-sized arrays, we'll have to allocate them ourselves.
+The `MallocArray` type is one way to do that.
 ```julia
 using StaticTools
 function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
@@ -270,7 +274,7 @@ path = compile_executable(loopvec_matrix, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 which gives us a 21k executable that allocates, fills, multiplies two 100x100
 matrices and prints results in 6.3 ms singlethreaded
-```
+```julia-repl
 shell> ./loopvec_matrix 10 3
 3.850000e+02	7.700000e+02	1.155000e+03
 7.700000e+02	1.540000e+03	2.310000e+03
@@ -283,4 +287,170 @@ Benchmark 1: ./loopvec_matrix 100 100
 
 shell> ls -alh loopvec_matrix
 -rwxr-xr-x  1 cbkeller  staff    21K May 22 14:11 loopvec_matrix
+```
+
+### Compiled `.so`/`.dylib` shared libraries
+
+#### Calling compiled Julia from Python
+Say we were to take the example above, but we wanted to compile it into a shared
+library to, say, call from another language. For example, let's say we wanted to
+be able to call our nice fast `LoopVectorization.jl`-based `mul!` function from
+Python...
+
+##### Julia:
+```julia
+using StaticCompiler
+using StaticTools
+using LoopVectorization
+using Base: RefValue
+
+@inline function mul!(C::MallocArray, A::MallocArray, B::MallocArray)
+    @turbo for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+        Cmn = zero(eltype(C))
+        for k ∈ indices((A,B), (2,1))
+            Cmn += A[m,k] * B[k,n]
+        end
+        C[m,n] = Cmn
+    end
+    return 0
+end
+
+# this will let us accept pointers to MallocArrays
+mul!(C::Ref,A::Ref,B::Ref) = mul!(C[], A[], B[])
+
+# Note that we have to specify a contrete type for each argument when compiling!
+# So not just any MallocArra but in this case specifically MallocArray{Float64,2}
+# (AKA MallocMatrix{Float64})
+tt = (RefValue{MallocMatrix{Float64}}, RefValue{MallocMatrix{Float64}}, RefValue{MallocMatrix{Float64}})
+compile_shlib(mul!, tt, "./", "mul_inplace")
+```
+Note that with shared libraries, we're no longer limited to just `argc::Int, argv::Ptr{Ptr{UInt8}}`.
+In principle, we can pass just about anything we want! However, it's usually easiest
+to pass either plain native number types or else pointers to more complicated objects.
+`MallocArray`s would qualify as the latter, hence passing pointers to refs
+
+##### Python side:
+```python
+import ctypes as ct
+import numpy as np
+
+class MallocMatrix(ct.Structure):
+    _fields_ = [("pointer", ct.c_void_p),
+                ("length", ct.c_int64),
+                ("s1", ct.c_int64),
+                ("s2", ct.c_int64)]
+
+def mmptr(A):
+    ptr = A.ctypes.data_as(ct.c_void_p)
+    a = MallocMatrix(ptr, ct.c_int64(A.size), ct.c_int64(A.shape[1]), ct.c_int64(A.shape[0]))
+    return ct.byref(a)
+
+lib = ct.CDLL("./mul_inplace.dylib")
+
+A = np.ones((10,10))
+B = np.ones((10,10))
+C = np.ones((10,10))
+
+Aptr = mmptr(A)
+Bptr = mmptr(B)
+Cptr = mmptr(C)
+
+lib.julia_mul_inplace(Cptr, Bptr, Aptr)
+```
+Note that here we have basically just mimiced the structure of the `MallocArray` Julia `struct`
+```julia
+struct MallocArray{T,N}
+    pointer::Ptr{T}
+    length::Int
+    size::NTuple{N, Int}
+end
+```
+with a python `class`
+```python
+class MallocMatrix(ct.Structure):
+    _fields_ = [("pointer", ct.c_void_p),
+                ("length", ct.c_int64),
+                ("s1", ct.c_int64),
+                ("s2", ct.c_int64)]
+```
+In particular, we can use two integers `s1` and `s2` for the two integers in `size`,
+which in this case is specifically an `Ntuple{2, Int}`, because we're talking
+about a 2d array -- but note that we have to flip the order, because Python is
+row-major in contrast to Julia which is column-major!
+
+Then, wrap that in a ref with `ct.byref` before passing that to our shared library...
+
+##### Results:
+```python
+lib.julia_mul_inplace(Cptr, Bptr, Aptr)
+Out[2]: 0
+
+C
+Out[3]:
+array([[10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
+       [10., 10., 10., 10., 10., 10., 10., 10., 10., 10.]])
+
+%timeit lib.julia_mul_inplace(Cptr, Bptr, Aptr)
+549 ns ± 6.78 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+%timeit np.matmul(A,B)
+2.24 µs ± 39.9 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+```
+so about 4x faster than numpy.matmul for a 10x10 matrix, not counting the time to obtain the pointers.
+
+That said, if we were to go back to Julia
+```julia
+using Libdl
+lib = Libdl.dlopen("./mul_inplace.$(Libdl.dlext)", Libdl.RTLD_LOCAL)
+mul_inplace = Libdl.dlsym(lib, "julia_mul_inplace")
+
+A = MallocArray{Float64}(undef, 10, 10); A .= 1
+B = MallocArray{Float64}(undef, 10, 10); B .= 1
+C = MallocArray{Float64}(undef, 10, 10); C .= 0
+
+ra, rb, rc = Ref(A), Ref(B), Ref(C)
+pa, pb, pc = pointer_from_objref(ra), pointer_from_objref(rb), pointer_from_objref(rc)
+
+ccall(mul_inplace, Int, (Ptr{Nothing}, Ptr{Nothing}, Ptr{Nothing}), pc, pa, pb)
+```
+
+there would seem to be still about another 5x on the table:
+```julia-repl
+julia> ccall(mul_inplace, Int, (Ptr{Nothing}, Ptr{Nothing}, Ptr{Nothing}), pc, pa, pb)
+0
+
+julia> C
+10×10 MallocMatrix{Float64}:
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+ 10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0  10.0
+
+julia> using BenchmarkTools
+
+julia> @benchmark ccall($mul_inplace, Int, (Ptr{nothing}, Ptr{nothing}, Ptr{nothing}), $pc, $pa, $pb)
+BenchmarkTools.Trial: 10000 samples with 956 evaluations.
+ Range (min … max):  90.455 ns … 285.144 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     93.046 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   99.250 ns ±  16.589 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+  ▄█▅▁▁▃▂▂▂   ▂▁       ▁                                       ▁
+  ██████████████████▇▇▇██▇▇▇▇▇▆▇▇▇▆▆▆▆▆▆▆▅▅▆▆▅▅▅▄▅▅▅▅▅▅▅▆▄▄▄▅▅ █
+  90.5 ns       Histogram: log(frequency) by time       178 ns <
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
 ```
