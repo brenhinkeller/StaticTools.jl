@@ -56,11 +56,11 @@ status = run(`julia --compile=min $testpath/scripts/loopvec_matrix.jl`)
 @test status.exitcode == 0
 
 # Run...
-println("10x3 matrix product:")
-status = run(`./loopvec_matrix 10 3`)
+println("10x5 matrix product:")
+status = run(`./loopvec_matrix 10 5`)
 @test isa(status, Base.Process)
 @test status.exitcode == 0
-A = (1:10) * (1:3)'
+A = (1:10) * (1:5)'
 @test parsedlm(c"table.tsv",'\t') == A' * A
 
 ## --- Test string handling
