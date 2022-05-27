@@ -535,7 +535,8 @@ end
     Libc `fgets` function, accessed by direct `llvmcall`.
 
     Read up to `n` characters from the filestream specified by file pointer `fp`
-    to the MallocString `s`.
+    to the MallocString `s`. Stops when a newline is encountered, end-of-file
+    is reached, or `n-1` characters have been read (whichever comes first).
 
     ## Examples
     ```julia
@@ -566,6 +567,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Ptr{FILE}, Int32}, pointer(s), fp, n % Int32)
     end
+    const readline! = gets!
 
 
 ## --- printf/fprintf, just a string
