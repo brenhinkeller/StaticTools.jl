@@ -1,8 +1,6 @@
 name: CI (Integration nightly)
 on:
   push:
-    branches:
-      - '**'
     paths-ignore:
       - 'README.md'
   pull_request:
