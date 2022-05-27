@@ -118,8 +118,10 @@
 ## --- Printing errors
 
     @test error(c"This is a test\n") == 0
+    @test StaticTools.warn(c"This is a test\n") == 0
     msg = m"This is a test\n"
     @test error(msg) == 0
+    @test StaticTools.warn(msg) == 0
     free(msg)
 
 ## --- Libc functions that just happen to print

@@ -156,6 +156,7 @@ end
 ## -- Print errors
 
 @inline Base.error(s::Union{StaticString,MallocString}) = (perror(c"ERROR: "); perror(s))
+@inline warn(s::Union{StaticString,MallocString}) = (perror(c"Warning: "); perror(s))
 
 """
 ```julia
