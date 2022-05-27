@@ -570,6 +570,47 @@ end
     const readline! = gets!
 
 
+    """
+    ```julia
+    readline(fp::Ptr{FILE})
+    ```
+    Read characters from file pointer `fp` until a unix newline (\n) is encountered
+    and copy the results to a `MallocString`
+
+    See also `readline!` / `gets!` for a more efficient in-place version.
+
+    ## Examples
+    ```julia
+    julia> fp = fopen(c"testfile.txt", c"w+")
+    Ptr{FILE} @0x00007fffb05f1148
+
+    julia> printf(fp, c"Here is a line of text!")
+    23
+
+    julia> frewind(fp)
+    0
+
+    julia> readline(fp)
+    m"Here is a line of text!"
+    ```
+    """
+    @inline function Base.readline(fp::Ptr{FILE})
+        linelen = 0
+        c = getc(fp)
+        while c > 0 && c != 0x0d && c != 0x0a
+            linelen += 1
+            c = getc(fp)
+        end
+        fseek(fp, (c < 0) - linelen - 1)
+        str = MallocString(undef, linelen + 1) # str[end] == 0x00
+        if linelen > 0
+            gets!(str, fp, linelen)
+            fseek(fp, 1) # Advance by 1
+        end
+        return str
+    end
+
+
 ## --- printf/fprintf, just a string
 
     """
