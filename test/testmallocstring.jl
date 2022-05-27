@@ -5,6 +5,7 @@
     @test isa(str, MallocString)
     @test sizeof(str) == 19
     @test StaticTools.strlen(str) == length(str) == 18
+    @test pointer(str) == Base.unsafe_convert(Ptr{UInt8}, str)
     str1 = MallocString(c"Hello, world! 🌍")
     @test isa(str1, MallocString)
 

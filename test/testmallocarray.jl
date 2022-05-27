@@ -11,6 +11,7 @@
     @test lastindex(A) == 20
     @test stride(A,1) == 1
     @test stride(A,2) == 20
+    @test pointer(A) == Base.unsafe_convert(Ptr{Float64}, A)
 
     # Test mutability and indexing
     A[8] = 5

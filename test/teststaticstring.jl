@@ -5,6 +5,7 @@
     @test isa(str, StaticString{19})
     @test sizeof(str) == 19
     @test StaticTools.strlen(str) == length(str) == 18
+    @test pointer(str) == Base.unsafe_convert(Ptr{UInt8}, str)
     str1 = StaticString(str[1:end])
     @test isa(str1, StaticString{19})
 
