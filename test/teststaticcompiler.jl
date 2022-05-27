@@ -38,17 +38,19 @@ status = run(`./rand_matrix 5 5`)
 
 ## --- Test LoopVectorization integration
 
-# Compile...
-status = run(`julia --compile=min $testpath/scripts/loopvec_product.jl`)
-@test isa(status, Base.Process)
-@test status.exitcode == 0
+if Bool(LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2}))
+    # Compile...
+    status = run(`julia --compile=min $testpath/scripts/loopvec_product.jl`)
+    @test isa(status, Base.Process)
+    @test status.exitcode == 0
 
-# Run...
-println("10x10 table sum:")
-status = run(`./loopvec_product 10 10`)
-@test isa(status, Base.Process)
-@test status.exitcode == 0
-@test parsedlm(c"product.tsv",'\t')[] == 3025
+    # Run...
+    println("10x10 table sum:")
+    status = run(`./loopvec_product 10 10`)
+    @test isa(status, Base.Process)
+    @test status.exitcode == 0
+    @test parsedlm(c"product.tsv",'\t')[] == 3025
+end
 
 # Compile...
 status = run(`julia --compile=min $testpath/scripts/loopvec_matrix.jl`)

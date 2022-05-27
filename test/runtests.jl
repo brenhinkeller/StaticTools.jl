@@ -26,6 +26,7 @@ const GROUP = get(ENV, "GROUP", "All")
     end
 end
 
+using LoopVectorization
 @static if GROUP == "Integration" || GROUP == "All"
     @testset "StaticCompiler" begin include("teststaticcompiler.jl") end
 end
