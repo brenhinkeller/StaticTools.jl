@@ -68,6 +68,14 @@ julia> parsedlm(Int32, c"testfile.tsv", '\t')
 	getc(fp) != Int32('\n') && (rows += 1)
 	frewind(fp)
 
+	# If file starts with \ufeff, ignore it (with warning)
+	c1, c2 = getc(fp), getc(fp)
+	if c1 == 0xfe && c2 == 0xff
+		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
+	else
+		frewind(fp)
+	end
+
 	# # if debug
 	# printf(c"Maximum number of characters: %d\n", maxchars)
 	# printf(c"Maximum number of delimiters: %d\n", maxcolumns)
