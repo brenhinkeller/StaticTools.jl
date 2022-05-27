@@ -41,7 +41,7 @@ module StaticTools
     export stdinp, stdoutp, stderrp                                             # File pointers
     export fopen, fclose, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END          # File open, close, seek
     export usleep                                                               # Other libc utility functions
-    export newline, putchar, getchar, getc, puts, gets!, printf                 # Char & String IO
+    export newline, putchar, getchar, printf, getc, puts, gets!, readline!      # Char & String IO
     export unsafe_mallocstring, strlen                                          # String management
     export parsedlm                                                             # File parsing
     export static_rng, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64       # Random number generation
