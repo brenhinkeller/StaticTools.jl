@@ -63,9 +63,17 @@
     @test printf(fp, m) == 0
     @test fclose(fp) == 0
 
-    m_parsed = parsedlm(Float64, c"testfile.tsv", '\t')
-    @test isa(m_parsed, MallocMatrix)
+    fp = fopen(c"testfile.tsv", c"r")
+    m_parsed = parsedlm(fp, '\t')
+    @test isa(m_parsed, MallocMatrix{Float64})
     @test m_parsed == m
+    @test free(m_parsed) == 0
+    @test fclose(fp) == 0
+
+    m_parsed = parsedlm(c"testfile.tsv", '\t')
+    @test isa(m_parsed, MallocMatrix{Float64})
+    @test m_parsed == m
+    @test free(m_parsed) == 0
 
     # Clean up
     rm("testfile.tsv")

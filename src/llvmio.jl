@@ -654,9 +654,9 @@ end
 
 ## --- fread
 
-
     """
     ```julia
+    fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
     fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE})
     ```
     Libc `fread` function, accessed by direct `llvmcall`.
@@ -705,11 +705,11 @@ end
 
     """
     ```julia
-    read(filename::AbstractStaticString, MallocString)
+    read(filename::AbstractString, MallocString)
     ```
     Read `filename` in its entirety to a `MallocString`
     """
-    @inline function Base.read(filename::AbstractStaticString, ::Type{MallocString})
+    @inline function Base.read(filename::AbstractString, ::Type{MallocString})
         fp = fopen(filename, c"r")
         str = read(fp, MallocString)
         fclose(fp)
@@ -844,7 +844,6 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Ptr{UInt8}}, fp, fmt, s)
     end
-
 
 
     printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)

@@ -32,11 +32,14 @@ julia> parsedlm(Int32, c"testfile.tsv", '\t')
  10  20  30  40  50  60  70  80  90  100
 ```
 """
-@inline parsedlm(filepath, delimiter::Char) = parsedlm(Float64, filepath, delimiter::Char)
-@inline function parsedlm(::Type{T}, filepath, delimiter::Char) where {T}
-
-	# File to open
-	fp = fopen(filepath, c"r")
+@inline parsedlm(source, delimiter::Char) = parsedlm(Float64, source, delimiter::Char)
+@inline function parsedlm(::Type{T}, filepath::AbstractString, delimiter::Char) where {T}
+	str = read(filepath, MallocString)
+	importedmatrix = parsedlmstr(T, str, delimiter)
+	free(str)
+	return importedmatrix
+end
+@inline function parsedlm(::Type{T}, fp::Ptr{FILE}, delimiter::Char) where {T}
 
 	if fp == C_NULL
 		error(c"File does not exist!")
@@ -82,7 +85,7 @@ julia> parsedlm(Int32, c"testfile.tsv", '\t')
 	# printf(c"Number of rows: %d\n", rows)
 
 	# Allocate space for the imported array
-	importedMatrix = MallocMatrix{T}(undef, rows, maxcolumns)
+	importedmatrix = MallocMatrix{T}(undef, rows, maxcolumns)
 	field = MallocVector{Int}(undef, maxcolumns+2)
 	str = MallocString(undef, maxchars+2)
 
@@ -106,13 +109,74 @@ julia> parsedlm(Int32, c"testfile.tsv", '\t')
 
 		# and perform operations on each field
 		for j = 1:maxcolumns
-			importedMatrix[i,j] = parse(T, pointer(str) + field[j])
+			importedmatrix[i,j] = parse(T, pointer(str) + field[j])
 		end
 		i += 1
 	end
-	fclose(fp)
 	free(str)
 	free(field)
 
-	return importedMatrix
+	return importedmatrix
+end
+
+@inline function parsedlmstr(::Type{T}, str::AbstractString, delimiter::Char) where {T}
+
+	delim = delimiter % UInt8
+	rows, columns, maxcolumns = 0, 0, 0
+
+	# Determine maximum number of characters per row, delimiters per row, and rows
+	@inbounds for i=1:length(str)
+		c = str[i]
+		c == delim && (columns += 1)
+		if c == 0x0a
+			rows += 1
+			# If there is a trailing delimiter, don't add an extra column for it
+			str[i-1] != delim && (columns += 1)
+
+			# See if we have a new maximum, and reset the counters
+			columns > maxcolumns && (maxcolumns = columns)
+			columns = 0
+		end
+	end
+	# If the last line isn't blank, add one more to the row counter
+	str[end-1] != 0x0a && (rows += 1)
+
+	# # if debug
+	# printf(c"Maximum number of characters: %d\n", maxchars)
+	# printf(c"Maximum number of delimiters: %d\n", maxcolumns)
+	# printf(c"Number of rows: %d\n", rows)
+
+	# Allocate space for the imported array
+	importedmatrix = MallocMatrix{T}(undef, rows, maxcolumns)
+	field = MallocVector{Int}(undef, maxcolumns)
+
+	# For each line,
+	k = 1
+	if str[1] == 0xfe && str[2] == 0xff
+		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
+		k += 2
+	end
+	@inbounds for i ∈ 1:rows
+
+		# identify the delimited fields,
+		field[1] = k-1
+		columns = 1
+		while str[k] != 0x0a
+			if str[k] == delim
+				str[k] = 0x00
+				columns += 1
+				field[columns] = k
+			end
+			k += 1
+		end
+
+		# and perform operations on each field
+		for j = 1:maxcolumns
+			importedmatrix[i,j] = parse(T, pointer(str) + field[j])
+		end
+		k += 1
+	end
+	free(field)
+
+	return importedmatrix
 end
