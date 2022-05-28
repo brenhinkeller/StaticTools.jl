@@ -97,6 +97,48 @@
         """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
     end
 
+    """
+    ```julia
+    ftell(fp::Ptr{FILE})
+    ```
+    Libc `ftell` function, accessed by direct `llvmcall`.
+
+    Return the current position of the file pointer `fp`, in bytes from the start of the file.
+
+    ## Examples
+    ```julia
+    julia> fp = fopen(c"testfile.txt", c"w")
+    Ptr{StaticTools.FILE} @0x00007fffc92bd0b0
+
+    julia> ftell(fp)
+    0
+
+    julia> printf(fp, c"Here is a string")
+    16
+
+    julia> ftell(fp)
+    16
+
+    julia> fclose(fp)
+    0
+    ```
+    """
+    function ftell(fp::Ptr{FILE})
+        Base.llvmcall(("""
+        ; External declaration of the ftell function
+        declare i64 @ftell(i8*)
+
+        define i64 @main(i64 %jlfp) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %position = call i64 @ftell(i8* %fp)
+          ret i64 %position
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int64, Tuple{Ptr{FILE}}, fp)
+    end
+
     # Seek in a file
     frewind(fp::Ptr{FILE}) = fseek(fp, 0, SEEK_SET)
 
@@ -622,7 +664,7 @@ end
 
     """
     ```julia
-    read(filename::AbstractString, MallocString)
+    read(filename::AbstractStaticString, MallocString)
     ```
     Read `filename` in its entirety to a `MallocString`
     """

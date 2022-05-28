@@ -143,11 +143,13 @@
     name, mode = m"testfile.txt", m"r"
     fp = fopen(name, mode)
     @test isa(fp, Ptr{StaticTools.FILE})
+    @test ftell(fp) === 0
     @test fp != 0
     @static if fp != 0
         str = MallocString(undef, 100)
         @test gets!(str, fp) != C_NULL
         @test strlen(str) == 2
+        @test ftell(fp) === 2
         @test str[1] == UInt8('1')
 
         @test frewind(fp) == 0

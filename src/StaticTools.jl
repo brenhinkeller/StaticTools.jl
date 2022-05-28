@@ -39,7 +39,7 @@ module StaticTools
     # Functions
     export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management
     export stdinp, stdoutp, stderrp                                             # File pointers
-    export fopen, fclose, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END          # File open, close, seek
+    export fopen, fclose, ftell, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END   # File open, close, seek
     export usleep                                                               # Other libc utility functions
     export newline, putchar, getchar, printf, getc, puts, gets!, readline!      # Char & String IO
     export unsafe_mallocstring, strlen                                          # String management
