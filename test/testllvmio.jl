@@ -164,6 +164,7 @@
         @test frewind(fp) == 0
         @test getc(fp) === Int32('1')
         @test getc(fp) === Int32('\n')
+        @test read(fp, UInt8) === UInt8('2')
 
         @test frewind(fp) == 0
         str = readline(fp)
@@ -178,6 +179,14 @@
     #     @test getchar(fp) === UInt8('\n')
     #     @test fclose(fp) == 0
     # end
+
+    # Read entire file to string
+    str = read(c"testfile.txt", MallocString)
+    @test isa(str, MallocString)
+    @test str[1] == UInt8('1')
+    @test length(str) > 500
+    @test free(str) == 0
+
     @test free(name) == 0
     @test free(mode) == 0
 

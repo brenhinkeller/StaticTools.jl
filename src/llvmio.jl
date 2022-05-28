@@ -610,6 +610,48 @@ end
         return str
     end
 
+## --- Base.read
+
+    """
+    ```julia
+    read(fp::Ptr{FILE}, UInt8)
+    ```
+    Read a single byte (as a single `UInt8`) from file pointer `fp`.
+    """
+    @inline Base.read(fp::Ptr{FILE}, ::Type{UInt8}) = getc(fp::Ptr{FILE}) % UInt8
+
+    """
+    ```julia
+    read(filename::AbstractString, MallocString)
+    ```
+    Read `filename` in its entirety to a `MallocString`
+    """
+    @inline function Base.read(filename::AbstractStaticString, ::Type{MallocString})
+        fp = fopen(filename, c"r")
+        str = read(fp, MallocString)
+        fclose(fp)
+        return str
+    end
+
+    """
+    ```julia
+    read(fp::Ptr{FILE}, MallocString)
+    ```
+    Read `fp` in its entirety to a `MallocString`
+    """
+    @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocString})
+        len = 0
+        while getc(fp) > 0
+            len += 1
+        end
+        frewind(fp)
+        str = MallocString(undef, len+1)
+        for i ∈ 1:len
+            str[i] = read(fp, UInt8)
+        end
+        return str
+    end
+
 
 ## --- printf/fprintf, just a string
 
