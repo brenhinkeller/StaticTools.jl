@@ -187,6 +187,9 @@
     @test isa(str, MallocString)
     @test str[1] == UInt8('1')
     @test length(str) > 500
+    fp = fopen(c"testfile.txt", c"r")
+    @test fread!(str, length(str), fp) == length(str)
+    @test fclose(fp) == 0
     @test free(str) == 0
 
     @test free(name) == 0

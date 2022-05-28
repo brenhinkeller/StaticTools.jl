@@ -652,6 +652,47 @@ end
         return str
     end
 
+## --- fread
+
+
+    """
+    ```julia
+    fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE})
+    ```
+    Libc `fread` function, accessed by direct `llvmcall`.
+
+    Read `nbytes` bytes from the filestream specified by  file pointer `fp` to the MallocString `s`.
+
+    ## Examples
+    ```julia
+    julia> s = MallocString(undef, 100)
+    m""
+
+    julia> gets!(s, stdinp(), 3)
+    Ptr{UInt8} @0x00007fb15afce550
+
+    julia> s
+    m"\n"
+    ```
+    """
+    @inline fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE}) = fread!(s, 1, nbytes, fp)
+    function fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
+        Base.llvmcall(("""
+        ; External declaration of the gets function
+        declare i64 @fread(i8*, i64, i64, i8*)
+
+        define i64 @main(i64 %jls, i64 %size, i64 %n, i64 %jlfp) #0 {
+        entry:
+          %str = inttoptr i64 %jls to i8*
+          %fp = inttoptr i64 %jlfp to i8*
+          %status = call i64 (i8*, i64, i64, i8*) @fread(i8* %str, i64 %size, i64 %n, i8* %fp)
+          ret i64 %status
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, pointer(s), size, n, fp)
+    end
+
 ## --- Base.read
 
     """
@@ -682,15 +723,11 @@ end
     Read `fp` in its entirety to a `MallocString`
     """
     @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocString})
-        len = 0
-        while getc(fp) > 0
-            len += 1
-        end
+        fseek(fp, 0, SEEK_END)
+        len = ftell(fp)
         frewind(fp)
         str = MallocString(undef, len+1)
-        for i ∈ 1:len
-            str[i] = read(fp, UInt8)
-        end
+        fread!(str, len, fp)
         return str
     end
 

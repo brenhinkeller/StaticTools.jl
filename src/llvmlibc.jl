@@ -84,8 +84,8 @@ julia> free(p)
 0
 ```
 """
-@inline calloc(size::Integer) = calloc(Int64(size))
-@inline calloc(size::Int64) = calloc(1, size)
+@inline calloc(nbytes::Integer) = calloc(Int64(nbytes))
+@inline calloc(nbytes::Int64) = calloc(1, nbytes)
 @inline function calloc(n::Int64, size::Int64)
     Base.llvmcall(("""
     ; External declaration of the `calloc` function
