@@ -35,7 +35,11 @@
 
 ## --- dlopen / dlsym / dlclose
 
-    lib = StaticTools.dlopen(c"libc" * StaticTools.DLEXT)
+    dlpath = c"libc" * StaticTools.DLEXT
+    if Sys.islinux()
+        dlpath *= c".6"
+    end
+    lib = StaticTools.dlopen(dlpath)
     @test isa(lib, Ptr{StaticTools.DYLIB})
     @test lib != C_NULL
 
