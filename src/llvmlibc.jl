@@ -545,6 +545,77 @@ end
     """, "main"), UInt64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, s, p, base)
 end
 
+## --- Dlopen / dylsym / dlclose
+
+const RTLD_LOCAL = Int32(1)
+const RTLD_GLOBAL = Int32(2)
+const RTLD_LAZY = Int32(4)
+
+dlopen(name::AbstractMallocdMemory, mode=RTLD_LOCAL) = dlopen(pointer(name), mode)
+dlopen(name, mode=RTLD_LOCAL) = GC.@preserve name dlopen(pointer(name), mode)
+function dlopen(name::Ptr{UInt8}, mode::Int32)
+    Base.llvmcall(("""
+    ; External declaration of the dlopen function
+    declare i8* @dlopen(i8*, i32)
+
+    define i64 @main(i64 %jlname, i32 %mode) #0 {
+    entry:
+      %name = inttoptr i64 %jlname to i8*
+      %fp = call i8* (i8*, i32) @dlopen(i8* %name, i32 %mode)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, mode)
+end
+
+dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
+dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
+function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the dlsym function
+    declare i8* @dlsym(i8*, i8*)
+
+    define i64 @main(i64 %jlh, i64 %jls) #0 {
+    entry:
+      %handle = inttoptr i64 %jlh to i8*
+      %symbol = inttoptr i64 %jls to i8*
+      %fp = call i8* (i8*, i8*) @dlsym(i8* %handle, i8* %symbol)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{Nothing}, Tuple{Ptr{DYLIB}, Ptr{UInt8}}, handle, symbol)
+end
+
+function dlclose(handle::Ptr{DYLIB})
+    Base.llvmcall(("""
+    ; External declaration of the dlclose function
+    declare i32 @dlclose(i8*)
+
+    define i32 @main(i64 %jlh) #0 {
+    entry:
+      %handle = inttoptr i64 %jlh to i8*
+      %status = call i32 (i8*) @dlclose(i8* %handle)
+      ret i32 %status
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Int32, Tuple{Ptr{DYLIB}}, handle)
+end
+
+@static if Sys.isapple()
+    const DLEXT = c".dylib"
+elseif Sys.iswindows()
+    const DLEXT = c".dll"
+else
+    const DLEXT = c".so"
+end
+
+
+## --- Parse
 
 """
 ```julia

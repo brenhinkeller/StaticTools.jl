@@ -9,6 +9,7 @@ module StaticTools
 
     # Declare some types we'll use later
     struct FILE end # Plain struct to denote and dispatch on file pointers
+    struct DYLIB end # Plain struct to denote and dispatch pointers to dlopen'd shlibs
 
     # Manual memory allocation
     include("mallocarray.jl")

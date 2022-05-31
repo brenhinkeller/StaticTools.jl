@@ -33,6 +33,21 @@
 
     free(a)
 
+## --- dlopen / dlsym / dlclose
+
+    lib = StaticTools.dlopen(c"libc" * StaticTools.DLEXT)
+    @test isa(lib, Ptr{StaticTools.DYLIB})
+    @test lib != C_NULL
+
+    fp = StaticTools.dlsym(lib, c"time")
+    @test isa(fp, Ptr)
+    @test fp != C_NULL
+
+    a, b = ccall(fp, Int64, (Ptr{Cvoid},), C_NULL), time()
+    @test isapprox(a, b, atol = 5)
+
+    @test StaticTools.dlclose(lib) == 0
+
 ## --- Other libc utility functions
 
     @test usleep(1000) === Int32(0)

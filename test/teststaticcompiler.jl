@@ -38,7 +38,7 @@ status = run(`./rand_matrix 5 5`)
 
 ## --- Test LoopVectorization integration
 
-if Bool(LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2}))
+@static if LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2})
     # Compile...
     status = run(`julia --compile=min $testpath/scripts/loopvec_product.jl`)
     @test isa(status, Base.Process)
