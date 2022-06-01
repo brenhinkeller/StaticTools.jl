@@ -34,9 +34,9 @@ julia> parsedlm(Int32, c"testfile.tsv", '\t')
 """
 @inline parsedlm(source, delimiter::Char) = parsedlm(Float64, source, delimiter::Char)
 @inline function parsedlm(::Type{T}, filepath::AbstractString, delimiter::Char) where {T}
-	str = read(filepath, MallocString)
-	importedmatrix = parsedlmstr(T, str, delimiter)
-	free(str)
+	fp = fopen(filepath, c"r")
+	importedmatrix = parsedlm(T, fp, delimiter)
+	fclose(fp)
 	return importedmatrix
 end
 @inline function parsedlm(::Type{T}, fp::Ptr{FILE}, delimiter::Char) where {T}

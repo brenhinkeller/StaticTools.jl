@@ -75,5 +75,11 @@
     @test m_parsed == m
     @test free(m_parsed) == 0
 
+    str = read(c"testfile.tsv", MallocString)
+    m_parsed = StaticTools.parsedlmstr(Float64, str, '\t')
+    free(str)
+    @test m_parsed == m
+    @test free(m_parsed) == 0
+
     # Clean up
     rm("testfile.tsv")
