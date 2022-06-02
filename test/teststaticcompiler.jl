@@ -12,6 +12,7 @@ let
     # faster.
     status = -1
     try
+        isfile("times_table") && rm("times_table")
         status = run(`julia --compile=min $testpath/scripts/times_table.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/times_table.jl"
@@ -22,7 +23,13 @@ let
 
     # Attempt to run
     println("5x5 times table:")
-    status = run(`./times_table 5 5`)
+    status = -1
+    try
+        status = run(`./times_table 5 5`)
+    catch e
+        @warn "Could not run $(scratch)/times_table"
+        println(e)
+    end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     @test parsedlm(Int64, c"table.tsv", '\t') == (1:5)*(1:5)'
@@ -36,6 +43,7 @@ let
     # faster.
     status = -1
     try
+        isfile("rand_matrix") && rm("rand_matrix")
         status = run(`julia --compile=min $testpath/scripts/rand_matrix.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/rand_matrix.jl"
@@ -46,7 +54,13 @@ let
 
     # Run...
     println("5x5 random matrix:")
-    status = run(`./rand_matrix 5 5`)
+    status = -1
+    try
+        status = run(`./rand_matrix 5 5`)
+    catch e
+        @warn "Could not run $(scratch)/rand_matrix"
+        println(e)
+    end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
 end
@@ -58,6 +72,7 @@ end
         # Attempt to compile...
         status = -1
         try
+            isfile("loopvec_product") && rm("loopvec_product")
             status = run(`julia --compile=min $testpath/scripts/loopvec_product.jl`)
         catch e
             @warn "Could not compile $testpath/scripts/loopvec_product.jl"
@@ -68,7 +83,13 @@ end
 
         # Run...
         println("10x10 table sum:")
-        status = run(`./loopvec_product 10 10`)
+        status = -1
+        try
+            status = run(`./loopvec_product 10 10`)
+        catch e
+            @warn "Could not run $(scratch)/loopvec_product"
+            println(e)
+        end
         @test isa(status, Base.Process)
         @test isa(status, Base.Process) && status.exitcode == 0
         @test parsedlm(c"product.tsv",'\t')[] == 3025
@@ -79,6 +100,7 @@ let
     # Attempt to compile...
     status = -1
     try
+        isfile("loopvec_matrix") && rm("loopvec_matrix")
         status = run(`julia --compile=min $testpath/scripts/loopvec_matrix.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/loopvec_matrix.jl"
@@ -89,7 +111,13 @@ let
 
     # Run...
     println("10x5 matrix product:")
-    status = run(`./loopvec_matrix 10 5`)
+    status = -1
+    try
+        status = run(`./loopvec_matrix 10 5`)
+    catch e
+        @warn "Could not run $(scratch)/loopvec_matrix"
+        println(e)
+    end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
@@ -101,6 +129,7 @@ end
     # Attempt to compile...
     status = -1
     try
+        isfile("print_args") && rm("print_args")
         status = run(`julia --compile=min $testpath/scripts/print_args.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/print_args.jl"
@@ -111,7 +140,13 @@ end
 
     # Run...
     println("String indexing and handling:")
-    status = run(`./print_args foo bar`)
+    status = -1
+    try
+        status = run(`./print_args foo bar`)
+    catch e
+        @warn "Could not run $(scratch)/print_args"
+        println(e)
+    end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
 end
