@@ -764,12 +764,12 @@ end
     function printf(s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture, ...)
+        declare i32 @printf(i8* noalias nocapture)
 
         define i32 @main(i64 %jls) #0 {
         entry:
           %str = inttoptr i64 %jls to i8*
-          %status = call i32 (i8*, ...) @printf(i8* %str)
+          %status = call i32 (i8*) @printf(i8* %str)
           ret i32 %status
         }
 
@@ -779,7 +779,7 @@ end
     function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fprintf function
-        declare i32 @fprintf(i8*, i8*)
+        declare i32 @fprintf(i8* noalias nocapture, i8*)
 
         define i32 @main(i64 %jlfp, i64 %jls) #0 {
         entry:
@@ -830,14 +830,14 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fprintf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i8*)
 
         define i32 @main(i64 %jlfp, i64 %jlf, i64 %jls) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
           %str = inttoptr i64 %jls to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8* %str)
+          %status = call i32 (i8*, i8*, i8*) @fprintf(i8* %fp, i8* %fmt, i8* %str)
           ret i32 %status
         }
 
@@ -870,13 +870,13 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, double)
 
         define i32 @main(i64 %jlfp, i64 %jlf, double %n) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, double %n)
+          %status = call i32 (i8*, i8*, double) @fprintf(i8* %fp, i8* %fmt, double %n)
           ret i32 %status
         }
 
@@ -907,13 +907,13 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i64)
 
         define i32 @main(i64 %jlfp, i64 %jlf, i64 %n) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i64 %n)
+          %status = call i32 (i8*, i8*, i64) @fprintf(i8* %fp, i8* %fmt, i64 %n)
           ret i32 %status
         }
 
@@ -939,13 +939,13 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i32)
 
         define i32 @main(i64 %jlfp, i64 %jlf, i32 %n) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i32 %n)
+          %status = call i32 (i8*, i8*, i32) @fprintf(i8* %fp, i8* %fmt, i32 %n)
           ret i32 %status
         }
 
@@ -971,13 +971,13 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i16)
 
         define i32 @main(i64 %jlfp, i64 %jlf, i16 %n) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i16 %n)
+          %status = call i32 (i8*, i8*, i16) @fprintf(i8* %fp, i8* %fmt, i16 %n)
           ret i32 %status
         }
 
@@ -1003,13 +1003,13 @@ end
     function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @fprintf(i8*, ...)
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i8)
 
         define i32 @main(i64 %jlfp, i64 %jlf, i8 %n) #0 {
         entry:
           %fp = inttoptr i64 %jlfp to i8*
           %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @fprintf(i8* %fp, i8* %fmt, i8 %n)
+          %status = call i32 (i8*, i8*, i8) @fprintf(i8* %fp, i8* %fmt, i8 %n)
           ret i32 %status
         }
 
