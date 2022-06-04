@@ -3,7 +3,7 @@
     # Open a file
     """
     ```julia
-    fopen(name, mode)
+    fopen(name::AbstractString, mode::AbstractString)
     ```
     Libc `fopen` function, accessed by direct `llvmcall`.
 
@@ -509,7 +509,7 @@ end
 
     """
     ```julia
-    puts([fp::Ptr{FILE}], s)
+    puts([fp::Ptr{FILE}], s::AbstractString)
     ```
     Libc `puts`/`fputs` function, accessed by direct `llvmcall`.
 
@@ -736,7 +736,7 @@ end
 
     """
     ```julia
-    printf([fp::Ptr{FILE}], [fmt], s)
+    printf([fp::Ptr{FILE}], [fmt::AbstractString], s)
     ```
     Libc `printf` function, accessed by direct `llvmcall`.
 

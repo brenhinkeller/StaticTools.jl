@@ -5,10 +5,9 @@ const RTLD_GLOBAL = Int32(2)
 const RTLD_LAZY = Int32(4)
 const RTLD_NOW = Int32(8)
 
-
 """
 ```julia
-dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
+dlopen(name::AbstractString, flag=RTLD_LOCAL|RTLD_LAZY)
 ```
 Libc `dlopen` function, accessed by direct `llvmcall`.
 
@@ -17,14 +16,18 @@ Returns a handle (pointer) to a `.so`/`.dylib` shared library specified by
 Returns `C_NULL` on failure. Valid modes include:
 
 Required:
+
   `RTLD_LOCAL` (default): Symbols will not be made available for subsequently loaded libraries. The opposite of `RTLD_GLOBAL`.
 
   `RTLD_GLOBAL`: Symbols will be made available for subsequently loaded libraries. The opposite of `RTLD_LOCAL`.
 
 Optional:
+
   `RTLD_LAZY` (default): Lazy binding: only resolve symbols as the code that references them is executed. The opposite of `RLTD_NOW`.
 
   `RTLD_NOW`: Eager binding: resolve all symbols before `dlopen` returns. The opposite of `RTLD_LAZY`
+
+Modes from the two categories can be combined with bitwise `or` (`|`)
 
 See also: `StaticTools.dlsym`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
 
@@ -174,7 +177,6 @@ end
 
 ## -- Macro for calling function pointers (as obtained from e.g. dlsym) via llvm
 
-
 """
 ```julia
 @ptrcall function_pointer(argvalue1::Type1, ...)::ReturnType
@@ -310,7 +312,7 @@ macro symbolcall(expr)
     all(i->fn.args[i].head===:(::), 2:length(fn.args)) || return :(error("@symbolcall function arguments must be annotated"))
     arguments = ntuple(i->first(fn.args[i+1].args), length(fn.args)-1)
     argument_types = ntuple(i->last(fn.args[i+1].args), length(fn.args)-1)
-    regname = 'a':'z'
+    regname = 'A':'z'
 
     # Convert Julia types to equivalent LLVM types
     Tᵣ_ext = llvmtype_external(return_type)
