@@ -25,6 +25,7 @@ module StaticTools
     const AbstractMallocdMemory = Union{MallocString, MallocArray}
 
     # Here there be `llvmcall`s
+    include("llvminterop.jl")   # dlopen/sym/close, @ptrcall, @symbolcall
     include("llvmio.jl")        # Best way to print things? LLVM IR obviously!
     include("llvmlibc.jl")      # strtod, strtol, parse, etc...
 
@@ -37,6 +38,8 @@ module StaticTools
     export MallocArray, MallocMatrix, MallocVector
     # Macros
     export @c_str, @m_str, @mm_str
+    export @ptrcall, @symbolcall
+
     # Functions
     export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management
     export stdinp, stdoutp, stderrp                                             # File pointers

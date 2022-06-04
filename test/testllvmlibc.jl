@@ -33,7 +33,7 @@
 
     free(a)
 
-## --- dlopen / dlsym / dlclose
+## --- dlopen / dlsym / dlclose / @ptrcall / @symbolcall
 
     dlpath = c"libc" * StaticTools.DLEXT
     if Sys.islinux()
@@ -48,6 +48,14 @@
     @test fp != C_NULL
 
     a, b = ccall(fp, Int64, (Ptr{Cvoid},), C_NULL), time()
+    @test isapprox(a, b, atol = 5)
+
+    dltime() = @ptrcall fp()::Int64
+    a, b = dltime(), time()
+    @test isapprox(a, b, atol = 5)
+
+    ctime() = @symbolcall time()::Int64
+    a, b = ctime(), time()
     @test isapprox(a, b, atol = 5)
 
     @test StaticTools.dlclose(lib) == 0
