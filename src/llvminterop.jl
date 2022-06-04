@@ -3,24 +3,66 @@
 const RTLD_LOCAL = Int32(1)
 const RTLD_GLOBAL = Int32(2)
 const RTLD_LAZY = Int32(4)
+const RTLD_NOW = Int32(8)
 
-@inline dlopen(name::AbstractMallocdMemory, mode=RTLD_LOCAL) = dlopen(pointer(name), mode)
-@inline dlopen(name, mode=RTLD_LOCAL) = GC.@preserve name dlopen(pointer(name), mode)
-@inline function dlopen(name::Ptr{UInt8}, mode::Int32)
+
+"""
+```julia
+dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
+```
+Libc `dlopen` function, accessed by direct `llvmcall`.
+
+Returns a handle (pointer) to a `.so`/`.dylib` shared library specified by
+`name` opened with the mode or combination of modes specified by `flag`.
+Returns `C_NULL` on failure. Valid modes include:
+
+Required:
+  `RTLD_LOCAL` (default): Symbols will not be made available for subsequently loaded libraries. The opposite of `RTLD_GLOBAL`.
+
+  `RTLD_GLOBAL`: Symbols will be made available for subsequently loaded libraries. The opposite of `RTLD_LOCAL`.
+
+Optional:
+  `RTLD_LAZY` (default): Lazy binding: only resolve symbols as the code that references them is executed. The opposite of `RLTD_NOW`.
+
+  `RTLD_NOW`: Eager binding: resolve all symbols before `dlopen` returns. The opposite of `RTLD_LAZY`
+
+See also: `StaticTools.dlsym`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+ctime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
+@inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
+@inline dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY) = GC.@preserve name dlopen(pointer(name), flag)
+@inline function dlopen(name::Ptr{UInt8}, flag::Int32)
     Base.llvmcall(("""
     ; External declaration of the dlopen function
     declare i8* @dlopen(i8*, i32)
 
-    define i64 @main(i64 %jlname, i32 %mode) #0 {
+    define i64 @main(i64 %jlname, i32 %flag) #0 {
     entry:
       %name = inttoptr i64 %jlname to i8*
-      %fp = call i8* (i8*, i32) @dlopen(i8* %name, i32 %mode)
+      %fp = call i8* (i8*, i32) @dlopen(i8* %name, i32 %flag)
       %jlfp = ptrtoint i8* %fp to i64
       ret i64 %jlfp
     }
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, mode)
+    """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
 end
 
 @static if Sys.isapple()
@@ -33,6 +75,36 @@ end
 
 ## --- dylsym
 
+"""
+```julia
+dlsym(lib::Ptr{DYLIB}, symbol::AbstractString)
+```
+Libc `dlsym` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Takes a handle (`lib`) to a `.so`/`.dylib` shared library previously opened with
+`StaticTools.dlopen`, along with a null-terminated symbol name string (`symbol`),
+and returns the location in memory of that symbol. Returns `C_NULL` on failure.
+
+See also: `StaticTools.dlopen`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+dltime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
 @inline dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
 @inline dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
 @inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
@@ -55,6 +127,35 @@ end
 
 ## --- dlclose
 
+"""
+```julia
+dlclose(lib::Ptr{DYLIB})
+```
+Libc `dlclose` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Close a shared library `lib` given a pointer (handle) previously obtained from
+`StaticTools.dlopen`.
+
+See also: `StaticTools.dlopen`, `StaticTools.dlsym`, `StaticTools.@ptrcall`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+dltime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
 @inline function dlclose(handle::Ptr{DYLIB})
     Base.llvmcall(("""
     ; External declaration of the dlclose function
@@ -73,6 +174,35 @@ end
 
 ## -- Macro for calling function pointers (as obtained from e.g. dlsym) via llvm
 
+
+"""
+```julia
+@ptrcall function_pointer(argvalue1::Type1, ...)::ReturnType
+```
+Call a function pointer (e.g., as obtained from `dlsym`) via macro-constructed
+`llvmcall`.
+
+See also: `StaticTools.dlopen`, `StaticTools.dlsym`, `StaticTools.dlclose`
+c.f.: `@ccall`, `StaticTools.@symbolcall`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+dltime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
 macro ptrcall(expr)
     # Error if missing type annotation
     expr.head === :(::) || return :(error("@ptrcall expression must end with type annotation"))
@@ -149,6 +279,26 @@ end
 
 ## --- Macro for calling arbitrary symbols via LLVM
 
+"""
+```julia
+@symbolcall symbol(argvalue1::Type1, ...)::ReturnType
+```
+Call a function by symbol/name in LLVM IR, via macro-constructed `llvmcall`
+
+See also: `@ccall`, `StaticTools.@ptrcall`
+
+## Examples
+```julia
+julia> ctime() = @symbolcall time()::Int
+ctime (generic function with 1 method)
+
+julia> ctime()
+1654322507
+
+julia> @macroexpand @symbolcall time()::Int
+:(Base.llvmcall(("declare i64 @time()\n\ndefine i64 @main() #0 {\n  \n  %result = call i64 () @time()\n  ret i64 %result\n}\nattributes #0 = { alwaysinline nounwind ssp uwtable }\n", "main"), Int, Tuple{}))
+```
+"""
 macro symbolcall(expr)
     # Error if missing type annotation
     expr.head === :(::) || return :(error("@symbolcall expression must end with type annotation"))

@@ -15,7 +15,6 @@
     @test fp != 0
     @test fclose(fp) == 0
 
-
 ## -- Test low-level printing functions on a variety of arguments
 
     @test puts("1") == 0
@@ -65,7 +64,6 @@
     @test print(fp, a) == 0
     @test println(fp, a) == 0
     @test free(a) == 0
-
 
     # Print AbstractArray
     @test printf((1:5)') == 0

@@ -10,11 +10,11 @@
     Returns a file pointer to a file at location specified by `name` opened for
     reading, writing, or both as specified by `mode`. Valid modes include:
 
-      c"r": Read, from an existing file.
+      `c"r"`: Read, from an existing file.
 
-      c"w": Write. If the file exists, it will be overwritten.
+      `c"w"`: Write. If the file exists, it will be overwritten.
 
-      c"a": Append, to the end of an existing file.
+      `c"a"`: Append, to the end of an existing file.
 
     as well as `"r+"`, `c"w+"`, and `"a+"`, which enable both reading and writing.
 
