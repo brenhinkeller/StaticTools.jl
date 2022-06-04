@@ -129,13 +129,13 @@ macro ptrcall(expr)
     Tᵣ_int === :void && (callstr = "call")
 
     # Return statement
-    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint %result_ptr $Tᵣ_int to $Tᵣ_ext\n"
+    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
     retstr *= "ret $Tᵣ_ext"
     Tᵣ_int === :void || (retstr *= " %result")
 
-    # Construct argument types
+    # Construct llvm IR to call
     llvm_str = """
-    define $Tᵣ_int @main($argstr_external) #0 {
+    define $Tᵣ_ext @main($argstr_external) #0 {
       $inttoptrstr
       %fptr = inttoptr $fpstr to $Tᵣ_int ($argtypestr)*
       $callstr $Tᵣ_int ($argtypestr) %fptr($argstr_internal)
@@ -204,16 +204,15 @@ macro symbolcall(expr)
     Tᵣ_int === :void && (callstr = "call")
 
     # Return statement
-    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint %result_ptr $Tᵣ_int to $Tᵣ_ext\n"
+    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
     retstr *= "ret $Tᵣ_ext"
     Tᵣ_int === :void || (retstr *= " %result")
 
-
-    # Construct argument types
+    # Construct llvm IR to call
     llvm_str = """
     declare $Tᵣ_int @$fname($argtypestr)
 
-    define $Tᵣ_int @main($argstr_external) #0 {
+    define $Tᵣ_ext @main($argstr_external) #0 {
       $inttoptrstr
       $callstr $Tᵣ_int ($argtypestr) @$fname($argstr_internal)
       $retstr

@@ -43,14 +43,14 @@
     @test isa(lib, Ptr{StaticTools.DYLIB})
     @test lib != C_NULL
 
-    fp = StaticTools.dlsym(lib, c"time")
-    @test isa(fp, Ptr)
-    @test fp != C_NULL
+    timep = StaticTools.dlsym(lib, c"time")
+    @test isa(timep, Ptr)
+    @test timep != C_NULL
 
-    a, b = ccall(fp, Int64, (Ptr{Cvoid},), C_NULL), time()
+    a, b = ccall(timep, Int64, (Ptr{Cvoid},), C_NULL), time()
     @test isapprox(a, b, atol = 5)
 
-    dltime() = @ptrcall fp()::Int64
+    dltime() = @ptrcall timep()::Int64
     a, b = dltime(), time()
     @test isapprox(a, b, atol = 5)
 
@@ -58,7 +58,40 @@
     a, b = ctime(), time()
     @test isapprox(a, b, atol = 5)
 
+    mallocp = StaticTools.dlsym(lib, c"malloc")
+    @test isa(mallocp, Ptr)
+    @test mallocp != C_NULL
+
+    dlmalloc(nbytes) = @ptrcall mallocp(nbytes::Int)::Ptr{Float64}
+    ptr = dlmalloc(10*sizeof(Float64))
+    @test isa(ptr, Ptr{Float64})
+    @test ptr != C_NULL
+
+    Base.unsafe_store!(ptr, 3.141592, 1)
+    @test Base.unsafe_load(ptr, 1) === 3.141592
+
+    freep = StaticTools.dlsym(lib, c"free")
+    @test isa(freep, Ptr)
+    @test freep != C_NULL
+
+    dlfree(ptr) = @ptrcall freep(ptr::Ptr{Float64})::Nothing
+    @test isnothing(dlfree(ptr))
+
     @test StaticTools.dlclose(lib) == 0
+
+## --- more ``@symbolcall`s
+
+    cmalloc(nbytes) = @symbolcall malloc(nbytes::Int)::Ptr{Float64}
+    ptr = cmalloc(10*sizeof(Float64))
+    @test isa(ptr, Ptr{Float64})
+    @test ptr != C_NULL
+
+    Base.unsafe_store!(ptr, 3.141592, 1)
+    @test Base.unsafe_load(ptr, 1) === 3.141592
+
+    cfree(ptr) = @symbolcall free(ptr::Ptr{Float64})::Nothing
+    @test isnothing(cfree(ptr))
+
 
 ## --- Other libc utility functions
 
