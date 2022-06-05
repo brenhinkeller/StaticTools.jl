@@ -1,5 +1,5 @@
 
-    const MaybePointer = Union{Ptr, UndefInitializer}
+    const PointerOrInitializer = Union{Ptr, UndefInitializer, typeof(Base.zeros)}
 
     # Definition and constructors:
     """
@@ -41,12 +41,22 @@
     MallocArray{T}(undef, dims)
     MallocArray{T,N}(undef, dims)
     ```
-    Construct an uninitialized `N`-dimensional `MallocArray` containing elements
-    of type `T`. `N` can either be supplied explicitly, as in `Array{T,N}(undef, dims)`,
+    ```julia
+    MallocArray{T}(zeros, dims)
+    MallocArray{T,N}(zeros, dims)
+    ```
+    Construct an uninitialized (`undef`) or zero-initialized (`zeros`)
+    `N`-dimensional `MallocArray` containing elements of type `T`.
+    `N` can either be supplied explicitly, as in `Array{T,N}(undef, dims)`,
     or be determined by the length or number of `dims`. `dims` may be a tuple or
     a series of integer arguments corresponding to the lengths in each dimension.
     If the rank `N` is supplied explicitly, then it must match the length or
-    number of `dims`. Here `undef` is the `UndefInitializer`.
+    number of `dims`.
+
+    Here `undef` is the `UndefInitializer` and signals that `malloc` should be
+    used to obtain the underlying memory, while `zeros` is the `Base` function
+    `zeros` and flags that `calloc` should be used to obtain and zero-initialize
+    the underlying memory
 
     ## Examples
     ```julia
@@ -59,15 +69,15 @@
     julia> free(A)
     0
 
-    julia> A = MallocArray{Float64, 3}(undef, 2,2,2) # explicit N
+    julia> A = MallocArray{Float64, 3}(zeros, 2,2,2) # explicit N, zero initialize
     2×2×2 MallocArray{Float64, 3}:
     [:, :, 1] =
-     3.10504e231  2.0e-323
-     2.32036e77   6.94996e-310
+     0.0  0.0
+     0.0  0.0
 
     [:, :, 2] =
-     6.95322e-310  5.0e-324
-     6.95322e-310  5.56271e-309
+     0.0  0.0
+     0.0  0.0
 
     julia> free(A)
     0
@@ -79,10 +89,16 @@
         p = Ptr{T}(malloc(length*sizeof(T)))
         MallocArray{T,N}(p, length, dims)
     end
-    @inline MallocArray{T,N}(x::MaybePointer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
-    @inline MallocArray{T}(x::MaybePointer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
-    @inline MallocArray{T,N}(x::MaybePointer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
-    @inline MallocArray{T}(x::MaybePointer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
+    @inline function MallocArray{T,N}(::typeof(Base.zeros), length::Int, dims::Dims{N}) where {T,N}
+        @assert Base.allocatedinline(T)
+        @assert length == prod(dims)
+        p = Ptr{T}(calloc(length*sizeof(T)))
+        MallocArray{T,N}(p, length, dims)
+    end
+    @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T}(x::PointerOrInitializer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
+    @inline MallocArray{T}(x::PointerOrInitializer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
 
     # Indirect constructors
     @inline Base.similar(a::MallocArray{T,N}) where {T,N} = MallocArray{T,N}(undef, size(a))
@@ -224,3 +240,27 @@
     @inline Base.println(a::MallocArray) = (printf(a); newline())
     @inline Base.print(fp::Ptr{FILE}, a::MallocArray) = printf(fp, a)
     @inline Base.println(fp::Ptr{FILE}, a::MallocArray) = (printf(fp, a); newline(fp))
+
+
+    # Other custom constructors
+    """
+    ```julia
+    mzeros([T=Float64,] dims::Tuple)
+    mzeros([T=Float64,] dims...)
+    ```
+    Create a `MallocArray{T}` containing all zeros of type `T`, of size `dims`.
+    As `Base.zeros`, but returning a `MallocArray` instead of an `Array`.
+
+    See also `mfill`
+    ## Examples
+    ```julia
+    julia> mzeros(Int32, 2,2)
+    2×2 MallocMatrix{Int32}:
+     0  0
+     0  0
+    ```
+    """
+    @inline mzeros(dims::Vararg{Int}) = mzeros(dims)
+    @inline mzeros(dims::Dims{N}) where {N} = MallocArray{Float64,N}(zeros, dims)
+    @inline mzeros(T::Type, dims::Vararg{Int}) = mzeros(T, dims)
+    @inline mzeros(::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(zeros, dims)

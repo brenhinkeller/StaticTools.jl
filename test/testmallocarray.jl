@@ -129,3 +129,22 @@
     B[:,:,:,2] .= 3
     @test B[2,2,2,2] === 3
     @test free(B) == 0
+
+## -- test other constructors
+
+A = MallocArray{Float64,2}(zeros, 10, 10)
+@test A == zeros(10,10)
+@test A[1] === 0.0
+
+B = mzeros(10,10)
+@test B == zeros(10,10)
+@test B[1] === 0.0
+
+C = mzeros(Int32, 10,10)
+@test C == zeros(Int32, 10,10)
+@test C[1] === Int32(0)
+
+@test A == B == C
+free(A)
+free(B)
+free(C)
