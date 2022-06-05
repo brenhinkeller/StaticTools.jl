@@ -1,4 +1,5 @@
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 ManualMemory = "d125e4d3-2237-4719-b19c-fa641b8a4667"
 StaticCompiler = "81625895-6c0f-48fc-b932-11a18313743c"

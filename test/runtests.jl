@@ -1,6 +1,7 @@
 using StaticTools
 using Test
 using ManualMemory: MemoryBuffer
+using LinearAlgebra
 
 const GROUP = get(ENV, "GROUP", "All")
 

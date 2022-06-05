@@ -132,20 +132,20 @@
 
 ## -- test other constructors
 
-A = MallocArray{Float64,2}(zeros, 10, 10)
-@test A == zeros(10,10)
+A = MallocArray{Float64,2}(zeros, 11, 10)
+@test A == zeros(11,10)
 @test A[1] === 0.0
 
-B = mzeros(10,10)
-@test B == zeros(10,10)
+B = mzeros(11,10)
+@test B == zeros(11,10)
 @test B[1] === 0.0
 
-C = mzeros(Int32, 10,10)
-@test C == zeros(Int32, 10,10)
+C = mzeros(Int32, 11,10)
+@test C == zeros(Int32, 11,10)
 @test C[1] === Int32(0)
 
-D = mfill(Int32(0), 10,10)
-@test D == zeros(Int32, 10,10)
+D = mfill(Int32(0), 11,10)
+@test D == zeros(Int32, 11,10)
 @test D[1] === Int32(0)
 
 @test A == B == C == D
@@ -156,13 +156,25 @@ free(D)
 
 ## ---
 
-A = mones(10,10)
-@test A == ones(10,10)
+A = mones(11,10)
+@test A == ones(11,10)
 @test A[1] === 1.0
 
-B = mones(Int32, 10,10)
-@test B == ones(Int32, 10,10)
+B = mones(Int32, 11,10)
+@test B == ones(Int32, 11,10)
 @test B[1] === Int32(1.0)
+
+@test A == B
+free(A)
+free(B)
+
+A = meye(10)
+@test A == I(10)
+@test A[5,5] === 1.0
+
+B = meye(Int32, 10)
+@test B == I(10)
+@test B[5,5] === Int32(1.0)
 
 @test A == B
 free(A)

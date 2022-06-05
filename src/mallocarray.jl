@@ -188,12 +188,15 @@
         @inbounds for i ∈ eachindex(a)
             setindex!(a, x, i)
         end
-        return a
     end
 
     # Other nice functions
-    @inline Base.fill!(A::MallocArray{T}, x::T) where {T} = setindex!(A, x, :)
-    @inline Base.fill!(A::MallocArray{T}, x) where {T} = setindex!(A, convert(T,x), :)
+    @inline Base.fill!(A::MallocArray{T}, x) where {T} = fill!(A, convert(T,x))
+    @inline function Base.fill!(A::MallocArray{T}, x::T) where {T}
+        setindex!(A, x, :)
+        return A
+    end
+
     @inline function Base.:(==)(a::MallocArray{A}, b::MallocArray{B}) where {A,B}
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
@@ -265,7 +268,6 @@
     @inline mzeros(T::Type, dims::Vararg{Int}) = mzeros(T, dims)
     @inline mzeros(::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(zeros, dims)
 
-
     """
     ```julia
     mones([T=Float64,] dims::Tuple)
@@ -290,6 +292,31 @@
     @inline function mones(::Type{T}, dims::Dims{N}) where {T,N}
         A = MallocArray{T,N}(undef, prod(dims), dims)
         fill!(A, one(T))
+    end
+
+    """
+    ```julia
+    meye([T=Float64,] dim::Int)
+    ```
+    Create a `MallocArray{T}` containing an identity matrix of type `T`,
+    of size `dim` x `dim`.
+
+    ## Examples
+    ```julia
+    julia> meye(Int32, 2,2)
+    2×2 MallocMatrix{Int32}:
+     1  0
+     0  1
+    ```
+    """
+    @inline meye(dim::Int) = meye(Float64, dim)
+    @inline function meye(::Type{T}, dim::Int) where {T}
+        A = MallocMatrix{T}(zeros, dim*dim, (dim, dim))
+        𝔦 = one(T)
+        @inbounds for i=1:dim
+            A[i,i] = 𝔦
+        end
+        return A
     end
 
     """
