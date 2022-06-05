@@ -167,34 +167,33 @@
 
     @inline Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
     @inline Base.setindex!(a::MallocArray{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
-    @inline function Base.setindex!(a::MallocArray, x, r::UnitRange{Int})
-        is₀ = first(r)-1
-        ix₀ = firstindex(x)-1
-        @inbounds for i = 1:length(r)
-            setindex!(a, x[i+ix₀], i+is₀)
-        end
-    end
-    @inline function Base.setindex!(a::MallocArray{T}, x::Union{T,<:Number}, r::UnitRange{Int}) where T
-        xₜ = convert(T,x)
-        is₀ = first(r)-1
-        @inbounds for i = 1:length(r)
-            setindex!(a, xₜ, i+is₀)
-        end
-    end
-    @inline function Base.setindex!(a::MallocArray, x, ::Colon)
-        ix₀ = firstindex(x)-1
-        @inbounds for i = 1:length(a)
+    @inline function Base.setindex!(a::MallocArray{T}, x::Union{AbstractArray{T},NTuple{T}}, r::UnitRange{Int}) where T
+        ix₀ = firstindex(x)-first(r)
+        @inbounds for i ∈ r
             setindex!(a, x[i+ix₀], i)
         end
     end
-    @inline function Base.setindex!(a::MallocArray{T}, x::Union{T,<:Number}, ::Colon) where T
-        xₜ = convert(T,x)
-        @inbounds for i = 1:length(a)
-            setindex!(a, xₜ, i)
+    @inline function Base.setindex!(a::MallocArray{T}, x::T, r::UnitRange{Int}) where T
+        @inbounds for i ∈ r
+            setindex!(a, x, i)
         end
+    end
+    @inline function Base.setindex!(a::MallocArray{T}, x::Union{AbstractArray{T},NTuple{T}}, ::Colon) where T
+        ix₀ = firstindex(x)-1
+        @inbounds for i ∈ eachindex(a)
+            setindex!(a, x[i+ix₀], i)
+        end
+    end
+    @inline function Base.setindex!(a::MallocArray{T}, x::T, ::Colon) where T
+        @inbounds for i ∈ eachindex(a)
+            setindex!(a, x, i)
+        end
+        return a
     end
 
     # Other nice functions
+    @inline Base.fill!(A::MallocArray{T}, x::T) where {T} = setindex!(A, x, :)
+    @inline Base.fill!(A::MallocArray{T}, x) where {T} = setindex!(A, convert(T,x), :)
     @inline function Base.:(==)(a::MallocArray{A}, b::MallocArray{B}) where {A,B}
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
@@ -251,7 +250,8 @@
     Create a `MallocArray{T}` containing all zeros of type `T`, of size `dims`.
     As `Base.zeros`, but returning a `MallocArray` instead of an `Array`.
 
-    See also `mfill`
+    See also `mfill`.
+
     ## Examples
     ```julia
     julia> mzeros(Int32, 2,2)
@@ -264,3 +264,28 @@
     @inline mzeros(dims::Dims{N}) where {N} = MallocArray{Float64,N}(zeros, dims)
     @inline mzeros(T::Type, dims::Vararg{Int}) = mzeros(T, dims)
     @inline mzeros(::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(zeros, dims)
+
+
+    """
+    ```julia
+    mfill(x::T, dims::Tuple)
+    mfill(x::T, dims...)
+    ```
+    Create a `MallocArray{T}` of size `dims`, filled with the value `x`, where `x` is of type `T`.
+    As `Base.fill`, but returning a `MallocArray` instead of an `Array`.
+
+    See also `mzeros`.
+
+    ## Examples
+    ```julia
+    julia> mfill(3, 2, 2)
+    2×2 MallocMatrix{Int64}:
+     3  3
+     3  3
+    ```
+    """
+    @inline mfill(x, dims::Vararg{Int}) = mfill(x, dims)
+    @inline function mfill(x::T, dims::Dims{N}) where {T,N}
+        A = MallocArray{T,N}(undef, prod(dims), dims)
+        fill!(A, x)
+    end

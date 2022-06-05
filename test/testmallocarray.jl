@@ -42,9 +42,9 @@
     @test C[2,1] == 7
     A[7] = 2
     @test C[2,2] == 2
-    A[1:end] = 5
-    @test C[2,2] == 5
-    A[:] = 0
+    A[1:end] = 5.0
+    @test C[2,2] === 5.0
+    A[:] = 0.0
     @test all(C .=== 0.0)
     C = reinterpret(Float16, C)
     @test isa(C, MallocArray{Float16,2})
@@ -144,7 +144,12 @@ C = mzeros(Int32, 10,10)
 @test C == zeros(Int32, 10,10)
 @test C[1] === Int32(0)
 
-@test A == B == C
+D = mfill(Int32(0), 10,10)
+@test D == zeros(Int32, 10,10)
+@test D[1] === Int32(0)
+
+@test A == B == C == D
 free(A)
 free(B)
 free(C)
+free(D)

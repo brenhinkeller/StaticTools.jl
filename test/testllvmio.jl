@@ -58,7 +58,7 @@
     @test printf((1:5...,)) == 0
     @test printf(fp, 1:5) == 0
     @test printf(fp, (1:5...,)) == 0
-    a = MallocVector{Float64}(undef, 2); a[:] = 2
+    a = MallocVector{Float64}(undef, 2); fill!(a, 2)
     @test print(a) == 0
     @test println(a) == 0
     @test print(fp, a) == 0
@@ -70,7 +70,7 @@
     @test printf(rand(4,4)) == 0
     @test printf(fp, (1:5)') == 0
     @test printf(fp, rand(4,4)) == 0
-    a = MallocMatrix{Float64}(undef, 1,2); a[:] = 2
+    a = MallocMatrix{Float64}(undef, 1,2); fill!(a, 2)
     @test print(a) == 0
     @test println(a) == 0
     @test print(fp, a) == 0
