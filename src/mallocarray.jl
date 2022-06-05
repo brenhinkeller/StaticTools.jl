@@ -250,7 +250,7 @@
     Create a `MallocArray{T}` containing all zeros of type `T`, of size `dims`.
     As `Base.zeros`, but returning a `MallocArray` instead of an `Array`.
 
-    See also `mfill`.
+    See also `mones`, `mfill`.
 
     ## Examples
     ```julia
@@ -268,13 +268,39 @@
 
     """
     ```julia
+    mones([T=Float64,] dims::Tuple)
+    mones([T=Float64,] dims...)
+    ```
+    Create a `MallocArray{T}` containing all zeros of type `T`, of size `dims`.
+    As `Base.zeros`, but returning a `MallocArray` instead of an `Array`.
+
+    See also `mzeros`, `mfill`.
+
+    ## Examples
+    ```julia
+    julia> mones(Int32, 2,2)
+    2×2 MallocMatrix{Int32}:
+     1  1
+     1  1
+    ```
+    """
+    @inline mones(dims::Vararg{Int}) = mones(Float64, dims)
+    @inline mones(dims::Dims) = mones(Float64, dims)
+    @inline mones(T::Type, dims::Vararg{Int}) = mones(T, dims)
+    @inline function mones(::Type{T}, dims::Dims{N}) where {T,N}
+        A = MallocArray{T,N}(undef, prod(dims), dims)
+        fill!(A, one(T))
+    end
+
+    """
+    ```julia
     mfill(x::T, dims::Tuple)
     mfill(x::T, dims...)
     ```
     Create a `MallocArray{T}` of size `dims`, filled with the value `x`, where `x` is of type `T`.
     As `Base.fill`, but returning a `MallocArray` instead of an `Array`.
 
-    See also `mzeros`.
+    See also `mzeros`, `mones`.
 
     ## Examples
     ```julia

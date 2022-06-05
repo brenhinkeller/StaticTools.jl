@@ -153,3 +153,17 @@ free(A)
 free(B)
 free(C)
 free(D)
+
+## ---
+
+A = mones(10,10)
+@test A == ones(10,10)
+@test A[1] === 1.0
+
+B = mones(Int32, 10,10)
+@test B == ones(Int32, 10,10)
+@test B[1] === Int32(1.0)
+
+@test A == B
+free(A)
+free(B)
