@@ -1,6 +1,7 @@
 # General
 const Bits64 = Union{Int64, UInt64, Float64}
 abstract type StaticRNG end
+abstract type UniformStaticRNG <: StaticRNG end
 @inline Base.pointer(x::StaticRNG) = Ptr{UInt64}(Base.pointer_from_objref(x))
 
 # SplitMix64
@@ -33,11 +34,13 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.8704883051360292
 ```
 """
-mutable struct SplitMix64{T<:Bits64} <: StaticRNG
+mutable struct SplitMix64{T<:Bits64} <: UniformStaticRNG
     state::NTuple{1,T}
 end
 @inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
-@inline Base.rand(rng::SplitMix64) = splitmix64(rng)/typemax(UInt64)
+
+@inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
+
 """
 ```julia
 splitmix64([rng::SplitMix64])
@@ -102,14 +105,14 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.9856766307398369
 ```
 """
-mutable struct Xoshiro256✴︎✴︎{T<:Bits64} <: StaticRNG
+mutable struct Xoshiro256✴︎✴︎{T<:Bits64} <: UniformStaticRNG
     state::NTuple{4,T}
 end
 @inline function Xoshiro256✴︎✴︎(seed::Bits64=time())
     rng = SplitMix64(seed)
     Xoshiro256✴︎✴︎((splitmix64(rng),splitmix64(rng),splitmix64(rng),splitmix64(rng)))
 end
-@inline Base.rand(rng::Xoshiro256✴︎✴︎) = xoshiro256✴︎✴︎(rng)/typemax(UInt64)
+
 # Xoshiro256✴︎✴︎ PRNG implemented in LLVM IR
 """
 ```julia
@@ -257,3 +260,10 @@ julia> rand(rng)
 ```
 """
 @inline static_rng(seed=StaticTools.time()) = Xoshiro256✴︎✴︎(seed)
+
+# Extend Base.rand
+@inline Base.rand(rng::UniformStaticRNG) = rand(Float64, rng)
+@inline Base.rand(::Type{Int64}, rng::UniformStaticRNG) = reinterpret(Int64, rand(UInt64, rng))
+@inline Base.rand(::Type{Float64}, rng::UniformStaticRNG) = rand(UInt64, rng) / typemax(UInt64)
+@inline Base.rand(::Type{UInt64}, rng::SplitMix64) = splitmix64(rng)
+@inline Base.rand(::Type{UInt64}, rng::Xoshiro256✴︎✴︎) = xoshiro256✴︎✴︎(rng)
