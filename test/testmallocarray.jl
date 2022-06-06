@@ -51,6 +51,14 @@
     @test size(C) == (20,4)
     @test all(C .=== Float16(0))
 
+    # Special indexing for 0d arrays
+    C = MallocArray{Float64}(undef, ())
+    C[] = 1
+    @test C[] === 1.0
+    C[] = 2.0
+    @test C[] === 2.0
+    @test free(C) == 0
+
     # Test other constructors
     C = similar(B)
     @test isa(C, MallocArray{Float64,1})
@@ -132,50 +140,50 @@
 
 ## -- test other constructors
 
-A = MallocArray{Float64,2}(zeros, 11, 10)
-@test A == zeros(11,10)
-@test A[1] === 0.0
+    A = MallocArray{Float64,2}(zeros, 11, 10)
+    @test A == zeros(11,10)
+    @test A[1] === 0.0
 
-B = mzeros(11,10)
-@test B == zeros(11,10)
-@test B[1] === 0.0
+    B = mzeros(11,10)
+    @test B == zeros(11,10)
+    @test B[1] === 0.0
 
-C = mzeros(Int32, 11,10)
-@test C == zeros(Int32, 11,10)
-@test C[1] === Int32(0)
+    C = mzeros(Int32, 11,10)
+    @test C == zeros(Int32, 11,10)
+    @test C[1] === Int32(0)
 
-D = mfill(Int32(0), 11,10)
-@test D == zeros(Int32, 11,10)
-@test D[1] === Int32(0)
+    D = mfill(Int32(0), 11,10)
+    @test D == zeros(Int32, 11,10)
+    @test D[1] === Int32(0)
 
-@test A == B == C == D
-free(A)
-free(B)
-free(C)
-free(D)
+    @test A == B == C == D
+    free(A)
+    free(B)
+    free(C)
+    free(D)
 
 ## ---
 
-A = mones(11,10)
-@test A == ones(11,10)
-@test A[1] === 1.0
+    A = mones(11,10)
+    @test A == ones(11,10)
+    @test A[1] === 1.0
 
-B = mones(Int32, 11,10)
-@test B == ones(Int32, 11,10)
-@test B[1] === Int32(1.0)
+    B = mones(Int32, 11,10)
+    @test B == ones(Int32, 11,10)
+    @test B[1] === Int32(1.0)
 
-@test A == B
-free(A)
-free(B)
+    @test A == B
+    free(A)
+    free(B)
 
-A = meye(10)
-@test A == I(10)
-@test A[5,5] === 1.0
+    A = meye(10)
+    @test A == I(10)
+    @test A[5,5] === 1.0
 
-B = meye(Int32, 10)
-@test B == I(10)
-@test B[5,5] === Int32(1.0)
+    B = meye(Int32, 10)
+    @test B == I(10)
+    @test B[5,5] === Int32(1.0)
 
-@test A == B
-free(A)
-free(B)
+    @test A == B
+    free(A)
+    free(B)

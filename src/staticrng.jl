@@ -39,8 +39,6 @@ mutable struct SplitMix64{T<:Bits64} <: UniformStaticRNG
 end
 @inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
 
-@inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
-
 """
 ```julia
 splitmix64([rng::SplitMix64])

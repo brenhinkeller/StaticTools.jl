@@ -127,6 +127,7 @@
     @inline Base.stride(a::MallocArray, dim::Int) = (dim <= 1) ? 1 : stride(a, dim-1) * size(a, dim-1)
     @inline Base.firstindex(::MallocArray) = 1
     @inline Base.lastindex(a::MallocArray) = a.length
+    @inline Base.getindex(a::MallocArray{T,0}) where {T} = unsafe_load(pointer(a))
     @inline Base.getindex(a::MallocArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
     @inline Base.getindex(a::MallocArray, ::Colon) = a
     @inline Base.getindex(a::MallocArray{T}, r::UnitRange{<:Integer}) where T = MallocArray(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
@@ -165,8 +166,10 @@
         return MallocArray{T,3}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2)*size(a,3), (size(a,1), size(a,2), size(a,3)))
     end
 
-    @inline Base.setindex!(a::MallocArray{T}, x::T, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
-    @inline Base.setindex!(a::MallocArray{T}, x, i::Int) where T = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
+    @inline Base.setindex!(a::MallocArray{T,0}, x::T) where {T} = unsafe_store!(pointer(a), x)
+    @inline Base.setindex!(a::MallocArray{T,0}, x) where {T} = unsafe_store!(pointer(a), convert(T,x))
+    @inline Base.setindex!(a::MallocArray{T}, x::T, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
+    @inline Base.setindex!(a::MallocArray{T}, x, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     @inline function Base.setindex!(a::MallocArray{T}, x::Union{AbstractArray{T},NTuple{T}}, r::UnitRange{Int}) where T
         ix₀ = firstindex(x)-first(r)
         @inbounds for i ∈ r
