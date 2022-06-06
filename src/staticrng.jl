@@ -34,10 +34,11 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.8704883051360292
 ```
 """
-mutable struct SplitMix64{T<:Bits64} <: UniformStaticRNG
-    state::NTuple{1,T}
+mutable struct SplitMix64 <: UniformStaticRNG
+    state::NTuple{1,UInt64}
 end
-@inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64((seed,))
+@inline SplitMix64(seed::UInt64) = SplitMix64((seed,))
+@inline SplitMix64(seed::Bits64=StaticTools.time()) = SplitMix64(reinterpret(UInt64, seed))
 
 """
 ```julia
@@ -103,8 +104,8 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.9856766307398369
 ```
 """
-mutable struct Xoshiro256✴︎✴︎{T<:Bits64} <: UniformStaticRNG
-    state::NTuple{4,T}
+mutable struct Xoshiro256✴︎✴︎ <: UniformStaticRNG
+    state::NTuple{4,UInt64}
 end
 @inline function Xoshiro256✴︎✴︎(seed::Bits64=time())
     rng = SplitMix64(seed)
