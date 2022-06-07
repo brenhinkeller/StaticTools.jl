@@ -11,20 +11,20 @@ r = rand(UInt64, rng)
 
 # Test SplitMix64 initialized with constant seed
 rng = SplitMix64(0)
-@test rand(UInt64, rng) === 0xe220a8397b1dcdaf
-@test rand(Int64, rng) === 7960286522194355700
-@test rand(rng) === 0.026433771592597816
+@test rand(UInt64, rng)::UInt64 ≈ 0xe220a8397b1dcdaf
+@test rand(Int64, rng)::Int64 ≈ 7960286522194355700
+@test rand(rng)::Float64 ≈ 0.026433771592597816
 bm = BoxMuller(rng)
-@test randn(bm) === 0.15062167061669643
+@test randn(bm)::Float64 ≈ 0.15062167061669643
 mp = MarsagliaPolar(rng)
-@test randn(mp) === -0.9741485722677525
+@test randn(mp)::Float64 ≈ -0.9741485722677525
 
 # Test Xoshiro256✴︎✴︎ initialized with constant seed
 rng = Xoshiro256✴︎✴︎(0) # Initialized using SplitMix64 initizlized with seed!
-@test rand(UInt64, rng) === 0x99ec5f36cb75f2b4
-@test rand(Int64, rng) === -4652746763540216534
-@test rand(rng) === 0.10301998939503641
+@test rand(UInt64, rng)::UInt64 ≈ 0x99ec5f36cb75f2b4
+@test rand(Int64, rng)::Int64 ≈ -4652746763540216534
+@test rand(rng)::Float64 ≈ 0.10301998939503641
 bm = BoxMuller(rng)
-@test randn(bm) === -1.315825649730135
+@test randn(bm)::Float64 ≈ -1.315825649730135
 mp = MarsagliaPolar(rng)
-@test randn(mp) === 1.579109828558518
+@test randn(mp)::Float64 ≈ 1.579109828558518
