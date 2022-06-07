@@ -11,9 +11,8 @@ module StaticTools
     struct FILE end # Plain struct to denote and dispatch on file pointers
     struct DYLIB end # Plain struct to denote and dispatch pointers to dlopen'd shlibs
 
-    # Manual memory allocation
-    include("mallocarray.jl")
-    include("staticrng.jl")
+    # Arrays backed by malloc'd memory
+    include("mallocarray.jl")   # MallocArray, MallocMatrix, MallocVector
 
     # String handling
     include("abstractstaticstring.jl")  # Shared string infrastructure
@@ -33,6 +32,9 @@ module StaticTools
     include("printformats.jl")
     include("parsedlm.jl")
 
+    # Random number generation
+    include("staticrng.jl")
+
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString
     export MallocArray, MallocMatrix, MallocVector
@@ -49,5 +51,6 @@ module StaticTools
     export newline, putchar, getchar, getc, puts, gets!, fread!, readline!      # Char & String IO
     export unsafe_mallocstring, strlen                                          # String management
     export parsedlm, printf                                                     # File parsing and formatting
-    export static_rng, xoshiro256✴︎✴︎, Xoshiro256✴︎✴︎, splitmix64, SplitMix64       # Random number generation
+    export static_rng, splitmix64, xoshiro256✴︎✴︎                                 # RNG functions
+    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar                  # RNG types
 end

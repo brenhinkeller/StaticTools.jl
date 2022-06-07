@@ -53,12 +53,41 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Run...
-    println("5x5 random matrix:")
+    println("5x5 uniform random matrix:")
     status = -1
     try
         status = run(`./rand_matrix 5 5`)
     catch e
         @warn "Could not run $(scratch)/rand_matrix"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+end
+
+let
+    # Attempt to compile...
+    # We have to start a new Julia process to get around the fact that Pkg.test
+    # disables `@inbounds`, but ironically we can use `--compile=min` to make that
+    # faster.
+    status = -1
+    try
+        isfile("randn_matrix") && rm("randn_matrix")
+        status = run(`julia --compile=min $testpath/scripts/randn_matrix.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/randn_matrix.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("5x5 Normal random matrix:")
+    status = -1
+    try
+        status = run(`./randn_matrix 5 5`)
+    catch e
+        @warn "Could not run $(scratch)/randn_matrix"
         println(e)
     end
     @test isa(status, Base.Process)

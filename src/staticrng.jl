@@ -2,6 +2,7 @@
 const Bits64 = Union{Int64, UInt64, Float64}
 abstract type StaticRNG{N} end
 abstract type UniformStaticRNG{N} <: StaticRNG{N} end
+abstract type GaussianStaticRNG{N} <: StaticRNG{N} end
 @inline Base.pointer(x::StaticRNG) = Ptr{UInt64}(Base.pointer_from_objref(x))
 
 # SplitMix64
@@ -266,3 +267,67 @@ julia> rand(rng)
 @inline Base.rand(::Type{Float64}, rng::StaticRNG) = rand(UInt64, rng) / typemax(UInt64)
 @inline Base.rand(::Type{UInt64}, rng::StaticRNG{1}) = splitmix64(rng)
 @inline Base.rand(::Type{UInt64}, rng::StaticRNG{4}) = xoshiro256✴︎✴︎(rng)
+
+
+# Types for Gaussian random number generators
+mutable struct BoxMuller{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}
+    state::NTuple{N, UInt64}
+    z₁::Float64
+    n::Int64
+end
+@inline BoxMuller(rng::T) where T<:UniformStaticRNG{N} where N = BoxMuller{T,N}(rng.state, 0.0, 0)
+@inline BoxMuller(seed::Bits64=StaticTools.time()) = BoxMuller(static_rng(seed))
+mutable struct MarsagliaPolar{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}
+    state::NTuple{N, UInt64}
+    z₁::Float64
+    n::Int64
+end
+@inline MarsagliaPolar(rng::T) where T<:UniformStaticRNG{N} where N = MarsagliaPolar{T,N}(rng.state, 0.0, 0)
+@inline MarsagliaPolar(seed::Bits64=StaticTools.time()) = MarsagliaPolar(static_rng(seed))
+
+
+# Utility functions for gaussian random number generation
+@inline upm1(rng) = rand(UInt64, rng)/(typemax(UInt64)/2) - 1.0
+@inline lsqrt(x::Float64) = @symbolcall llvm.sqrt.f64(x::Float64)::Float64
+@inline llog(x::Float64) = @symbolcall log(x::Float64)::Float64
+@inline lsin(x::Float64) = @symbolcall llvm.sin.f64(x::Float64)::Float64
+@inline lcos(x::Float64) = @symbolcall llvm.cos.f64(x::Float64)::Float64
+
+
+# Extend Base.randn
+@inline function Base.randn(rng::BoxMuller)
+    if rng.n == 0
+        rng.n = 1
+        u₁, u₂ = rand(rng), rand(rng)
+        R = lsqrt(-2*llog(u₁))
+        Θ = 2pi*u₂
+        rng.z₁ = R * lcos(Θ)
+        z₂ = R * lsin(Θ)
+    else
+        rng.n = 0
+        rng.z₁
+    end
+end
+@inline function Base.randn(rng::MarsagliaPolar)
+    if rng.n == 0
+        rng.n = 1
+        u₁, u₂ = upm1(rng), upm1(rng)
+        s = u₁*u₁ + u₂*u₂
+        while s > 1.0
+            u₁, u₂ = upm1(rng), upm1(rng)
+            s = u₁*u₁ + u₂*u₂
+        end
+        r = lsqrt(-2*llog(s)/s)
+        rng.z₁ = u₁*r
+        z₂ = u₂*r
+    else
+        rng.n = 0
+        rng.z₁
+    end
+end
+@inline function Base.randn(rng::StaticRNG)
+    u₁, u₂ = rand(rng), rand(rng)
+    R = lsqrt(-2*llog(u₁))
+    Θ = 2pi*u₂
+    z₁ = R * lcos(Θ)
+end
