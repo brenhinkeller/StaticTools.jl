@@ -1,7 +1,7 @@
 # General
 const Bits64 = Union{Int64, UInt64, Float64}
-abstract type StaticRNG end
-abstract type UniformStaticRNG <: StaticRNG end
+abstract type StaticRNG{N} end
+abstract type UniformStaticRNG{N} <: StaticRNG{N} end
 @inline Base.pointer(x::StaticRNG) = Ptr{UInt64}(Base.pointer_from_objref(x))
 
 # SplitMix64
@@ -34,7 +34,7 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.8704883051360292
 ```
 """
-mutable struct SplitMix64 <: UniformStaticRNG
+mutable struct SplitMix64 <: UniformStaticRNG{1}
     state::NTuple{1,UInt64}
 end
 @inline SplitMix64(seed::UInt64) = SplitMix64((seed,))
@@ -65,7 +65,7 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.8704883051360292
 ```
 """
-@inline splitmix64(rng::SplitMix64=SplitMix64()) = GC.@preserve rng splitmix64(pointer(rng))
+@inline splitmix64(rng::StaticRNG{1}=SplitMix64()) = GC.@preserve rng splitmix64(pointer(rng))
 @inline function splitmix64(state::Ptr{UInt64})
     s = unsafe_load(state)
     s += 0x9e3779b97f4a7c15
@@ -104,7 +104,7 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.9856766307398369
 ```
 """
-mutable struct Xoshiro256✴︎✴︎ <: UniformStaticRNG
+mutable struct Xoshiro256✴︎✴︎ <: UniformStaticRNG{4}
     state::NTuple{4,UInt64}
 end
 @inline function Xoshiro256✴︎✴︎(seed::Bits64=time())
@@ -138,7 +138,7 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
 0.9856766307398369
 ```
 """
-@inline xoshiro256✴︎✴︎(rng::Xoshiro256✴︎✴︎) = GC.@preserve rng xoshiro256✴︎✴︎(pointer(rng))
+@inline xoshiro256✴︎✴︎(rng::StaticRNG{4}) = GC.@preserve rng xoshiro256✴︎✴︎(pointer(rng))
 @inline function xoshiro256✴︎✴︎(state::Ptr{UInt64})
     Base.llvmcall(("""
     ; Function Attrs: noinline nounwind ssp uwtable
@@ -261,8 +261,8 @@ julia> rand(rng)
 @inline static_rng(seed=StaticTools.time()) = Xoshiro256✴︎✴︎(seed)
 
 # Extend Base.rand
-@inline Base.rand(rng::UniformStaticRNG) = rand(Float64, rng)
-@inline Base.rand(::Type{Int64}, rng::UniformStaticRNG) = reinterpret(Int64, rand(UInt64, rng))
-@inline Base.rand(::Type{Float64}, rng::UniformStaticRNG) = rand(UInt64, rng) / typemax(UInt64)
-@inline Base.rand(::Type{UInt64}, rng::SplitMix64) = splitmix64(rng)
-@inline Base.rand(::Type{UInt64}, rng::Xoshiro256✴︎✴︎) = xoshiro256✴︎✴︎(rng)
+@inline Base.rand(rng::StaticRNG) = rand(Float64, rng)
+@inline Base.rand(::Type{Int64}, rng::StaticRNG) = reinterpret(Int64, rand(UInt64, rng))
+@inline Base.rand(::Type{Float64}, rng::StaticRNG) = rand(UInt64, rng) / typemax(UInt64)
+@inline Base.rand(::Type{UInt64}, rng::StaticRNG{1}) = splitmix64(rng)
+@inline Base.rand(::Type{UInt64}, rng::StaticRNG{4}) = xoshiro256✴︎✴︎(rng)
