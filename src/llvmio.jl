@@ -35,9 +35,9 @@
     Here is a string
     ```
     """
-    fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
-    fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
-    function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
+    @inline fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
+    @inline fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
+    @inline function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fopen function
         declare i8* @fopen(i8*, i8*)
@@ -81,7 +81,7 @@
     Here is a string
     ```
     """
-    function fclose(fp::Ptr{FILE})
+    @inline function fclose(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the fclose function
         declare i32 @fclose(i8*)
@@ -123,7 +123,7 @@
     0
     ```
     """
-    function ftell(fp::Ptr{FILE})
+    @inline function ftell(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the ftell function
         declare i64 @ftell(i8*)
@@ -140,7 +140,7 @@
     end
 
     # Seek in a file
-    frewind(fp::Ptr{FILE}) = fseek(fp, 0, SEEK_SET)
+    @inline frewind(fp::Ptr{FILE}) = fseek(fp, 0, SEEK_SET)
 
     """
     ```julia
@@ -183,7 +183,7 @@
     0
     ```
     """
-    function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
+    @inline function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
         Base.llvmcall(("""
         ; External declaration of the fseek function
         declare i32 @fseek(i8*, i64, i32)
@@ -224,7 +224,7 @@
     ```
     """
 @static if Sys.isapple()
-    function stdoutp()
+    @inline function stdoutp()
         Base.llvmcall(("""
         @__stdoutp = external global i8*
 
@@ -239,7 +239,7 @@
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
-    function stdoutp()
+    @inline function stdoutp()
         Base.llvmcall(("""
         @stdout = external global i8*
 
@@ -275,7 +275,7 @@ end
     ```
     """
 @static if Sys.isapple()
-    function stderrp()
+    @inline function stderrp()
         Base.llvmcall(("""
         @__stderrp = external global i8*
 
@@ -290,7 +290,7 @@ end
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
-    function stderrp()
+    @inline function stderrp()
         Base.llvmcall(("""
         @stderr = external global i8*
 
@@ -322,7 +322,7 @@ end
     ```
     """
 @static if Sys.isapple()
-    function stdinp()
+    @inline function stdinp()
         Base.llvmcall(("""
         @__stdinp = external global i8*
 
@@ -337,7 +337,7 @@ end
         """, "main"), Ptr{FILE}, Tuple{})
     end
 else
-    function stdinp()
+    @inline function stdinp()
         Base.llvmcall(("""
         @stdin = external global i8*
 
@@ -381,8 +381,8 @@ end
     0
     ```
     """
-    putchar(c::Char) = putchar(UInt8(c))
-    function putchar(c::UInt8)
+    @inline putchar(c::Char) = putchar(UInt8(c))
+    @inline function putchar(c::UInt8)
         Base.llvmcall(("""
         ; External declaration of the putchar function
         declare i32 @putchar(i8 nocapture) nounwind
@@ -396,8 +396,8 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{UInt8}, c)
     end
-    putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
-    function putchar(fp::Ptr{FILE}, c::UInt8)
+    @inline putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
+    @inline function putchar(fp::Ptr{FILE}, c::UInt8)
         Base.llvmcall(("""
         ; External declaration of the fputc function
         declare i32 @fputc(i8, i8*) nounwind
@@ -433,8 +433,8 @@ end
     0
     ```
     """
-    newline() = putchar(0x0a)
-    newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
+    @inline newline() = putchar(0x0a)
+    @inline newline(fp::Ptr{FILE}) = putchar(fp, 0x0a)
 
 ## --- getchar / getc
 
@@ -454,7 +454,7 @@ end
     0x63
     ```
     """
-    function getchar()
+    @inline function getchar()
         Base.llvmcall(("""
         ; External declaration of the getchar function
         declare i32 @getchar()
@@ -487,7 +487,7 @@ end
     99
     ```
     """
-    function getc(fp::Ptr{FILE})
+    @inline function getc(fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the fgetc function
         declare i32 @fgetc(i8*)
@@ -528,9 +528,9 @@ end
     0
     ```
     """
-    puts(s::AbstractMallocdMemory) = puts(pointer(s))
-    puts(s) = GC.@preserve s puts(pointer(s))
-    function puts(s::Ptr{UInt8})
+    @inline puts(s::AbstractMallocdMemory) = puts(pointer(s))
+    @inline puts(s) = GC.@preserve s puts(pointer(s))
+    @inline function puts(s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the puts function
         declare i32 @puts(i8* nocapture) nounwind
@@ -546,9 +546,9 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
 
-    puts(fp::Ptr{FILE}, s::AbstractMallocdMemory) = puts(fp, pointer(s))
-    puts(fp::Ptr{FILE}, s) = GC.@preserve s puts(fp, pointer(s))
-    function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
+    @inline puts(fp::Ptr{FILE}, s::AbstractMallocdMemory) = puts(fp, pointer(s))
+    @inline puts(fp::Ptr{FILE}, s) = GC.@preserve s puts(fp, pointer(s))
+    @inline function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the puts function
         declare i32 @fputs(i8*, i8*) nounwind
@@ -565,8 +565,8 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
         newline(fp) # puts appends `\n`, but fputs doesn't (!)
     end
-    puts(s::StringView) = (printf(s); newline())
-    puts(fp::Ptr{FILE}, s::StringView) = (printf(fp, s); newline(fp))
+    @inline puts(s::StringView) = (printf(s); newline())
+    @inline puts(fp::Ptr{FILE}, s::StringView) = (printf(fp, s); newline(fp))
 
 ## --- gets/fgets
 
@@ -592,7 +592,7 @@ end
     m"\n"
     ```
     """
-    function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+    @inline function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
         Base.llvmcall(("""
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
@@ -676,7 +676,7 @@ end
     ```
     """
     @inline fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE}) = fread!(s, 1, nbytes, fp)
-    function fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
+    @inline function fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the gets function
         declare i64 @fread(i8*, i64, i64, i8*)
@@ -736,7 +736,7 @@ end
 
     """
     ```julia
-    printf([fp::Ptr{FILE}], [fmt::AbstractString], s)
+    printf ([fp::Ptr{FILE}], [fmt::AbstractString], s)
     ```
     Libc `printf` function, accessed by direct `llvmcall`.
 
@@ -757,11 +757,11 @@ end
     13
     ```
     """
-    printf(s::MallocString) = printf(pointer(s))
-    printf(s) = GC.@preserve s printf(pointer(s))
-    printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
-    printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
-    function printf(s::Ptr{UInt8})
+    @inline printf(s::MallocString) = printf(pointer(s))
+    @inline printf(s) = GC.@preserve s printf(pointer(s))
+    @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
+    @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
+    @inline function printf(s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture)
@@ -776,7 +776,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
-    function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
+    @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*)
@@ -792,13 +792,13 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
     end
-    function printf(s::StringView)
+    @inline function printf(s::StringView)
         for i ∈ eachindex(s)
             putchar(s[i])
         end
         return length(s) % Int32
     end
-    function printf(fp::Ptr{FILE}, s::StringView)
+    @inline function printf(fp::Ptr{FILE}, s::StringView)
         for i ∈ eachindex(s)
             putchar(fp, s[i])
         end
@@ -807,11 +807,11 @@ end
 
 ## --- printf/fprintf, with a format string, just like in C
 
-    printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
-    printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
-    printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
-    printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
-    function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
+    @inline printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
+    @inline printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+    @inline function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -827,7 +827,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i8*)
@@ -846,13 +846,13 @@ end
     end
 
 
-    printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
-    printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(pointer(fmt), n)
-    printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, pointer(fmt), n)
-    printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, pointer(fmt), n)
+    @inline printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
+    @inline printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(pointer(fmt), n)
+    @inline printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, pointer(fmt), n)
+    @inline printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, pointer(fmt), n)
 
     # Floating point numbers
-    function printf(fmt::Ptr{UInt8}, n::Float64)
+    @inline function printf(fmt::Ptr{UInt8}, n::Float64)
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -867,7 +867,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, double)
@@ -885,11 +885,11 @@ end
     end
 
     # Just convert all other Floats to double
-    printf(fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fmt::Ptr{UInt8}, Float64(n))
-    printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, Float64(n))
+    @inline printf(fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fmt::Ptr{UInt8}, Float64(n))
+    @inline printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, Float64(n))
 
     # Integers
-    function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -904,7 +904,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i64)
@@ -921,7 +921,7 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
-    function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -936,7 +936,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i32)
@@ -953,7 +953,7 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
-    function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -968,7 +968,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i16)
@@ -985,7 +985,7 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
-    function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -1000,7 +1000,7 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
-    function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i8)
