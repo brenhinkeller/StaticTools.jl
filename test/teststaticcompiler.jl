@@ -78,8 +78,23 @@ let
         @warn "Could not compile $testpath/scripts/randn_matrix.jl"
         println(e)
     end
-    @test isa(status, Base.Process)
-    @test isa(status, Base.Process) && status.exitcode == 0
+    @static if Sys.isapple()
+        @test isa(status, Base.Process)
+        @test isa(status, Base.Process) && status.exitcode == 0
+    else
+        # Write a minimal wrapper to avoid having to specify a custom entry
+        open("wrapper.c", "w") do fp
+            print(fp, """int main(int argc, char** argv)
+            {
+                julia_randn_matrix(argc, argv);
+                return 0;
+            }""")
+        end
+        # Compile, but explicitly link in libm (needed for `log`)
+        status = run(`gcc -lm wrapper.c randn_matrix.o -o randn_matrix`)
+        @test isa(status, Base.Process)
+        @test isa(status, Base.Process) && status.exitcode == 0
+    end
 
     # Run...
     println("5x5 Normal random matrix:")
