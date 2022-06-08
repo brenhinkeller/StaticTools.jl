@@ -21,6 +21,7 @@ In addition to the exported names, Julia `Base` functions extended for StaticToo
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
+[printmandel.jl](https://gist.github.com/brenhinkeller/ca2246ab0928e109e281a4d540010b2d)
 
 ### Limitations:
 In order to be standalone-compileable without linking to libjulia, you need to avoid (among probably other things):
@@ -291,7 +292,7 @@ shell> ls -alh loopvec_matrix
 
 ### Compiled `.so`/`.dylib` shared libraries
 
-#### Calling compiled Julia from Python
+#### Calling compiled Julia library from Python
 Say we were to take the example above, but we wanted to compile it into a shared
 library to, say, call from another language. For example, let's say we wanted to
 be able to call our nice fast `LoopVectorization.jl`-based `mul!` function from
@@ -406,7 +407,8 @@ array([[10., 10., 10., 10., 10., 10., 10., 10., 10., 10.],
 ```
 so about 4x faster than numpy.matmul for a 10x10 matrix, not counting the time to obtain the pointers.
 
-That said, if we were to go back to Julia
+#### Calling compiled Julia library from Julia
+That said, if we were to go back to Julia...
 ```julia
 using Libdl
 lib = Libdl.dlopen("./mul_inplace.$(Libdl.dlext)", Libdl.RTLD_LOCAL)
@@ -420,6 +422,8 @@ ra, rb, rc = Ref(A), Ref(B), Ref(C)
 pa, pb, pc = pointer_from_objref(ra), pointer_from_objref(rb), pointer_from_objref(rc)
 
 ccall(mul_inplace, Int, (Ptr{Nothing}, Ptr{Nothing}, Ptr{Nothing}), pc, pa, pb)
+
+Libdl.dlclose(lib)
 ```
 
 there would seem to be still about another 5x on the table:
@@ -453,4 +457,37 @@ BenchmarkTools.Trial: 10000 samples with 956 evaluations.
   90.5 ns       Histogram: log(frequency) by time       178 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
+```
+
+#### Calling compiled Julia library from compiled Julia
+And of course if we want to bring this full-circle:
+```julia
+using StaticTools, StaticCompiler
+
+function dlmul()
+    lib = StaticTools.dlopen(c"./mul_inplace.dylib")
+    mul_inplace = StaticTools.dlsym(lib, c"julia_mul_inplace")
+
+    A = MallocArray{Float64}(undef, 5, 5); fill!(A, 1)
+    B = MallocArray{Float64}(undef, 5, 5); fill!(B, 1)
+    C = MallocArray{Float64}(undef, 5, 5); fill!(C, 0)
+
+    ra, rb, rc = Ref(A), Ref(B), Ref(C)
+    GC.@preserve ra rb rc begin
+        pa, pb, pc = pointer_from_objref(ra), pointer_from_objref(rb), pointer_from_objref(rc)
+        @ptrcall mul_inplace(pc::Ptr{Nothing}, pa::Ptr{Nothing}, pb::Ptr{Nothing})::Int
+    end
+    StaticTools.dlclose(lib)
+    printf(C)
+end
+
+compile_executable(dlmul, (), "./")
+```
+```julia-repl
+shell> ./dlmul
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
 ```
