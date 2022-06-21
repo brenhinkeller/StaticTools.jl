@@ -17,6 +17,18 @@
     @test ncodeunits(str) == length(str)+1
     @test codeunits(c"Hello") == codeunits(c"Hello")
 
+    # Test concatenation with different string types
+    c=c"asdf"
+    @test c*c == c"asdfasdf"
+    @test c*"asdf" == c"asdfasdf"
+    @test "asdf"*c == c"asdfasdf"
+    @test c[1:3]^2 == c"asdasd"
+    @test c[1:3]*c[1:3] == c"asdasd"
+    @test c[1:3]*c"asd" == c"asdasd"
+    @test c"asd"*c[1:3] == c"asdasd"
+    @test c[1:3]*"asd" == c"asdasd"
+    @test "asd"*c[1:3] == c"asdasd"
+
     # Test mutability
     str[8] = 'W'
     @test str[8] == 0x57 # W

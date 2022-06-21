@@ -21,6 +21,15 @@
     @test codeunits(str) == codeunits(c"Hello, world! 🌍")
     @test codeunits(c"Hello, world! 🌍") == codeunits(str)
 
+    # Test concatenation
+    m = m"asdf"
+    c1 = m*c"asdf"
+    @test c1 == "asdfasdf"
+    @test m[1:3]*m[1:3] == "asdasd"
+    @test m[1:3]^2 == "asdasd"
+    free(m)
+    free(c1)
+
     # Test mutability
     str[8] = 'W'
     @test str[8] == 0x57 # W

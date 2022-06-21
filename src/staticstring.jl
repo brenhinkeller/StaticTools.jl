@@ -140,29 +140,3 @@
     # Implement some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
-    @inline function Base.:*(a::AbstractStaticString, b::AbstractStaticString)  # Concatenation
-        N = length(a) + length(b) + 1 # n.b. `length` excludes null-termination
-        c = StaticString{N}(undef)
-        c[1:length(a)] = a
-        c[length(a)+1:length(a)+length(b)] = b
-        c[end] = 0x00 # Null-terminate
-        return c
-    end
-    @inline function Base.:^(s::AbstractStaticString, n::Integer)       # Repetition
-        l = length(s) # Excluding null-termination
-        N = n*l + 1
-        c = StaticString{N}(undef)
-        for i=1:n
-            c[(l*(i-1) + 1):(l*i)] = s
-        end
-        c[end] = 0x00 # Null-terminate
-        return c
-    end
-
-
-    # String macro to directly create null-terminated `ManualMemory.MemoryBuffer`s
-    macro mm_str(s)
-        n = _unsafe_unescape!(s)
-        t = Expr(:tuple, codeunits(s)[1:n]...)
-        :(MemoryBuffer($t))
-    end

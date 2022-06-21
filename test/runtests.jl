@@ -13,18 +13,6 @@ const GROUP = get(ENV, "GROUP", "All")
     @testset "MallocString" begin include("testmallocstring.jl") end
     @testset "MallocArray" begin include("testmallocarray.jl") end
     @testset "StaticRNG" begin include("teststaticrng.jl") end
-    @testset "MemoryBuffer" begin
-
-        # Test direct buffer constructor
-        buf = mm"Hello, world! 🌍"
-        @test isa(buf, MemoryBuffer{18, UInt8})
-
-        # Test ascii escaping
-        a = mm"\0\a\b\f\n\r\t\v'\"\\\0"::MemoryBuffer
-        b = MemoryBuffer((codeunits("\0\a\b\f\n\r\t\v'\"\\\0")...,))
-        @test a.data == b.data
-
-    end
 end
 
 using LoopVectorization

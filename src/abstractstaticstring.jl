@@ -95,3 +95,24 @@
     @inline Base.codeunits(s::AbstractPointerString) = MallocVector{UInt8}(s.pointer, s.length)
     @inline Base.codeunit(s::AbstractStaticString) = UInt8
     @inline Base.codeunit(s::AbstractStaticString, i::Integer) = s[i]
+    @inline Base.:*(a::AbstractStaticString, b::AbstractStaticString) = _concat_staticstring(a,b)
+    @inline Base.:*(a::AbstractStaticString, b::AbstractString) = _concat_staticstring(a,b)
+    @inline Base.:*(a::AbstractString, b::AbstractStaticString) = _concat_staticstring(a,b)
+    @inline function _concat_staticstring(a::AbstractString, b::AbstractString)  # Concatenation
+        N = length(a) + length(b) + 1 # n.b. `length` excludes null-termination
+        c = StaticString{N}(undef)
+        c[1:length(a)] = a
+        c[length(a)+1:length(a)+length(b)] = b
+        c[end] = 0x00 # Null-terminate
+        return c
+    end
+    @inline function Base.:^(s::AbstractStaticString, n::Integer)       # Repetition
+        l = length(s) # Excluding null-termination
+        N = n*l + 1
+        c = StaticString{N}(undef)
+        for i=1:n
+            c[(l*(i-1) + 1):(l*i)] = s
+        end
+        c[end] = 0x00 # Null-terminate
+        return c
+    end

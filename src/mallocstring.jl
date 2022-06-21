@@ -170,7 +170,10 @@ end
     end
 
     # Some of the AbstractString interface -- where overriding AbstractStaticString defaults
-    @inline function Base.:*(a::MallocString, b::AbstractStaticString)  # Concatenation
+    @inline Base.:*(a::MallocString, b::MallocString) = _concat_mallocstring(a,b)
+    @inline Base.:*(a::MallocString, b::AbstractStaticString) = _concat_mallocstring(a,b)
+    @inline Base.:*(a::MallocString, b::AbstractString) = _concat_mallocstring(a,b)
+    @inline function _concat_mallocstring(a::AbstractString, b::AbstractString)
         N = length(a) + length(b) + 1
         c = MallocString(undef, N)
         c[1:length(a)] = a
