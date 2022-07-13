@@ -113,13 +113,11 @@
     @inline Base.length(s::StaticString{N}) where N = N-1
     @inline Base.:(==)(::StaticString, ::StaticString) = false
     @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
-        GC.@preserve a b begin
-            pa, pb = pointer(a), pointer(b)
-            for n ∈ 0:N-1
-                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
-            end
-            return true
+        pa, pb = pointer(a), pointer(b)
+        for n ∈ 0:N-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
+        return true
     end
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)

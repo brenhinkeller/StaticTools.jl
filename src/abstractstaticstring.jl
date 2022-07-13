@@ -42,24 +42,20 @@
         return true
     end
     @inline function Base.:(==)(a::AbstractStaticString, b::AbstractString)
-        GC.@preserve a b begin
-            (N = length(a)) == sizeof(b) || return false
-            pa, pb = pointer(a), pointer(b)
-            for n in 0:N-1
-                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
-            end
-            return true
+        (N = length(a)) == sizeof(b) || return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:N-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
+        return true
     end
     @inline function Base.:(==)(a::AbstractString, b::AbstractStaticString)
-        GC.@preserve a b begin
-            (N = sizeof(a)) == length(b) || return false
-            pa, pb = pointer(a), pointer(b)
-            for n in 0:N-1
-                unsafe_load(pa + n) == unsafe_load(pb + n) || return false
-            end
-            return true
+        (N = sizeof(a)) == length(b) || return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:N-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
+        return true
     end
 
 
