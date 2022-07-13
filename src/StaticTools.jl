@@ -11,8 +11,10 @@ module StaticTools
     struct FILE end # Plain struct to denote and dispatch on file pointers
     struct DYLIB end # Plain struct to denote and dispatch pointers to dlopen'd shlibs
 
-    # Arrays backed by malloc'd memory
-    include("mallocarray.jl")   # MallocArray, MallocMatrix, MallocVector
+    # Arrays backed by malloc'd and alloca'd memory
+    include("abstractstaticarray.jl")  # Shared array infrastructure
+    include("stackarray.jl")           # StackArray, StackMatrix, StackVector
+    include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
 
     # String handling
     include("abstractstaticstring.jl")  # Shared string infrastructure
