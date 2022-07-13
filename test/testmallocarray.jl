@@ -22,10 +22,11 @@
     @test A[10] === 2.0
     A[:] = ones(20)
     @test A[8] === 1.0
-    @test A === A[1:end]
+    @test A == A[1:end]
     @test A === A[:]
     @test A[1:2] === A[1:2]
     @test A[1:2] != A[1:3]
+    @test isa(A[1:2], ArrayView)
 
     # Test equality
     @test A == ones(20)

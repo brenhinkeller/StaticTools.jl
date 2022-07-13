@@ -40,6 +40,7 @@ module StaticTools
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString
     export MallocArray, MallocMatrix, MallocVector
+    export ArrayView
     # Macros
     export @c_str, @m_str, @mm_str
     export @ptrcall, @symbolcall
