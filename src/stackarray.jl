@@ -81,18 +81,6 @@
     @inline StackArray{T,N}(x::Union{UndefInitializer,NTuple}, dims::Vararg{Int}) where {T,N} = StackArray{T,N}(x, dims)
 
 
-    # Indirect constructors
-    @inline Base.similar(a::StackArray{T,N,L,D}) where {T,N,L,D} = StackArray{T,N,L,D}(undef)
-    @inline Base.similar(a::StackArray{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
-    @inline Base.similar(a::StackArray{T}, dims::Vararg{Int}) where {T} = StackArray{T}(undef, dims)
-    @inline Base.similar(a::StackArray, ::Type{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
-    @inline Base.similar(a::StackArray, ::Type{T}, dims::Vararg{Int}) where {T} = StackArray{T}(undef, dims)
-    @inline function Base.copy(a::StackArray{T,N,L,D}) where {T,N,L,D}
-        c = StackArray{T,N,L,D}(undef)
-        copyto!(c, a)
-        return c
-    end
-
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, a::StackArray) where {T} = Ptr{T}(pointer_from_objref(a))
     @inline Base.pointer(a::StackArray{T}) where {T} = Ptr{T}(pointer_from_objref(a))
@@ -100,47 +88,28 @@
     @inline Base.sizeof(a::StackArray{T,N,L}) where {T,N,L} = L * sizeof(T)
     @inline Base.size(a::StackArray{T,N,L,D}) where {T,N,L,D} = D
 
-
-    @inline function Base.:(==)(a::StackArray{A}, b::StackArray{B}) where {A,B}
-        (N = length(a)) == length(b) || return false
+    # Other nice functions
+    @inline Base.:(==)(::StackArray, ::StackArray) = false
+    @inline function Base.:(==)(a::StackArray{Ta,N,L,D}, b::StackArray{Tb,N,L,D}) where {Ta,Tb,N,L,D}
         pa, pb = pointer(a), pointer(b)
-        for n in 0:N-1
-            unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
-        end
-        return true
-    end
-    @inline function Base.:(==)(a::StackArray, b::NTuple{N, <:Number}) where N
-        N == length(a) || return false
-        for n in 1:N
-            a[n] == b[n] || return false
-        end
-        return true
-    end
-    @inline function Base.:(==)(a::NTuple{N, <:Number}, b::StackArray) where N
-        N == length(b) || return false
-        for n in 1:N
-            a[n] == b[n] || return false
+        sa, sb = sizeof(Ta), sizeof(Tb)
+        for n ∈ 0:L-1
+            unsafe_load(pa + n*sa) == unsafe_load(pb + n*sb) || return false
         end
         return true
     end
 
-    # # Reshaping and Reinterpreting
-    # @inline function Base.reshape(a::StackArray{T}, dims::Dims{N})  where {T,N}
-    #     @assert prod(dims) == length(a)
-    #     StackArray{T,N}(pointer(a), dims)
-    # end
-    # @inline Base.reshape(a::StackArray, dims::Vararg{Int}) = reshape(a, dims)
-    #
-    # @inline function Base.reinterpret(::Type{Tᵣ}, a::StackArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
-    #     @assert Base.allocatedinline(Tᵣ)
-    #     @assert length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
-    #     @assert size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
-    #     lengthᵣ = length(a)*sizeof(Tᵢ)÷sizeof(Tᵣ)
-    #     sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
-    #     pointerᵣ = Ptr{Tᵣ}(pointer(a))
-    #     StackArray{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
-    # end
-
+    # Indirect constructors
+    @inline Base.similar(a::StackArray{T,N,L,D}) where {T,N,L,D} = StackArray{T,N,L,D}(undef)
+    @inline Base.similar(a::StackArray{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
+    @inline Base.similar(a::StackArray, dims::Vararg{Int}) = similar(a, dims)
+    @inline Base.similar(a::StackArray, ::Type{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
+    @inline Base.similar(a::StackArray, T::Type, dims::Vararg{Int}) = similar(a, T, dims)
+    @inline function Base.copy(a::StackArray{T,N,L,D}) where {T,N,L,D}
+        c = StackArray{T,N,L,D}(undef)
+        copyto!(c, a)
+        return c
+    end
 
     # Other custom constructors
     """

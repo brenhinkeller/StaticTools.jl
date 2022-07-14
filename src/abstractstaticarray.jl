@@ -104,24 +104,25 @@
         return A
     end
 
-    @inline function Base.:(==)(a::DenseStaticArray{A}, b::DenseStaticArray{B}) where {A,B}
+    @inline function Base.:(==)(a::DenseStaticArray{Ta}, b::DenseStaticArray{Tb}) where {Ta,Tb}
         (N = length(a)) == length(b) || return false
         pa, pb = pointer(a), pointer(b)
+        sa, sb = sizeof(Ta), sizeof(Tb)
         for n in 0:N-1
-            unsafe_load(pa + n*sizeof(A)) == unsafe_load(pb + n*sizeof(B)) || return false
+            unsafe_load(pa + n*sa) == unsafe_load(pb + n*sb) || return false
         end
         return true
     end
-    @inline function Base.:(==)(a::DenseStaticArray, b::NTuple{N, <:Number}) where N
-        N == length(a) || return false
-        for n in 1:N
+    @inline function Base.:(==)(a::DenseStaticArray, b::Union{DenseArray,NTuple})
+        length(a) == length(b) || return false
+        @inbounds for n in eachindex(a)
             a[n] == b[n] || return false
         end
         return true
     end
-    @inline function Base.:(==)(a::NTuple{N, <:Number}, b::DenseStaticArray) where N
-        N == length(b) || return false
-        for n in 1:N
+    @inline function Base.:(==)(a::Union{DenseArray,NTuple}, b::DenseStaticArray)
+        length(a) == length(b) || return false
+        @inbounds for n in eachindex(b)
             a[n] == b[n] || return false
         end
         return true

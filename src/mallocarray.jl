@@ -100,21 +100,20 @@
     @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
     @inline MallocArray{T}(x::PointerOrInitializer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
 
+    # Destructor:
+    @inline free(a::MallocArray) = free(a.pointer)
+
     # Indirect constructors
     @inline Base.similar(a::MallocArray{T,N}) where {T,N} = MallocArray{T,N}(undef, size(a))
     @inline Base.similar(a::MallocArray{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
-    @inline Base.similar(a::MallocArray{T}, dims::Vararg{Int}) where {T} = MallocArray{T}(undef, dims)
+    @inline Base.similar(a::MallocArray, dims::Vararg{Int}) = similar(a, dims)
     @inline Base.similar(a::MallocArray, ::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
-    @inline Base.similar(a::MallocArray, ::Type{T}, dims::Vararg{Int}) where {T} = MallocArray{T}(undef, dims)
+    @inline Base.similar(a::MallocArray, T::Type, dims::Vararg{Int}) = similar(a, T, dims)
     @inline function Base.copy(a::MallocArray{T,N}) where {T,N}
         c = MallocArray{T,N}(undef, size(a))
         copyto!(c, a)
         return c
     end
-
-    # Destructor:
-    @inline free(a::MallocArray) = free(a.pointer)
-
 
     # Other custom constructors
     """
