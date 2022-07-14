@@ -10,7 +10,7 @@
     the Julia garbage collector (is stack allocated by `alloca`), so is
     StaticCompiler-friendly, and (2) indexing returns views rather than copies.
     """
-    mutable struct StackArray{T,N,L,D} <: DenseArray{T,N}
+    mutable struct StackArray{T,N,L,D} <: DenseStaticArray{T,N}
         data::NTuple{L,T}
         @inline function StackArray{T,N,L,D}(::UndefInitializer) where {T,N,L,D}
             @assert Base.allocatedinline(T)
@@ -100,83 +100,6 @@
     @inline Base.sizeof(a::StackArray{T,N,L}) where {T,N,L} = L * sizeof(T)
     @inline Base.size(a::StackArray{T,N,L,D}) where {T,N,L,D} = D
 
-    # Some of the AbstractArray interface:
-    @inline Base.IndexStyle(::StackArray) = IndexLinear()
-    @inline Base.stride(a::StackArray, dim::Int) = (dim <= 1) ? 1 : stride(a, dim-1) * size(a, dim-1)
-    @inline Base.firstindex(::StackArray) = 1
-    @inline Base.lastindex(a::StackArray) = a.length
-    @inline Base.getindex(a::StackArray{T,0}) where {T} = unsafe_load(pointer(a))
-    @inline Base.getindex(a::StackArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
-    @inline Base.getindex(a::StackArray, ::Colon) = a
-    @inline Base.getindex(a::StackArray{T}, r::UnitRange{<:Integer}) where T = StackArray(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
-
-    @inline Base.getindex(a::StackArray, r::UnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
-    @inline function Base.getindex(a::StackArray{T}, r::UnitRange{<:Integer}, inds::Dims{N}) where {T,N}
-        i0 = 0
-        for i=1:N
-            i0 += (inds[i]-1) * stride(a, i+1)
-        end
-        return StackArray{T,1}(pointer(a)+i0*sizeof(T), length(r), (length(r),))
-    end
-
-    @inline Base.getindex(a::StackArray, ::Colon, inds::Vararg{Int}) = getindex(a, :, inds)
-    @inline function Base.getindex(a::StackArray{T}, ::Colon, inds::Dims{N}) where {T,N}
-        i0 = 0
-        for i=1:N
-            i0 += (inds[i]-1) * stride(a, i+1)
-        end
-        return StackArray{T,1}(pointer(a)+i0*sizeof(T), size(a,1), (size(a,1),))
-    end
-    @inline Base.getindex(a::StackArray, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, inds)
-    @inline function Base.getindex(a::StackArray{T}, ::Colon, ::Colon, inds::Dims{N}) where {T,N}
-        i0 = 0
-        for i=1:N
-            i0 += (inds[i]-1) * stride(a, i+2)
-        end
-        return StackArray{T,2}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2), (size(a,1), size(a,2)))
-    end
-    @inline Base.getindex(a::StackArray, ::Colon, ::Colon, ::Colon, inds::Vararg{Int}) = getindex(a, :, :, :, inds)
-    @inline function Base.getindex(a::StackArray{T}, ::Colon, ::Colon, ::Colon, inds::Dims{N}) where {T,N}
-        i0 = 0
-        for i=1:N
-            i0 += (inds[i]-1) * stride(a, i+3)
-        end
-        return StackArray{T,3}(pointer(a)+i0*sizeof(T), size(a,1)*size(a,2)*size(a,3), (size(a,1), size(a,2), size(a,3)))
-    end
-
-    @inline Base.setindex!(a::StackArray{T,0}, x::T) where {T} = unsafe_store!(pointer(a), x)
-    @inline Base.setindex!(a::StackArray{T,0}, x) where {T} = unsafe_store!(pointer(a), convert(T,x))
-    @inline Base.setindex!(a::StackArray{T}, x::T, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
-    @inline Base.setindex!(a::StackArray{T}, x, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
-    @inline function Base.setindex!(a::StackArray{T}, x::Union{AbstractArray{T},NTuple{T}}, r::UnitRange{Int}) where T
-        ix₀ = firstindex(x)-first(r)
-        @inbounds for i ∈ r
-            setindex!(a, x[i+ix₀], i)
-        end
-    end
-    @inline function Base.setindex!(a::StackArray{T}, x::T, r::UnitRange{Int}) where T
-        @inbounds for i ∈ r
-            setindex!(a, x, i)
-        end
-    end
-    @inline function Base.setindex!(a::StackArray{T}, x::Union{AbstractArray{T},NTuple{T}}, ::Colon) where T
-        ix₀ = firstindex(x)-1
-        @inbounds for i ∈ eachindex(a)
-            setindex!(a, x[i+ix₀], i)
-        end
-    end
-    @inline function Base.setindex!(a::StackArray{T}, x::T, ::Colon) where T
-        @inbounds for i ∈ eachindex(a)
-            setindex!(a, x, i)
-        end
-    end
-
-    # Other nice functions
-    @inline Base.fill!(A::StackArray{T}, x) where {T} = fill!(A, convert(T,x))
-    @inline function Base.fill!(A::StackArray{T}, x::T) where {T}
-        setindex!(A, x, :)
-        return A
-    end
 
     @inline function Base.:(==)(a::StackArray{A}, b::StackArray{B}) where {A,B}
         (N = length(a)) == length(b) || return false
@@ -201,22 +124,22 @@
         return true
     end
 
-    # Reshaping and Reinterpreting
-    @inline function Base.reshape(a::StackArray{T}, dims::Dims{N})  where {T,N}
-        @assert prod(dims) == length(a)
-        StackArray{T,N}(pointer(a), dims)
-    end
-    @inline Base.reshape(a::StackArray, dims::Vararg{Int}) = reshape(a, dims)
-
-    @inline function Base.reinterpret(::Type{Tᵣ}, a::StackArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
-        @assert Base.allocatedinline(Tᵣ)
-        @assert length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
-        @assert size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
-        lengthᵣ = length(a)*sizeof(Tᵢ)÷sizeof(Tᵣ)
-        sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
-        pointerᵣ = Ptr{Tᵣ}(pointer(a))
-        StackArray{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
-    end
+    # # Reshaping and Reinterpreting
+    # @inline function Base.reshape(a::StackArray{T}, dims::Dims{N})  where {T,N}
+    #     @assert prod(dims) == length(a)
+    #     StackArray{T,N}(pointer(a), dims)
+    # end
+    # @inline Base.reshape(a::StackArray, dims::Vararg{Int}) = reshape(a, dims)
+    #
+    # @inline function Base.reinterpret(::Type{Tᵣ}, a::StackArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
+    #     @assert Base.allocatedinline(Tᵣ)
+    #     @assert length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
+    #     @assert size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
+    #     lengthᵣ = length(a)*sizeof(Tᵢ)÷sizeof(Tᵣ)
+    #     sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
+    #     pointerᵣ = Ptr{Tᵣ}(pointer(a))
+    #     StackArray{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
+    # end
 
 
     # Other custom constructors

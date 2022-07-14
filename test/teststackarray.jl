@@ -1,9 +1,9 @@
-# Test MallocArray type
+# Test StackArray type
 
-    # Test MallocArray constructors
-    A = MallocArray{Float64}(undef, 20)
-    @test isa(A, MallocArray{Float64})
-    @test isa(A, MallocVector{Float64})
+    # Test StackArray constructors
+    A = StackArray{Float64}(undef, 20)
+    @test isa(A, StackArray{Float64})
+    @test isa(A, StackVector{Float64})
     @test length(A) == 20
     @test sizeof(A) == 20*sizeof(Float64)
     @test IndexStyle(A) == IndexLinear()
@@ -34,7 +34,7 @@
     @test ones(20) == A
     @test A == A
     B = copy(A)
-    @test isa(B, MallocArray)
+    @test isa(B, StackArray)
     @test A == B
     @test A !== B
     C = reshape(A, 5, 4)
@@ -54,42 +54,34 @@
     @test all(C .=== Float16(0))
 
     # Special indexing for 0d arrays
-    C = MallocArray{Float64}(undef, ())
+    C = StackArray{Float64}(undef, ())
     C[] = 1
     @test C[] === 1.0
     C[] = 2.0
     @test C[] === 2.0
-    @test free(C) == 0
 
     # Test other constructors
     C = similar(B)
-    @test isa(C, MallocArray{Float64,1})
+    @test isa(C, StackArray{Float64,1})
     @test isa(C[1], Float64)
     @test length(C) == 20
     @test size(C) == (20,)
-    @test free(C) == 0
 
     C = similar(B, 10, 10)
-    @test isa(C, MallocArray{Float64,2})
+    @test isa(C, StackArray{Float64,2})
     @test isa(C[1], Float64)
     @test length(C) == 100
     @test size(C) == (10,10)
-    @test free(C) == 0
 
     C = similar(B, Float32, 10)
-    @test isa(C, MallocArray{Float32,1})
+    @test isa(C, StackArray{Float32,1})
     @test isa(C[1], Float32)
     @test length(C) == 10
     @test size(C) == (10,)
-    @test free(C) == 0
-
-    # The end
-    @test free(A) == 0
-    @test free(B) == 0
 
     # Text constructor in higher dims
-    B = MallocMatrix{Float32}(undef, 10, 10)
-    @test isa(B, MallocArray{Float32,2})
+    B = StackMatrix{Float32}(undef, 10, 10)
+    @test isa(B, StackArray{Float32,2})
     @test size(B) == (10,10)
     @test length(B) == 100
     @test stride(B,1) == 1
@@ -98,10 +90,9 @@
     @test B[:,1] === B[:,1]
     @test B[3:7,1] === B[3:7,1]
     @test B[3:7,1] != B[4:7,1]
-    @test free(B) == 0
 
-    B = MallocArray{Int64,3}(undef,3,3,3)
-    @test isa(B, MallocArray{Int64,3})
+    B = StackArray{Int64,3}(undef,3,3,3)
+    @test isa(B, StackArray{Int64,3})
     @test size(B) == (3,3,3)
     @test length(B) == 27
     @test stride(B,1) == 1
@@ -116,10 +107,9 @@
     @test B[2,2,2] === 7
     B[:,:,2] .= 5
     @test B[2,2,2] === 5
-    @test free(B) == 0
 
-    B = MallocArray{Int64}(undef,2,2,2,2)
-    @test isa(B, MallocArray{Int64,4})
+    B = StackArray{Int64}(undef,2,2,2,2)
+    @test isa(B, StackArray{Int64,4})
     @test size(B) == (2,2,2,2)
     @test length(B) == 16
     @test stride(B,1) == 1
@@ -138,54 +128,45 @@
     @test B[2,2,2,2] === 5
     B[:,:,:,2] .= 3
     @test B[2,2,2,2] === 3
-    @test free(B) == 0
 
 ## -- test other constructors
 
-    A = MallocArray{Float64,2}(zeros, 11, 10)
+    A = sfill(0.0, 11,10)
     @test A == zeros(11,10)
     @test A[1] === 0.0
 
-    B = mzeros(11,10)
+    B = szeros(11,10)
     @test B == zeros(11,10)
     @test B[1] === 0.0
 
-    C = mzeros(Int32, 11,10)
+    C = szeros(Int32, 11,10)
     @test C == zeros(Int32, 11,10)
     @test C[1] === Int32(0)
 
-    D = mfill(Int32(0), 11,10)
+    D = sfill(Int32(0), 11,10)
     @test D == zeros(Int32, 11,10)
     @test D[1] === Int32(0)
 
     @test A == B == C == D
-    free(A)
-    free(B)
-    free(C)
-    free(D)
 
 ## ---
 
-    A = mones(11,10)
+    A = sones(11,10)
     @test A == ones(11,10)
     @test A[1] === 1.0
 
-    B = mones(Int32, 11,10)
+    B = sones(Int32, 11,10)
     @test B == ones(Int32, 11,10)
     @test B[1] === Int32(1.0)
 
     @test A == B
-    free(A)
-    free(B)
 
-    A = meye(10)
+    A = seye(10)
     @test A == I(10)
     @test A[5,5] === 1.0
 
-    B = meye(Int32, 10)
+    B = seye(Int32, 10)
     @test B == I(10)
     @test B[5,5] === Int32(1.0)
 
     @test A == B
-    free(A)
-    free(B)
