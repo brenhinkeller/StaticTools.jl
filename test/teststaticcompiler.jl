@@ -34,6 +34,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
     @test parsedlm(Int64, c"table.tsv", '\t') == (1:5)*(1:5)'
 end
+
 ## --- Random number generation
 
 let
@@ -156,9 +157,39 @@ let
     A = (1:10) * (1:5)'
     @test parsedlm(c"table.tsv",'\t') == A' * A
 end
+
+let
+    # Attempt to compile...
+    status = -1
+    try
+        isfile("loopvec_matrix_stack") && rm("loopvec_matrix_stack")
+        status = run(`julia --compile=min $testpath/scripts/loopvec_matrix_stack.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/loopvec_matrix_stack.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x5 matrix product:")
+    status = -1
+    try
+        status = run(`./loopvec_matrix_stack`)
+    catch e
+        @warn "Could not run $(scratch)/loopvec_matrix_stack"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    A = (1:10) * (1:5)'
+    @test parsedlm(c"table.tsv",'\t') == A' * A
+end
+
+
 ## --- Test string handling
 
-    let
+let
     # Attempt to compile...
     status = -1
     try
