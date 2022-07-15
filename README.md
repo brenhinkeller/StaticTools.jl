@@ -14,10 +14,11 @@ While we'll do our best to keep things working, this package should still be con
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
-In addition to the exported names, Julia `Base` functions extended for StaticTools types (`StaticString`, `MallocString`, and `MallocArray`) include:
+In addition to the exported names, Julia `Base` functions extended for StaticTools types (i.e., `StaticString`/ `MallocString` and `StackArray`/`MallocArray`) include:
 * `print`, `println`, `error`,
 * `parse`,
-* `rand` (when using an `rng` initialied with `static_rng()`, `SplitMix64()`, or `Xoshiro256✴︎✴︎()` )
+* `rand` (when using an `rng` initialied with `static_rng`, `SplitMix64`, or `Xoshiro256✴︎✴︎` )
+* `randn` (when using an `rng` initialied with `BoxMuller`, or `MarsagliaPolar` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
