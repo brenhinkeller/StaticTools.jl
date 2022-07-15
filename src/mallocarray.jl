@@ -4,14 +4,14 @@
     # Definition and constructors:
     """
     ```julia
-    MallocArray{T,N} <: AbstractArray{T,N}
+    MallocArray{T,N} <: DenseArray{T,N} <: AbstractArray{T,N}
     ```
     `N`-dimensional dense heap-allocated array with elements of type `T`.
 
     Much like `Base.Array`, except (1) backed by memory that is not tracked by
     the Julia garbage collector (is directly allocated with `malloc`) so is
     StaticCompiler-safe, (2) should be `free`d when no longer in use, and
-    (3) indexing returns views rather than copies.
+    (3) indexing returns `ArrayView`s rather than copies.
     """
     struct MallocArray{T,N} <: DensePointerArray{T,N}
         pointer::Ptr{T}
@@ -174,7 +174,7 @@
 
     ## Examples
     ```julia
-    julia> meye(Int32, 2,2)
+    julia> meye(Int32, 2)
     2×2 MallocMatrix{Int32}:
      1  0
      0  1

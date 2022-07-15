@@ -2,13 +2,14 @@
     # Definition and constructors:
     """
     ```julia
-    StackArray{T,N} <: AbstractArray{T,N}
+    StackArray{T,N} <: DenseArray{T,N} <: AbstractArray{T,N}
     ```
     `N`-dimensional dense stack-allocated array with elements of type `T`.
 
     Much like `Base.Array`, except (1) backed by memory that is not tracked by
     the Julia garbage collector (is stack allocated by `alloca`), so is
-    StaticCompiler-friendly, and (2) indexing returns views rather than copies.
+    StaticCompiler-friendly, and (2) contiguous slice indexing returns
+    `ArrayView`s rather than copies.
     """
     mutable struct StackArray{T,N,L,D} <: DenseStaticArray{T,N}
         data::NTuple{L,T}
@@ -68,11 +69,11 @@
 
     ## Examples
     ```julia
-    julia> A = StackArray{Float64}(undef, 3,3) # implicit N
-    3×3 StackMatrix{Float64}:
-     3.10504e231   6.95015e-310   2.12358e-314
-     1.73061e-77   6.95015e-310   5.56271e-309
-     6.95015e-310  0.0           -1.29074e-231
+    julia> StackArray{Float64}(undef, 3,3)
+    3×3 StackMatrix{Float64, 9, (3, 3)}:
+     0.0  0.0  0.0
+     0.0  0.0  0.0
+     0.0  0.0  0.0
     ```
     """
     @inline StackArray(x::NTuple, dims::Vararg{Int}) = StackArray(x, dims)
@@ -125,7 +126,7 @@
     ## Examples
     ```julia
     julia> szeros(Int32, 2,2)
-    2×2 StackMatrix{Int32}:
+    2×2 StackMatrix{Int32, 4, (2, 2)}:
      0  0
      0  0
     ```
@@ -148,7 +149,7 @@
     ## Examples
     ```julia
     julia> sones(Int32, 2,2)
-    2×2 StackMatrix{Int32}:
+    2×2 StackMatrix{Int32, 4, (2, 2)}:
      1  1
      1  1
     ```
@@ -170,8 +171,8 @@
 
     ## Examples
     ```julia
-    julia> seye(Int32, 2,2)
-    2×2 StackMatrix{Int32}:
+    julia> seye(Int32, 2)
+    2×2 StackMatrix{Int32, 4, (2, 2)}:
      1  0
      0  1
     ```
@@ -200,7 +201,7 @@
     ## Examples
     ```julia
     julia> sfill(3, 2, 2)
-    2×2 StackMatrix{Int64}:
+    2×2 StackMatrix{Int64, 4, (2, 2)}:
      3  3
      3  3
     ```
