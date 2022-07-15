@@ -11,8 +11,10 @@ module StaticTools
     struct FILE end # Plain struct to denote and dispatch on file pointers
     struct DYLIB end # Plain struct to denote and dispatch pointers to dlopen'd shlibs
 
-    # Arrays backed by malloc'd memory
-    include("mallocarray.jl")   # MallocArray, MallocMatrix, MallocVector
+    # Arrays backed by malloc'd and alloca'd memory
+    include("abstractstaticarray.jl")  # Shared array infrastructure
+    include("stackarray.jl")           # StackArray, StackMatrix, StackVector
+    include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
 
     # String handling
     include("abstractstaticstring.jl")  # Shared string infrastructure
@@ -38,6 +40,8 @@ module StaticTools
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString
     export MallocArray, MallocMatrix, MallocVector
+    export StackArray, StackMatrix, StackVector
+    export ArrayView
     # Macros
     export @c_str, @m_str, @mm_str
     export @ptrcall, @symbolcall
@@ -45,6 +49,7 @@ module StaticTools
     # Functions
     export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management
     export mfill, mzeros, mones, meye                                           # Other MallocArray functions
+    export sfill, szeros, sones, seye                                           # Other StackArray functions
     export stdinp, stdoutp, stderrp                                             # File pointers
     export fopen, fclose, ftell, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END   # File open, close, seek
     export usleep                                                               # Other libc utility functions
