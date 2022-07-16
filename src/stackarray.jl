@@ -24,15 +24,14 @@
             L = prod(size)
             A = new{T,N,L,size}()
         end
-        @inline function StackArray{T,N}(data::NTuple{L,T₀}, size::Dims{N}) where {T,N,L,T₀}
-            @assert Base.allocatedinline(T)
-            @assert prod(size)*sizeof(T) == L*sizeof(T₀)
-            A = new{T,N,prod(size),size}()
-        end
         @inline function StackArray(data::NTuple{L,T}, size::Dims{N}) where {T,N,L}
             @assert Base.allocatedinline(T)
             @assert L == prod(size)
-            A = new{T,N,L,size}()
+            A = new{T,N,L,size}(data)
+        end
+        @inline function StackArray(data::NTuple{L,T}) where {T,L}
+            @assert Base.allocatedinline(T)
+            A = new{T,1,L,(L,)}(data)
         end
     end
 
@@ -154,7 +153,7 @@
      1  1
     ```
     """
-    @inline sones(dims::Vararg{Int}) = sones(Float64, dims)
+    @inline sones(dims::Vararg{Int}) = sones(dims)
     @inline sones(dims::Dims) = sones(Float64, dims)
     @inline sones(T::Type, dims::Vararg{Int}) = sones(T, dims)
     @inline function sones(::Type{T}, dims::Dims{N}) where {T,N}

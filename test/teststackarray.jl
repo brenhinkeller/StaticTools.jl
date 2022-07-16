@@ -149,7 +149,21 @@
 
     @test A == B == C == D
 
-## ---
+## --- Additional constructors
+
+    data = (1:25...,)
+    A = StackArray(data)
+    @test isa(A, StackArray{Int64, 1, 25, (25,)})
+
+    B = StackArray(data,(5,5))
+    @test isa(B, StackArray{Int64, 2, 25, (5,5)})
+
+    C = StackArray(data,5,5)
+    @test isa(B, StackArray{Int64, 2, 25, (5,5)})
+
+    @test A != B
+    @test A == vec(B)
+    @test B == C
 
     A = sones(11,10)
     @test A == ones(11,10)
