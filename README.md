@@ -180,6 +180,32 @@ The same array, reinterpreted as Int32:
 0	0	0
 ```
 
+#### StackArrays with size determined at compile-time:
+If we know the size of an array at compile-time, we can avoid the `malloc` and
+keep the array on the stack instead (as long as it's small enough to fit on the
+stack) with the `StackArray` type:
+```
+julia> function stack_times_table()
+           a = StackArray{Int64}(undef, 5, 5)
+           for i ∈ axes(a,1)
+               for j ∈ axes(a,2)
+                   a[i,j] = i*j
+               end
+           end
+           print(a)
+       end
+
+julia> filepath = compile_executable(stack_times_table, (), "./")
+"/Users/user/stack_times_table"
+
+shell> ./stack_times_table
+1   2   3   4   5
+2   4   6   8   10
+3   6   9   12  15
+4   8   12  16  20
+5   10  15  20  25
+```
+
 #### Random number generation:
 ```julia
 julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
