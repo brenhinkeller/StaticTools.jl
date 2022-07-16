@@ -11,7 +11,7 @@
     Much like `Base.Array`, except (1) backed by memory that is not tracked by
     the Julia garbage collector (is directly allocated with `malloc`) so is
     StaticCompiler-safe, (2) should be `free`d when no longer in use, and
-    (3) indexing returns `ArrayView`s rather than copies.
+    (3) contiguous slice indexing returns `ArrayView`s rather than copies.
     """
     struct MallocArray{T,N} <: DensePointerArray{T,N}
         pointer::Ptr{T}
