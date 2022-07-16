@@ -11,7 +11,7 @@
     StaticCompiler-friendly, and (2) contiguous slice indexing returns
     `ArrayView`s rather than copies.
     """
-    mutable struct StackArray{T,N,L,D} <: DenseStaticArray{T,N}
+    mutable struct StackArray{T,N,L,D} <: DenseTupleArray{T,N,L}
         data::NTuple{L,T}
         @inline function StackArray{T,N,L,D}(::UndefInitializer) where {T,N,L,D}
             @assert Base.allocatedinline(T)
