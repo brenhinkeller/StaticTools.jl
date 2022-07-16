@@ -92,11 +92,14 @@
         end
     end
     @inline Base.setindex!(a::DenseStaticArray, x, ::Colon) = setindex!(a, x, eachindex(a))
+    @inline Base.setindex!(a::DenseStaticArray{T}, x::T, ::Colon) where {T} = fill!(A, x)
 
     # Other nice functions
     @inline Base.fill!(A::DenseStaticArray{T}, x) where {T} = fill!(A, convert(T,x))
     @inline function Base.fill!(A::DenseStaticArray{T}, x::T) where {T}
-        setindex!(A, x, :)
+        for i ∈ eachindex(a)
+            setindex!(a, x, i)
+        end
         return A
     end
 
