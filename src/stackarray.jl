@@ -134,10 +134,8 @@
      0  0
     ```
     """
-    @inline szeros(dims::Vararg{Int}) = szeros(dims)
-    @inline szeros(dims::Dims{N}) where {N} = fill!(StackArray{Float64,N}(undef, dims), 0.0)
-    @inline szeros(T::Type, dims::Vararg{Int}) = szeros(T, dims)
-    @inline szeros(::Type{T}, dims::Dims{N}) where {T,N} = fill!(StackArray{T,N}(undef, dims), zero(T))
+    @inline sones(dims...) = sones(Float64, dims...)
+    @inline sones(::Type{T}, dims...) where {T} = sfill(one(T), dims...)
 
     """
     ```julia
@@ -157,13 +155,8 @@
      1  1
     ```
     """
-    @inline sones(dims::Vararg{Int}) = sones(dims)
-    @inline sones(dims::Dims) = sones(Float64, dims)
-    @inline sones(T::Type, dims::Vararg{Int}) = sones(T, dims)
-    @inline function sones(::Type{T}, dims::Dims{N}) where {T,N}
-        A = StackArray{T,N}(undef, dims)
-        fill!(A, one(T))
-    end
+    @inline szeros(dims...) = szeros(Float64, dims...)
+    @inline szeros(::Type{T}, dims...) where {T} = sfill(zero(T), dims...)
 
     """
     ```julia

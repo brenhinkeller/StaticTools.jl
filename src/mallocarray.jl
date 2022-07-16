@@ -157,13 +157,8 @@
      1  1
     ```
     """
-    @inline mones(dims::Vararg{Int}) = mones(Float64, dims)
-    @inline mones(dims::Dims) = mones(Float64, dims)
-    @inline mones(T::Type, dims::Vararg{Int}) = mones(T, dims)
-    @inline function mones(::Type{T}, dims::Dims{N}) where {T,N}
-        A = MallocArray{T,N}(undef, prod(dims), dims)
-        fill!(A, one(T))
-    end
+    @inline mones(dims...) = mones(Float64, dims...)
+    @inline mones(::Type{T}, dims...) where {T} = mfill(one(T), dims...)
 
     """
     ```julia
