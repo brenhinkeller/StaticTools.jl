@@ -58,9 +58,13 @@
     ```julia
     StackArray{T}(undef, dims)
     StackArray{T,N}(undef, dims)
+    StackArray{T,N,L,D}(undef)
+    StackArray(data::NTuple{N,T})
+    StackArray(data::NTuple{N,T}, dims)
     ```
     Construct an uninitialized `N`-dimensional `StackArray` containing elements
-    of type `T`. `N` can either be supplied explicitly, as in `Array{T,N}(undef, dims)`,
+    of type `T` with `N` dimensions, length `L` and dimensions `D`. Dimensionality
+    `N` can either be supplied explicitly, as in `Array{T,N}(undef, dims)`,
     or be determined by the length or number of `dims`. `dims` may be a tuple or
     a series of integer arguments corresponding to the lengths in each dimension.
     If the rank `N` is supplied explicitly, then it must match the length or
@@ -76,9 +80,9 @@
     ```
     """
     @inline StackArray(x::NTuple, dims::Vararg{Int}) = StackArray(x, dims)
-    @inline StackArray{T}(x::Union{UndefInitializer,NTuple}, dims::Vararg{Int}) where {T} = StackArray{T}(x, dims)
-    @inline StackArray{T}(x::Union{UndefInitializer,NTuple}, dims::Dims{N}) where {T,N} = StackArray{T,N}(x, dims)
-    @inline StackArray{T,N}(x::Union{UndefInitializer,NTuple}, dims::Vararg{Int}) where {T,N} = StackArray{T,N}(x, dims)
+    @inline StackArray{T}(x::UndefInitializer, dims::Vararg{Int}) where {T} = StackArray{T}(x, dims)
+    @inline StackArray{T}(x::UndefInitializer, dims::Dims{N}) where {T,N} = StackArray{T,N}(x, dims)
+    @inline StackArray{T,N}(x::UndefInitializer, dims::Vararg{Int}) where {T,N} = StackArray{T,N}(x, dims)
 
 
     # Fundamentals
