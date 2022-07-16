@@ -6,6 +6,9 @@
 
     # A subtype for arrays that are backed by a pointer, length, and size alone
     abstract type DensePointerArray{T,N} <: DenseStaticArray{T,N} end
+    # A subtype for arrays that are backed by an NTuple
+    abstract type DenseTupleArray{T,N,L} <: DenseStaticArray{T,N} end
+
 
     # Lightweight type for taking a view into an existing array
     struct ArrayView{T,N} <: DensePointerArray{T,N}
@@ -33,11 +36,14 @@
     @inline Base.getindex(a::DenseStaticArray{T,0}) where {T} = unsafe_load(pointer(a))
     @inline Base.getindex(a::DenseStaticArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
 
+    # Getindex methods returning tuples
+    @inline Base.getindex(a::DenseStaticArray, t::NTuple{N,Int}) where N = ntuple(i->a[t[i]], Val(N))
+
     # Getindex methods returning views
     @inline Base.getindex(a::DenseStaticArray, ::Colon) = a
-    @inline Base.getindex(a::DenseStaticArray{T}, r::UnitRange{<:Integer}) where T = ArrayView(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
-    @inline Base.getindex(a::DenseStaticArray, r::UnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
-    @inline function Base.getindex(a::DenseStaticArray{T}, r::UnitRange{<:Integer}, inds::Dims{N}) where {T,N}
+    @inline Base.getindex(a::DenseStaticArray{T}, r::AbstractUnitRange{<:Integer}) where T = ArrayView(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
+    @inline Base.getindex(a::DenseStaticArray, r::AbstractUnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
+    @inline function Base.getindex(a::DenseStaticArray{T}, r::AbstractUnitRange{<:Integer}, inds::Dims{N}) where {T,N}
         i0 = 0
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
@@ -74,28 +80,18 @@
     @inline Base.setindex!(a::DenseStaticArray{T,0}, x) where {T} = unsafe_store!(pointer(a), convert(T,x))
     @inline Base.setindex!(a::DenseStaticArray{T}, x::T, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
     @inline Base.setindex!(a::DenseStaticArray{T}, x, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
-    @inline function Base.setindex!(a::DenseStaticArray{T}, x::Union{AbstractArray{T},NTuple{T}}, r::UnitRange{Int}) where T
-        ix₀ = firstindex(x)-first(r)
-        for i ∈ r
-            setindex!(a, x[i+ix₀], i)
+    @inline function Base.setindex!(a::DenseStaticArray, x::Union{AbstractArray,NTuple{L}}, r::Union{AbstractUnitRange{Int}, NTuple{L,Int}}) where {L}
+        length(x) == length(r) || error(c"DimensionMismatch: indices and values not of matching length")
+        for (i,xᵢ) ∈ zip(r,x)
+            setindex!(a, xᵢ, i)
         end
     end
-    @inline function Base.setindex!(a::DenseStaticArray{T}, x::T, r::UnitRange{Int}) where T
+    @inline function Base.setindex!(a::DenseStaticArray{T}, x::T, r::Union{AbstractUnitRange{<:Integer}, NTuple{L,<:Integer}}) where {L,T}
         for i ∈ r
             setindex!(a, x, i)
         end
     end
-    @inline function Base.setindex!(a::DenseStaticArray{T}, x::Union{AbstractArray{T},NTuple{T}}, ::Colon) where T
-        ix₀ = firstindex(x)-1
-        for i ∈ eachindex(a)
-            setindex!(a, x[i+ix₀], i)
-        end
-    end
-    @inline function Base.setindex!(a::DenseStaticArray{T}, x::T, ::Colon) where T
-        for i ∈ eachindex(a)
-            setindex!(a, x, i)
-        end
-    end
+    @inline Base.setindex!(a::DenseStaticArray, x, ::Colon) = setindex!(a, x, eachindex(a))
 
     # Other nice functions
     @inline Base.fill!(A::DenseStaticArray{T}, x) where {T} = fill!(A, convert(T,x))

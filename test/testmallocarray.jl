@@ -53,6 +53,14 @@
     @test size(C) == (20,4)
     @test all(C .=== Float16(0))
 
+    # Test special indexing for tuples
+    A[:] = 0.
+    A[(1,3,5)] = 1,3,5
+    @test A[(1,3,5)] === (1.,3.,5.)
+    A[:] = 0.
+    A[(1,3,5)] = (1.,3.,5.)
+    @test A[1:5] == [1,0,3,0,5]
+
     # Special indexing for 0d arrays
     C = MallocArray{Float64}(undef, ())
     C[] = 1

@@ -11,16 +11,16 @@ module StaticTools
     struct FILE end # Plain struct to denote and dispatch on file pointers
     struct DYLIB end # Plain struct to denote and dispatch pointers to dlopen'd shlibs
 
-    # Arrays backed by malloc'd and alloca'd memory
-    include("abstractstaticarray.jl")  # Shared array infrastructure
-    include("stackarray.jl")           # StackArray, StackMatrix, StackVector
-    include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
-
     # String handling
     include("abstractstaticstring.jl")  # Shared string infrastructure
     include("unescape.jl")      # You don't want to know
     include("staticstring.jl")  # StaticCompiler-safe stack-allocated strings
     include("mallocstring.jl")  # StaticCompiler-safe heap-allocated strings
+
+    # Arrays backed by malloc'd and alloca'd memory
+    include("abstractstaticarray.jl")  # Shared array infrastructure
+    include("stackarray.jl")           # StackArray, StackMatrix, StackVector
+    include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
 
     # Union of things that don't need GC.@protect
     const AbstractMallocdMemory = Union{MallocString, MallocArray}
