@@ -24,6 +24,12 @@
             L = prod(size)
             A = new{T,N,L,size}()
         end
+        @inline function StackArray{T,N,L,D}(data::NTuple{L,T}) where {T,N,L,D}
+            @assert Base.allocatedinline(T)
+            @assert N == length(D)
+            @assert L == prod(D)
+            A = new{T,N,L,D}(data)
+        end
         @inline function StackArray(data::NTuple{L,T}, size::Dims{N}) where {T,N,L}
             @assert Base.allocatedinline(T)
             @assert L == prod(size)

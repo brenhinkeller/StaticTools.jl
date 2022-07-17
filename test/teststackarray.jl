@@ -167,11 +167,15 @@
     @test isa(B, StackArray{Int64, 2, 25, (5,5)})
 
     C = StackArray(data,5,5)
-    @test isa(B, StackArray{Int64, 2, 25, (5,5)})
+    @test isa(C, StackArray{Int64, 2, 25, (5,5)})
+
+    D = StackArray{Int64, 2, 25, (5,5)}(data)
+    @test isa(D, StackArray{Int64, 2, 25, (5,5)})
 
     @test A != B
     @test A == vec(B)
     @test B == C
+    @test C == D
 
     A = sones(11,10)
     @test A == ones(11,10)
