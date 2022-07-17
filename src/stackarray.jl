@@ -2,7 +2,7 @@
     # Definition and constructors:
     """
     ```julia
-    StackArray{T,N,L,D} <: DenseTupleArray{T,N,L} <: DenseArray{T,N} <: AbstractArray{T,N}
+    StackArray{T,N,L,D} <: DenseTupleArray{T,N,L,D} <: DenseArray{T,N} <: AbstractArray{T,N}
     ```
     `N`-dimensional dense stack-allocated array with elements of type `T`.
 
@@ -11,7 +11,7 @@
     StaticCompiler-friendly, and (2) contiguous slice indexing returns
     `ArrayView`s rather than copies.
     """
-    mutable struct StackArray{T,N,L,D} <: DenseTupleArray{T,N,L}
+    mutable struct StackArray{T,N,L,D} <: DenseTupleArray{T,N,L,D}
         data::NTuple{L,T}
         @inline function StackArray{T,N,L,D}(::UndefInitializer) where {T,N,L,D}
             @assert Base.allocatedinline(T)
@@ -34,7 +34,6 @@
             A = new{T,1,L,(L,)}(data)
         end
     end
-
 
     """
     ```julia
@@ -84,13 +83,13 @@
     @inline StackArray{T}(x::UndefInitializer, dims::Dims{N}) where {T,N} = StackArray{T,N}(x, dims)
     @inline StackArray{T,N}(x::UndefInitializer, dims::Vararg{Int}) where {T,N} = StackArray{T,N}(x, dims)
 
-
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, a::StackArray) where {T} = Ptr{T}(pointer_from_objref(a))
     @inline Base.pointer(a::StackArray{T}) where {T} = Ptr{T}(pointer_from_objref(a))
-    @inline Base.length(a::StackArray{T,N,L}) where {T,N,L} = L
-    @inline Base.sizeof(a::StackArray{T,N,L}) where {T,N,L} = L * sizeof(T)
-    @inline Base.size(a::StackArray{T,N,L,D}) where {T,N,L,D} = D
+    @inline Base.length(a::DenseTupleArray{T,N,L}) where {T,N,L} = L
+    @inline Base.sizeof(a::DenseTupleArray{T,N,L}) where {T,N,L} = L * sizeof(T)
+    @inline Base.size(a::DenseTupleArray{T,N,L,D}) where {T,N,L,D} = D
+    @inline Base.Tuple(a::DenseTupleArray) = a.data
 
     # Other nice functions
     @inline Base.:(==)(::StackArray, ::StackArray) = false

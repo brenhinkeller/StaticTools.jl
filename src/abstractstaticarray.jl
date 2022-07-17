@@ -7,7 +7,7 @@
     # A subtype for arrays that are backed by a pointer, length, and size alone
     abstract type DensePointerArray{T,N} <: DenseStaticArray{T,N} end
     # A subtype for arrays that are backed by an NTuple
-    abstract type DenseTupleArray{T,N,L} <: DenseStaticArray{T,N} end
+    abstract type DenseTupleArray{T,N,L,D} <: DenseStaticArray{T,N} end
 
 
     # Lightweight type for taking a view into an existing array
