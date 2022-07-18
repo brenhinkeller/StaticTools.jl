@@ -47,7 +47,7 @@ module StaticTools
     export @ptrcall, @symbolcall, @externptr, @externload
 
     # Functions
-    export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management
+    export ⅋, malloc, calloc, free, memset!, memcpy!, memcmp                    # Memory management
     export mfill, mzeros, mones, meye                                           # Other MallocArray functions
     export sfill, szeros, sones, seye                                           # Other StackArray functions
     export stdinp, stdoutp, stderrp                                             # File pointers

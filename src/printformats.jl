@@ -192,13 +192,6 @@ end
     printf(args[4])
     return zero(Int32)
 end
-@inline function printf(args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
-    return zero(Int32)
-end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5}) where {T1, T2, T3, T4, T5}
     printf(args[1])
     printf(args[2])
@@ -248,13 +241,6 @@ end
     printf(fp, args[1])
     printf(fp, args[2])
     printf(fp, args[3])
-    return zero(Int32)
-end
-@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}

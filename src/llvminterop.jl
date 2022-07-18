@@ -1,3 +1,24 @@
+## --- Reference operator
+
+"""
+```julia
+⅋(x)
+```
+A convenience function to obtain the most relevant properly-typed pointer
+available for a given object or reference.
+
+"⅋" can be typed at the repl as `\\upand<tab>`.
+```julia
+julia> x = Ref(1)
+Base.RefValue{Int64}(1)
+
+julia> ⅋(x)
+Ptr{Int64} @0x000000015751af00
+```
+"""
+@inline ⅋(x) = Base.pointer(x)
+@inline ⅋(x::Ref{T}) where {T} = Ptr{T}(Base.pointer_from_objref(x))
+
 ## --- dlopen
 
 const RTLD_LOCAL = Int32(1)

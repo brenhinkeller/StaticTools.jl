@@ -118,3 +118,12 @@
 
     @test isa(StaticTools.time(), Int64)
     @test StaticTools.time() > 10^9
+
+## --- Reference operator
+
+    x = Ref(1)
+    @test isa(⅋(x), Ptr{Int64})
+    @test ⅋(x) == pointer_from_objref(x)
+    x = c"asdf"
+    @test isa(⅋(x), Ptr{UInt8})
+    @test ⅋(x) == pointer(x)
