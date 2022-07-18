@@ -39,8 +39,10 @@ julia> printf(c"%f\n", 1/3)
 0
 ```
 """
-@inline printf(n::T) where T <: Union{Number, Ptr} = printf(printfmt(T), n)
-
+@inline function printf(n::T) where T <: Union{Number, Ptr}
+    printf(printfmt(T), n)
+    return zero(Int32)
+end
 # Print a vector
 """
 ```julia
@@ -73,7 +75,7 @@ julia> printf(rand(5,5))
 end
 
 # Print a tuple
-@inline function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(v::NTuple{N, T} where N) where T <: Union{Number, Ptr}
     fmt = printfmt(T)
     p = pointer(fmt)
     putchar(0x28) # open paren
@@ -106,7 +108,7 @@ end
 # Top-level formats, single numbers
 @inline function printf(fp::Ptr{FILE}, n::T) where T <: Union{Number, Ptr}
     printf(fp, printfmt(T), n)
-    newline(fp)
+    return zero(Int32)
 end
 
 
@@ -122,7 +124,7 @@ end
 end
 
 # Print a tuple
-@inline function printf(fp::Ptr{FILE}, v::NTuple{N, T} where N) where T <: Union{Number, Ptr, StaticString}
+@inline function printf(fp::Ptr{FILE}, v::NTuple{N, T} where N) where T <: Union{Number, Ptr}
     fmt = printfmt(T)
     p = pointer(fmt)
     putchar(fp, 0x28) # open paren
@@ -150,35 +152,155 @@ end
     return zero(Int32)
 end
 
-## -- Printing a long string of things
+## -- Printing a long string of things -- encourage type inference to work a bit harder
 
 """
 ```julia
-printf([fp::Ptr{FILE}], args...)
+printf([fp::Ptr{FILE}], things::Tuple)
 ```
-Print any number of arguments, optionally to a file specified by `fp`.
+Print any number of things, optionally to a file specified by `fp`.
 
 ## Examples
 ```julia
-julia> printf(c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n")
+julia> printf((c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n"))
 Sphinx of black quartz, judge my vow!
 0
 
-julia> printf(c"The value of x is currently ", x, c"\n")
+julia> x = 1
+1
+
+julia> printf((c"The value of x is currently ", x, c"\n"))
 The value of x is currently 1
 0
 ```
 """
-@inline function printf(args...)
-    for arg in args
-        printf(arg)
-    end
+@inline function printf(args::Tuple{T1, T2}) where {T1, T2}
+    printf(args[1])
+    printf(args[2])
     return zero(Int32)
 end
-@inline function printf(fp::Ptr{FILE}, args...)
-    for arg in args
-        printf(fp, arg)
-    end
+@inline function printf(args::Tuple{T1, T2, T3}) where {T1, T2, T3}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5}) where {T1, T2, T3, T4, T5}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    printf(args[5])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6}) where {T1, T2, T3, T4, T5, T6}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    printf(args[5])
+    printf(args[6])
+    printf(args[7])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    printf(args[5])
+    printf(args[6])
+    printf(args[7])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8}) where {T1, T2, T3, T4, T5, T6, T7, T8}
+    printf(args[1])
+    printf(args[2])
+    printf(args[3])
+    printf(args[4])
+    printf(args[5])
+    printf(args[6])
+    printf(args[7])
+    printf(args[8])
+    return zero(Int32)
+end
+# Print to file
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2}) where {T1, T2}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3}) where {T1, T2, T3}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5}) where {T1, T2, T3, T4, T5}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    printf(fp, args[5])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6}) where {T1, T2, T3, T4, T5, T6}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    printf(fp, args[5])
+    printf(fp, args[6])
+    printf(fp, args[7])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    printf(fp, args[5])
+    printf(fp, args[6])
+    printf(fp, args[7])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8}) where {T1, T2, T3, T4, T5, T6, T7, T8}
+    printf(fp, args[1])
+    printf(fp, args[2])
+    printf(fp, args[3])
+    printf(fp, args[4])
+    printf(fp, args[5])
+    printf(fp, args[6])
+    printf(fp, args[7])
+    printf(fp, args[8])
     return zero(Int32)
 end
 
