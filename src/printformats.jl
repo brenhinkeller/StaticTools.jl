@@ -152,6 +152,23 @@ end
 
 ## -- Printing a long string of things
 
+"""
+```julia
+printf([fp::Ptr{FILE}], args...)
+```
+Print any number of arguments, optionally to a file specified by `fp`.
+
+## Examples
+```julia
+julia> printf(c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n")
+Sphinx of black quartz, judge my vow!
+0
+
+julia> printf(c"The value of x is currently ", x, c"\n")
+The value of x is currently 1
+0
+```
+"""
 @inline function printf(args...)
     for arg in args
         printf(arg)

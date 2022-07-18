@@ -377,6 +377,24 @@ end
 
 ## --- Macros for obtaining llvm `external global` constants
 
+"""
+```julia
+@externptr symbol::T
+```
+Return the pointer to an LLVM `external global` variable with name `symbol` and type `T`
+
+## Examples
+```julia
+julia> foo() = @externptr __stderrp::Ptr{UInt8} # macos syntax
+foo (generic function with 1 method)
+
+julia> foo()
+Ptr{Ptr{UInt8}} @0x00007fffadb8a9a0
+
+julia> Base.unsafe_load(foo()) == stderrp()
+true
+```
+"""
 macro externptr(expr)
   # Error if missing type annotation
   expr.head === :(::) || return :(error("@externptr expression must end with type annotation"))
@@ -402,6 +420,25 @@ macro externptr(expr)
   return esc(call)
 end
 
+
+"""
+```julia
+@externload symbol::T
+```
+Load an LLVM `external global` variable with name `symbol` and type `T`
+
+## Examples
+```julia
+julia> foo() = @externload __stderrp::Ptr{UInt8} # macos syntax
+foo (generic function with 1 method)
+
+julia> foo()
+Ptr{UInt8} @0x00007fffadb8a240
+
+julia> foo() == stderrp()
+true
+```
+"""
 macro externload(expr)
   # Error if missing type annotation
   expr.head === :(::) || return :(error("@externload expression must end with type annotation"))
@@ -463,7 +500,7 @@ function llvmtype_internal(t)
         if (isa(t2, Expr) && first(t2.args) === :Ptr)
             t3 = last(t2.args)
             if (isa(t3, Expr) && first(t3.args) === :Ptr)
-                t4 = last(t4.args)
+                t4 = last(t3.args)
                 if (isa(t4, Expr) && first(t4.args) === :Ptr)
                     t5 = last(t4.args)
                     if (isa(t5, Expr) && first(t5.args) === :Ptr)
