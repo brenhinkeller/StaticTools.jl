@@ -29,6 +29,7 @@
     @test printf(0x00000001) == 0
     @test printf(0x0000000000000001) == 0
     @test printf(Ptr{UInt64}(0)) == 0
+    @test printf(c"\n", 1, c": ", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n") == 0
 
 ## -- low-level printing to file
 
@@ -48,7 +49,7 @@
     @test printf(fp, 0x00000001) == 0
     @test printf(fp, 0x0000000000000001) == 0
     @test printf(fp, Ptr{UInt64}(0)) == 0
-
+    @test printf(fp, c"\n", 1, c": ", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n") == 0
 
 
 ## -- High-level printing

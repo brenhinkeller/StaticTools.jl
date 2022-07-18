@@ -39,10 +39,7 @@ julia> printf(c"%f\n", 1/3)
 0
 ```
 """
-@inline function printf(n::T) where T <: Union{Number, Ptr}
-    printf(printfmt(T), n)
-    newline()
-end
+@inline printf(n::T) where T <: Union{Number, Ptr} = printf(printfmt(T), n)
 
 # Print a vector
 """
@@ -149,6 +146,21 @@ end
             putchar(fp, 0x09) # tab
         end
         newline(fp)
+    end
+    return zero(Int32)
+end
+
+## -- Printing a long string of things
+
+@inline function printf(args...)
+    for arg in args
+        printf(arg)
+    end
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args...)
+    for arg in args
+        printf(fp, arg)
     end
     return zero(Int32)
 end
