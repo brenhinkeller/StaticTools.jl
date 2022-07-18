@@ -375,6 +375,61 @@ macro symbolcall(expr)
     return esc(call)
 end
 
+## --- Macros for obtaining llvm `external global` constants
+
+macro externptr(expr)
+  # Error if missing type annotation
+  expr.head === :(::) || return :(error("@externptr expression must end with type annotation"))
+  # Separate name from type annotation
+  name = first(expr.args)
+  return_type = last(expr.args)
+
+  # Convert Julia types to equivalent LLVM types
+  Tᵣ_ext = Int===Int64 ? :i64 : :i32      # pointer
+  Tᵣ_int = llvmtype_internal(return_type)
+
+  # Construct llvm IR to call
+  llvm_str = """
+  @$name = external global $Tᵣ_int
+
+  define $Tᵣ_ext @main() #0 {
+    %jlptr = ptrtoint $Tᵣ_int* @$name to $Tᵣ_ext
+    ret $Tᵣ_ext %jlptr
+  }
+  attributes #0 = { alwaysinline nounwind ssp uwtable }
+  """
+  call = :(Base.llvmcall(($llvm_str, "main"), Ptr{$return_type}, Tuple{}))
+  return esc(call)
+end
+
+macro externload(expr)
+  # Error if missing type annotation
+  expr.head === :(::) || return :(error("@externload expression must end with type annotation"))
+  # Separate name from type annotation
+  name = first(expr.args)
+  return_type = last(expr.args)
+
+  # Convert Julia types to equivalent LLVM types
+  Tᵣ_ext = llvmtype_external(return_type)
+  Tᵣ_int = llvmtype_internal(return_type)
+  resultstr = Tᵣ_int == Tᵣ_ext ? "%result = %value" : "%result = ptrtoint $Tᵣ_int %value to $Tᵣ_ext"
+
+  # Construct llvm IR to call
+  llvm_str = """
+  @$name = external global $Tᵣ_int
+
+  define $Tᵣ_ext @main() #0 {
+    %value = load $Tᵣ_int, $Tᵣ_int* @$name
+    $resultstr
+    ret $Tᵣ_ext %result
+  }
+  attributes #0 = { alwaysinline nounwind ssp uwtable }
+  """
+  call = :(Base.llvmcall(($llvm_str, "main"), $return_type, Tuple{}))
+  return esc(call)
+end
+
+
 ## --- Converting between llvm types and Julia types
 
 function llvmtype_external(t)
@@ -401,7 +456,27 @@ function llvmtype_internal(t)
     (t == :(Ptr{Float64})) && return :("double*")
     (t == :(Ptr{Float32})) && return :("float*")
     (t == :(Ptr{Float16})) && return :("half*")
-    (isa(t, Expr) && first(t.args) === :Ptr) && return :("i8*") # All other Ptrs can be i8*
+    # All other Ptrs can be i8*
+    # ANSI C allows up to 12 levels of pointers, only implementing 5 here for now
+    if (isa(t, Expr) && first(t.args) === :Ptr)
+        t2 = last(t.args)
+        if (isa(t2, Expr) && first(t2.args) === :Ptr)
+            t3 = last(t2.args)
+            if (isa(t3, Expr) && first(t3.args) === :Ptr)
+                t4 = last(t4.args)
+                if (isa(t4, Expr) && first(t4.args) === :Ptr)
+                    t5 = last(t4.args)
+                    if (isa(t5, Expr) && first(t5.args) === :Ptr)
+                        return :("i8*****")
+                    end
+                    return :("i8****")
+                end
+                return :("i8***")
+            end
+            return :("i8**")
+        end
+        return :("i8*")
+    end
     (t === :Int128 || t === :UInt128) && return :i128
     (t === :Int64 || t === :UInt64) && return :i64
     (t === :Int32 || t === :UInt32) && return :i32

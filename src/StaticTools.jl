@@ -44,7 +44,7 @@ module StaticTools
     export ArrayView
     # Macros
     export @c_str, @m_str, @mm_str
-    export @ptrcall, @symbolcall
+    export @ptrcall, @symbolcall, @externptr, @externload
 
     # Functions
     export malloc, calloc, free, memset!, memcpy!, memcmp                       # Memory management

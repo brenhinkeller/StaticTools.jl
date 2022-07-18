@@ -95,6 +95,23 @@
     @test isnothing(cfree(ptr))
 
 
+## --- @externptr / @externload
+
+    if Sys.isapple()
+        foo() = @externload __stderrp::Ptr{UInt8}
+    else
+        foo() = @externload stderr::Ptr{UInt8}
+    end
+    @test foo() == stderrp()
+
+    if Sys.isapple()
+        fooptr() = @externptr __stderrp::Ptr{UInt8}
+    else
+        fooptr() = @externptr stderr::Ptr{UInt8}
+    end
+    @test Base.unsafe_load(fooptr()) == stderrp()
+
+
 ## --- Other libc utility functions
 
     @test usleep(1000) === Int32(0)
