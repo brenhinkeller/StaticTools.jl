@@ -1,9 +1,5 @@
 module StaticTools
 
-    if !(v"1.8.0-DEV" < VERSION < v"1.9.0-DEV")
-        @warn "StaticTools + StaticCompiler integration is best supported on Julia 1.8.\n Consider switching to a different Julia version"
-    end
-
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
 
