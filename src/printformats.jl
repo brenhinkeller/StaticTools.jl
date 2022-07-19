@@ -207,7 +207,6 @@ end
     printf(args[4])
     printf(args[5])
     printf(args[6])
-    printf(args[7])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
@@ -265,7 +264,6 @@ end
     printf(fp, args[4])
     printf(fp, args[5])
     printf(fp, args[6])
-    printf(fp, args[7])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
