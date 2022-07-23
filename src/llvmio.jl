@@ -202,6 +202,15 @@
     const SEEK_CUR = Int32(1)
     const SEEK_END = Int32(2)
 
+## --- Read and write
+
+    # Read binary data from file
+    # fread
+
+    # Write binary data to file
+    # frwite
+
+
 
 ## -- stdio pointers
 
@@ -656,27 +665,25 @@ end
 
     """
     ```julia
-    fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
-    fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE})
+    fread!(b::MallocString, n::Int64, fp::Ptr{FILE})
+    fread!(b::MallocArray{T}, n::Int64, fp::Ptr{FILE})
+    fread!(buffer, size::Int64, n::Int64, fp::Ptr{FILE})
     ```
     Libc `fread` function, accessed by direct `llvmcall`.
 
-    Read `nbytes` bytes from the filestream specified by  file pointer `fp` to the MallocString `s`.
+    Read `n` elements of `size` bytes each from the filestream specified by
+    file pointer `fp` to the buffer specified as the first argument.
+
+    When not otherwise specified, a `size` equal to `sizeof(eltype(b))` is used,
+    or `sizeof(UInt8) == 1` for strings.
 
     ## Examples
     ```julia
-    julia> s = MallocString(undef, 100)
-    m""
-
-    julia> gets!(s, stdinp(), 3)
-    Ptr{UInt8} @0x00007fb15afce550
-
-    julia> s
-    m"\n"
     ```
     """
-    @inline fread!(s::MallocString, nbytes::Int64, fp::Ptr{FILE}) = fread!(s, 1, nbytes, fp)
-    @inline function fread!(s::MallocString, size::Int64, n::Int64, fp::Ptr{FILE})
+    @inline fread!(a::DenseArray{T}, n::Int64, fp::Ptr{FILE}) where {T} = fread!(a, sizeof(T), nbytes, fp)
+    @inline fread!(s::AbstractString, nbytes::Int64, fp::Ptr{FILE}) = fread!(s, 1, nbytes, fp)
+    @inline function fread!(buffer, size::Int64, n::Int64, fp::Ptr{FILE})
         Base.llvmcall(("""
         ; External declaration of the gets function
         declare i64 @fread(i8*, i64, i64, i8*)
@@ -690,7 +697,7 @@ end
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, pointer(s), size, n, fp)
+        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, pointer(buffer), size, n, fp)
     end
 
 ## --- Base.read
@@ -706,21 +713,25 @@ end
     """
     ```julia
     read(filename::AbstractString, MallocString)
+    read(filename::AbstractString, MallocArray{T})
     ```
-    Read `filename` in its entirety to a `MallocString`
+    Read `filename` in its entirety to a `MallocString` or `MallocArray{T}` with
+    eltype `T`.
     """
-    @inline function Base.read(filename::AbstractString, ::Type{MallocString})
+    @inline function Base.read(filename::AbstractStaticString, T::Type)
         fp = fopen(filename, c"r")
-        str = read(fp, MallocString)
+        buffer = read(fp, T)
         fclose(fp)
-        return str
+        return buffer
     end
 
     """
     ```julia
     read(fp::Ptr{FILE}, MallocString)
+    read(fp::Ptr{FILE}, MallocArray{T})
     ```
-    Read `fp` in its entirety to a `MallocString`
+    Read `fp` in its entirety to a `MallocString` or `MallocArray{T}` with
+    eltype `T`.
     """
     @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocString})
         fseek(fp, 0, SEEK_END)
@@ -729,6 +740,15 @@ end
         str = MallocString(undef, len+1)
         fread!(str, len, fp)
         return str
+    end
+    @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocArray{T}}) where T
+        fseek(fp, 0, SEEK_END)
+        nbytes = ftell(fp)
+        len = nbytes ÷ sizeof(T)
+        frewind(fp)
+        A = MallocArray{T}(undef, len)
+        fread!(A, len, fp)
+        return A
     end
 
 

@@ -353,7 +353,7 @@ shell> cat foo.csv
 0.000000e+00,0.000000e+00,0.000000e+00,
 0.000000e+00,0.000000e+00,0.000000e+00,
 
-julia> parsedlm("foo.csv", ',')
+julia> parsedlm(c"foo.csv", ',')
 3×3 MallocMatrix{Float64}:
  0.0  0.0  0.0
  0.0  0.0  0.0
