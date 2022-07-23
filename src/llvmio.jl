@@ -665,8 +665,8 @@ end
 
     """
     ```julia
-    fread!(b::MallocString, n::Int64, fp::Ptr{FILE})
-    fread!(b::MallocArray{T}, n::Int64, fp::Ptr{FILE})
+    fread!(buffer::MallocString, fp::Ptr{FILE}, [n=length(buffer)])
+    fread!(buffer::MallocArray{T}, fp::Ptr{FILE}, [n=length(buffer)])
     fread!(buffer, size::Int64, n::Int64, fp::Ptr{FILE})
     ```
     Libc `fread` function, accessed by direct `llvmcall`.
@@ -681,11 +681,13 @@ end
     ```julia
     ```
     """
-    @inline fread!(a::DenseArray{T}, n::Int64, fp::Ptr{FILE}) where {T} = fread!(a, sizeof(T), nbytes, fp)
-    @inline fread!(s::AbstractString, nbytes::Int64, fp::Ptr{FILE}) = fread!(s, 1, nbytes, fp)
-    @inline function fread!(buffer, size::Int64, n::Int64, fp::Ptr{FILE})
+    @inline fread!(buffer::AbstractString, fp::Ptr{FILE}, n=length(buffer)) = fread!(buffer, fp, 1, n)
+    @inline fread!(buffer::DenseArray{T}, fp::Ptr{FILE}, n=length(buffer)) where {T} = fread!(buffer, fp, sizeof(T), n)
+    @inline fread!(buffer::AbstractMallocdMemory, fp::Ptr{FILE}, size, n) = fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n)
+    @inline fread!(buffer, fp::Ptr{FILE}, size, n) = GC.@preserve buffer fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n)
+    @inline function fread!(bp::Ptr{UInt8}, fp::Ptr{FILE}, size::Int64, n::Int64)
         Base.llvmcall(("""
-        ; External declaration of the gets function
+        ; External declaration of the fread function
         declare i64 @fread(i8*, i64, i64, i8*)
 
         define i64 @main(i64 %jls, i64 %size, i64 %n, i64 %jlfp) #0 {
@@ -697,7 +699,46 @@ end
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, pointer(buffer), size, n, fp)
+        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, bp, size, n, fp)
+    end
+
+
+    """
+    ```julia
+    fwrite(fp::Ptr{FILE}, data::AbstractString)
+    fwrite(fp::Ptr{FILE}, data::AbstractArray{T})
+    fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64)
+    ```
+    Libc `fwrite` function, accessed by direct `llvmcall`.
+
+    Write `n` elements of `size` bytes each to the filestream specified by
+    file pointer `fp` from the string or array `data`. Where not otherwise
+    specified, a `size` equal to `sizeof(eltype(data))` is used,
+    or `sizeof(UInt8) == 1` for strings.
+
+    ## Examples
+    ```julia
+    ```
+    """
+    @inline fwrite(fp::Ptr{FILE}, data::AbstractString) = fwrite(fp, data, 1, length(data))
+    @inline fwrite(fp::Ptr{FILE}, data::AbstractArray{T}) where {T} = fwrite(fp, data, sizeof(T), length(data))
+    @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
+    @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
+    @inline function fwrite(fp::Ptr{FILE}, dp::Ptr{UInt8}, size::Int64, n::Int64)
+        Base.llvmcall(("""
+        ; External declaration of the fwrite function
+        declare i64 @fwrite(i8*, i64, i64, i8*)
+
+        define i64 @main(i64 %jls, i64 %size, i64 %n, i64 %jlfp) #0 {
+        entry:
+          %str = inttoptr i64 %jls to i8*
+          %fp = inttoptr i64 %jlfp to i8*
+          %status = call i64 (i8*, i64, i64, i8*) @fwrite(i8* %str, i64 %size, i64 %n, i8* %fp)
+          ret i64 %status
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, dp, size, n, fp)
     end
 
 ## --- Base.read
@@ -718,8 +759,14 @@ end
     Read `filename` in its entirety to a `MallocString` or `MallocArray{T}` with
     eltype `T`.
     """
-    @inline function Base.read(filename::AbstractStaticString, T::Type)
+    @inline function Base.read(filename::AbstractStaticString, T::Type{MallocString})
         fp = fopen(filename, c"r")
+        buffer = read(fp, T)
+        fclose(fp)
+        return buffer
+    end
+    @inline function Base.read(filename::AbstractStaticString, T::Type{<:DenseArray})
+        fp = fopen(filename, c"rb")
         buffer = read(fp, T)
         fclose(fp)
         return buffer
@@ -738,7 +785,8 @@ end
         len = ftell(fp)
         frewind(fp)
         str = MallocString(undef, len+1)
-        fread!(str, len, fp)
+        fread!(str, fp, len)
+        str[end] = 0x00
         return str
     end
     @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocArray{T}}) where T
@@ -747,7 +795,7 @@ end
         len = nbytes ÷ sizeof(T)
         frewind(fp)
         A = MallocArray{T}(undef, len)
-        fread!(A, len, fp)
+        fread!(A, fp, len)
         return A
     end
 

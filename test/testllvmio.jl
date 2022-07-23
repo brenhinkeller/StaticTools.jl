@@ -30,9 +30,9 @@
     @test printf(0x0000000000000001) == 0
     @test printf(Ptr{UInt64}(0)) == 0
     @test printf((c"The value of x is currently ", 1.0, c"\n")) == 0
-    tpl = (c"O", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n")
-    for n=2:length(tpl)
-        @test printf(tpl[1:n]) == 0
+    tpl = (c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!", c"\n")
+    for n ∈ 1:length(tpl)-1
+        @test printf(tpl[[1:n..., length(tpl)]]) == 0
     end
 
 ## -- low-level printing to file
@@ -54,9 +54,9 @@
     @test printf(fp, 0x0000000000000001) == 0
     @test printf(fp, Ptr{UInt64}(0)) == 0
     @test printf(fp, (c"The value of x is currently ", 1.0, c"\n")) == 0
-    tpl = (c"O", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!\n")
-    for n=2:length(tpl)
-        @test printf(fp, tpl[1:n]) == 0
+    tpl = (c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!", c"\n")
+    for n ∈ 1:length(tpl)-1
+        @test printf(fp, tpl[[1:n..., length(tpl)]]) == 0
     end
 
 ## -- High-level printing
@@ -194,13 +194,28 @@
     @test str[1] == UInt8('1')
     @test length(str) > 500
     fp = fopen(c"testfile.txt", c"r")
-    @test fread!(str, length(str), fp) == length(str)
+    @test fread!(str, fp) == length(str)
     @test fclose(fp) == 0
     @test free(str) == 0
 
     @test free(name) == 0
     @test free(mode) == 0
 
+## -- Reading and writing binary data to file
+
+    m = (1:10)*(1:10)'
+    fp = fopen(c"testfile.b", c"wb")
+    @test fwrite(fp, m) == 100
+    @test fclose(fp) == 0
+
+    m2 = szeros(Int, 10,10)
+    fp = fopen(c"testfile.b", c"rb")
+    fread!(m2, fp)
+    @test m2 == m
+    @test fclose(fp) == 0
+
+
 ## --- clean up
 
     rm("testfile.txt")
+    rm("testfile.b")
