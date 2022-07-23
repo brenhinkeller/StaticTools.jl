@@ -39,6 +39,11 @@
             @assert Base.allocatedinline(T)
             A = new{T,1,L,(L,)}(data)
         end
+        @inline function StackArray(data::NTuple{L,T}) where {T,L}
+            @assert Base.allocatedinline(T)
+            A = new{T,1,L,(L,)}(data)
+        end
+
     end
 
     """
@@ -84,6 +89,7 @@
      0.0  0.0  0.0
     ```
     """
+    @inline StackArray(x::AbstractArray{T,N}) where {T,N} = copyto!(StackArray{T,N,length(x),size(x)}(undef), x)
     @inline StackArray(x::NTuple, dims::Vararg{Int}) = StackArray(x, dims)
     @inline StackArray{T}(x::UndefInitializer, dims::Vararg{Int}) where {T} = StackArray{T}(x, dims)
     @inline StackArray{T}(x::UndefInitializer, dims::Dims{N}) where {T,N} = StackArray{T,N}(x, dims)

@@ -87,6 +87,11 @@
     @test length(C) == 10
     @test size(C) == (10,)
 
+    m = (1:10)*(1:10)'
+    C = StackArray(m)
+    @test isa(C, StackArray{Int64,2, 100, (10, 10)})
+    @test C == m
+
     # Text constructor in higher dims
     B = StackMatrix{Float32}(undef, 10, 10)
     @test isa(B, StackArray{Float32,2})

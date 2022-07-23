@@ -91,6 +91,12 @@
     @test size(C) == (10,)
     @test free(C) == 0
 
+    m = (1:10)*(1:10)'
+    C = MallocArray(m)
+    @test isa(C, MallocArray{Int64,2})
+    @test C == m
+    @test free(C) == 0
+
     # The end
     @test free(A) == 0
     @test free(B) == 0

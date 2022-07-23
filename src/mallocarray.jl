@@ -83,6 +83,7 @@
     0
     ```
     """
+    @inline MallocArray(x::AbstractArray{T,N}) where {T,N} = copyto!(MallocArray{T,N}(undef, length(x), size(x)), x)
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
