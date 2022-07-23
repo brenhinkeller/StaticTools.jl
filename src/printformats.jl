@@ -326,3 +326,56 @@ ERROR: could not do thing
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, stderrp(), s)
 end
+
+## --- Print delimited data to file
+
+"""
+```julia
+printdlm(filepath, data, [delim='\t'])
+```
+Print a vector or matrix `data` as delimited ASCII text to a new file `name` with
+delimiter `delim`
+Returns `0` on success.
+
+## Examples
+```julia
+julia> a = szeros(3,3)
+3×3 StackMatrix{Float64, 9, (3, 3)}:
+ 0.0  0.0  0.0
+ 0.0  0.0  0.0
+ 0.0  0.0  0.0
+
+julia> printdlm(c"foo.csv", a, ',')
+0
+
+shell> cat foo.csv
+0.000000e+00,0.000000e+00,0.000000e+00,
+0.000000e+00,0.000000e+00,0.000000e+00,
+0.000000e+00,0.000000e+00,0.000000e+00,
+
+julia> parsedlm("foo.csv", ',')
+3×3 MallocMatrix{Float64}:
+ 0.0  0.0  0.0
+ 0.0  0.0  0.0
+ 0.0  0.0  0.0
+```
+"""
+@inline function printdlm(filepath::AbstractString, data, delimiter::Char='\t')
+    fp = fopen(filepath, c"w")
+    printdlm(fp, data, delimiter)
+    fclose(fp)
+end
+@inline printdlm(fp::Ptr{FILE}, v::AbstractVector, delimiter) = printf(fp, v)
+@inline function printdlm(fp::Ptr{FILE}, m::AbstractMatrix{T}, delimiter) where T
+    delim = delimiter % UInt8
+    fmt = printfmt(T)
+    p = pointer(fmt)
+    @inbounds GC.@preserve fmt for i ∈ axes(m,1)
+        for j ∈ axes(m,2)
+            printf(fp, p, m[i,j])
+            putchar(fp, delim)
+        end
+        newline(fp)
+    end
+    return zero(Int32)
+end

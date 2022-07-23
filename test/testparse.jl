@@ -58,10 +58,8 @@
 
 ## --- Test parsedlm
 
-    fp = fopen(c"testfile.tsv", c"w")
     m = (1:10) * (1:10)'
-    @test printf(fp, m) == 0
-    @test fclose(fp) == 0
+    @test printdlm(c"testfile.tsv", m) == 0
 
     fp = fopen(c"testfile.tsv", c"r")
     m_parsed = parsedlm(fp, '\t')
