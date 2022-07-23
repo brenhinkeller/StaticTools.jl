@@ -498,6 +498,7 @@ function llvmtype_external(t)
     (t === :Int16 || t === :UInt16) && return :i16
     (t === :Int8 || t === :UInt8) && return :i8
     (t === :Bool) && return :i1
+    t === :UInt && return UInt===UInt64 ? :i64 : :i32
     t === :Int && return Int===Int64 ? :i64 : :i32
     t === :Float64 && return :double
     t === :Float32 && return :float
@@ -541,6 +542,7 @@ function llvmtype_internal(t)
     (t === :Int16 || t === :UInt16) && return :i16
     (t === :Int8 || t === :UInt8) && return :i8
     (t === :Bool) && return :i1
+    t === :UInt && return UInt===UInt64 ? :i64 : :i32
     t === :Int && return Int===Int64 ? :i64 : :i32
     t === :Float64 && return :double
     t === :Float32 && return :float

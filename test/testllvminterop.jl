@@ -94,3 +94,4 @@
     @test StaticTools.llvmtype_internal(:(Ptr{Ptr{Ptr{Ptr{Ptr{UInt8}}}}})) == :("i8*****")
     @test StaticTools.llvmtype_internal(:(Ptr{Float32})) == :("float*")
     @test StaticTools.llvmtype_internal(:(Ptr{Float16})) == :("half*")
+    @test StaticTools.llvmtype_internal(:UInt) == StaticTools.llvmtype_external(:UInt) == ((Int==Int64) ? :i64 : :i32)
