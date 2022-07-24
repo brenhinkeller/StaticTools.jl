@@ -350,7 +350,7 @@ mul!(C::Ref,A::Ref,B::Ref) = mul!(C[], A[], B[])
 # So not just any MallocArra but in this case specifically MallocArray{Float64,2}
 # (AKA MallocMatrix{Float64})
 tt = (RefValue{MallocMatrix{Float64}}, RefValue{MallocMatrix{Float64}}, RefValue{MallocMatrix{Float64}})
-compile_shlib(mul!, tt, "./", "mul_inplace")
+compile_shlib(mul!, tt, "./", "mul_inplace", filename="libmul")
 ```
 Note that with shared libraries, we're no longer limited to just `argc::Int, argv::Ptr{Ptr{UInt8}}`.
 In principle, we can pass just about anything we want! However, it's usually easiest
@@ -373,7 +373,7 @@ def mmptr(A):
     a = MallocMatrix(ptr, ct.c_int64(A.size), ct.c_int64(A.shape[1]), ct.c_int64(A.shape[0]))
     return ct.byref(a)
 
-lib = ct.CDLL("./mul_inplace.dylib")
+lib = ct.CDLL("./libmul.dylib")
 
 A = np.ones((10,10))
 B = np.ones((10,10))
@@ -438,7 +438,7 @@ so about 4x faster than numpy.matmul for a 10x10 matrix, not counting the time t
 That said, if we were to go back to Julia...
 ```julia
 using Libdl
-lib = Libdl.dlopen("./mul_inplace.$(Libdl.dlext)", Libdl.RTLD_LOCAL)
+lib = Libdl.dlopen("./libmul.$(Libdl.dlext)", Libdl.RTLD_LOCAL)
 mul_inplace = Libdl.dlsym(lib, "julia_mul_inplace")
 
 A = MallocArray{Float64}(undef, 10, 10); A .= 1
@@ -492,7 +492,7 @@ And of course if we want to bring this full-circle:
 using StaticTools, StaticCompiler
 
 function dlmul()
-    lib = StaticTools.dlopen(c"./mul_inplace.dylib")
+    lib = StaticTools.dlopen(c"./libmul.dylib")
     mul_inplace = StaticTools.dlsym(lib, c"julia_mul_inplace")
 
     A = MallocArray{Float64}(undef, 5, 5); fill!(A, 1)
@@ -519,12 +519,43 @@ shell> ./dlmul
 5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
 ```
 ### Linking against existing libraries during compilation:
-Existing shared libraries can also be linked against simply by specifying the
-relevant compiler flags during compilation. For example, here we link at compile
-time against MPI, the Message Passing Interface used in high-performance computing
-(here via [StaticMPI.jl](https://github.com/brenhinkeller/StaticMPI.jl), which
+Existing shared libraries can also be linked against by specifying the
+relevant compiler flags during compilation, just as you would with GCC or clang.
+For example, the following is equivalent to the above example which explicitly
+`dlopen`s our `libmul`:
+```julia
+using StaticTools, StaticCompiler
+
+function dlmul()
+    A = MallocArray{Float64}(undef, 5, 5); fill!(A, 1)
+    B = MallocArray{Float64}(undef, 5, 5); fill!(B, 1)
+    C = MallocArray{Float64}(undef, 5, 5); fill!(C, 0)
+
+    ra, rb, rc = Ref(A), Ref(B), Ref(C)
+    GC.@preserve ra rb rc begin
+        pa, pb, pc = pointer_from_objref(ra), pointer_from_objref(rb), pointer_from_objref(rc)
+        @symbolcall julia_mul_inplace(pc::Ptr{Nothing}, pa::Ptr{Nothing}, pb::Ptr{Nothing})::Int
+    end
+    printf(C)
+end
+
+compile_executable(dlmul, (), "./", cflags=`-lmul -L./`)
+```
+```julia
+shell> ./dlmul
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
+```
+
+For a more complicated example, here we will link at compile time against
+[MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface),
+the Message Passing Interface used in high-performance computing -- here via
+[StaticMPI.jl](https://github.com/brenhinkeller/StaticMPI.jl), which
 merely provides convenience functions to `@symbolcall` the relevant functions
-from `libmpi.dylib`):
+from `libmpi.dylib`:
 ```julia
 julia> using StaticCompiler, StaticTools, StaticMPI
 
