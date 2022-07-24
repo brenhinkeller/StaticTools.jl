@@ -39,11 +39,6 @@
             @assert Base.allocatedinline(T)
             A = new{T,1,L,(L,)}(data)
         end
-        @inline function StackArray(data::NTuple{L,T}) where {T,L}
-            @assert Base.allocatedinline(T)
-            A = new{T,1,L,(L,)}(data)
-        end
-
     end
 
     """
