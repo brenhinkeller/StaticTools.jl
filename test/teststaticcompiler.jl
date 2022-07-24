@@ -32,7 +32,10 @@ let
     end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
-    @test parsedlm(Int64, c"table.tsv", '\t') == (1:5)*(1:5)'
+    # Test ascii output
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'
+    # Test binary output
+    @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
 end
 
 ## --- Random number generation
@@ -155,7 +158,10 @@ let
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
+    # Check ascii output
     @test parsedlm(c"table.tsv",'\t') == A' * A
+    # Check binary output
+    @test fread!(szeros(5,5), c"table.b") == A' * A
 end
 
 let

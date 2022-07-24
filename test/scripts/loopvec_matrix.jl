@@ -41,9 +41,8 @@ function loopvec_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
     # Print to stdout
     printf(C)
     # Also print to file
-    fp = fopen(c"table.tsv",c"w")
-    printf(fp, C)
-    fclose(fp)
+    printdlm(c"table.tsv", C, '\t')
+    fwrite(c"table.b", C)
     # Clean up matrices
     free(A)
     free(B)

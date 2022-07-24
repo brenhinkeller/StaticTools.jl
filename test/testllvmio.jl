@@ -151,37 +151,35 @@
     @test isa(fp, Ptr{StaticTools.FILE})
     @test ftell(fp) === 0
     @test fp != 0
-    @static if fp != 0
-        str = MallocString(undef, 100)
-        @test gets!(str, fp) != C_NULL
-        @test strlen(str) == 2
-        @test ftell(fp) === 2
-        @test str[1] == UInt8('1')
+    str = MallocString(undef, 100)
+    @test gets!(str, fp) != C_NULL
+    @test strlen(str) == 2
+    @test ftell(fp) === 2
+    @test str[1] == UInt8('1')
 
-        @test frewind(fp) == 0
-        @test readline!(str, fp) != C_NULL
-        @test strlen(str) == 2
-        @test str[1] == UInt8('1')
+    @test frewind(fp) == 0
+    @test readline!(str, fp) != C_NULL
+    @test strlen(str) == 2
+    @test str[1] == UInt8('1')
 
-        @test fseek(fp, -2, SEEK_CUR) == 0
-        @test gets!(str, fp) != C_NULL
-        @test strlen(str) == 2
-        @test str[1] == UInt8('1')
-        @test free(str) == 0
+    @test fseek(fp, -2, SEEK_CUR) == 0
+    @test gets!(str, fp) != C_NULL
+    @test strlen(str) == 2
+    @test str[1] == UInt8('1')
+    @test free(str) == 0
 
-        @test frewind(fp) == 0
-        @test getc(fp) === Int32('1')
-        @test getc(fp) === Int32('\n')
-        @test read(fp, UInt8) === UInt8('2')
+    @test frewind(fp) == 0
+    @test getc(fp) === Int32('1')
+    @test getc(fp) === Int32('\n')
+    @test read(fp, UInt8) === UInt8('2')
 
-        @test frewind(fp) == 0
-        str = readline(fp)
-        @test isa(str, MallocString)
-        @test str[1] == UInt8('1')
-        @test free(str) == 0
+    @test frewind(fp) == 0
+    str = readline(fp)
+    @test isa(str, MallocString)
+    @test str[1] == UInt8('1')
+    @test free(str) == 0
 
-        @test fclose(fp) == 0
-    end
+    @test fclose(fp) == 0
     # @static if fp != 0 && Sys.isapple()
     #     @test getchar(fp) === UInt8('1')
     #     @test getchar(fp) === UInt8('\n')
@@ -193,9 +191,8 @@
     @test isa(str, MallocString)
     @test str[1] == UInt8('1')
     @test length(str) > 500
-    fp = fopen(c"testfile.txt", c"r")
-    @test fread!(str, fp) == length(str)
-    @test fclose(fp) == 0
+    strc = StaticString(str)
+    @test fread!(str, c"testfile.txt") == strc
     @test free(str) == 0
 
     @test free(name) == 0
@@ -208,11 +205,16 @@
     @test fwrite(fp, m) == 100
     @test fclose(fp) == 0
 
-    m2 = szeros(Int, 10,10)
     fp = fopen(c"testfile.b", c"rb")
-    fread!(m2, fp)
-    @test m2 == m
+    @test fread!(szeros(Int, 10,10), fp) == m
     @test fclose(fp) == 0
+
+    rm("testfile.b")
+    @test write(c"testfile.b", StackArray(m)) == 100
+    a = read(c"testfile.b", MallocArray{Int64})
+    @test isa(a, MallocArray)
+    @test reshape(a, 10,10) == m
+    @test free(a) == 0
 
 
 ## --- clean up

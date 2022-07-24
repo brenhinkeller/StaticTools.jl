@@ -661,7 +661,7 @@ end
         return str
     end
 
-## --- fread
+## --- fread / fwrite
 
     """
     ```julia
@@ -677,14 +677,40 @@ end
     When not otherwise specified, a `size` equal to `sizeof(eltype(b))` is used,
     or `sizeof(UInt8) == 1` for strings.
 
+    See also: `fwrite`
+
     ## Examples
     ```julia
+    julia> fp = fopen(c"testfile.b", c"rwb")
+    Ptr{StaticTools.FILE} @0x00007fffa35730c8
+
+    julia> fwrite(fp, (1:5)*(1:5)'); frewind(fp)
+    0
+
+    julia> a = szeros(Int,5,5);
+
+    julia> fread!(a, fp); a
+    5×5 StackMatrix{Int64, 25, (5, 5)}:
+     1   2   3   4   5
+     2   4   6   8  10
+     3   6   9  12  15
+     4   8  12  16  20
+     5  10  15  20  25
+
+    julia> fclose(fp)
+    0
     ```
     """
+    @inline function fread!(buffer, filepath::AbstractString, args...)
+        fp = fopen(filepath, c"rb")
+        fread!(buffer, fp, args...)
+        fclose(fp)
+        buffer
+    end
     @inline fread!(buffer::AbstractString, fp::Ptr{FILE}, n=length(buffer)) = fread!(buffer, fp, 1, n)
     @inline fread!(buffer::DenseArray{T}, fp::Ptr{FILE}, n=length(buffer)) where {T} = fread!(buffer, fp, sizeof(T), n)
-    @inline fread!(buffer::AbstractMallocdMemory, fp::Ptr{FILE}, size, n) = fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n)
-    @inline fread!(buffer, fp::Ptr{FILE}, size, n) = GC.@preserve buffer fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n)
+    @inline fread!(buffer::AbstractMallocdMemory, fp::Ptr{FILE}, size, n) = (fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n); buffer)
+    @inline fread!(buffer, fp::Ptr{FILE}, size, n) = (GC.@preserve buffer fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n); buffer)
     @inline function fread!(bp::Ptr{UInt8}, fp::Ptr{FILE}, size::Int64, n::Int64)
         Base.llvmcall(("""
         ; External declaration of the fread function
@@ -705,6 +731,7 @@ end
 
     """
     ```julia
+    fwrite(filepath::AbstractString, data...)
     fwrite(fp::Ptr{FILE}, data::AbstractString)
     fwrite(fp::Ptr{FILE}, data::AbstractArray{T})
     fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64)
@@ -712,14 +739,40 @@ end
     Libc `fwrite` function, accessed by direct `llvmcall`.
 
     Write `n` elements of `size` bytes each to the filestream specified by
-    file pointer `fp` from the string or array `data`. Where not otherwise
-    specified, a `size` equal to `sizeof(eltype(data))` is used,
+    file pointer `fp` or name `filepath` from the string or array `data`.
+    Where not otherwise specified, a `size` equal to `sizeof(eltype(data))` is used,
     or `sizeof(UInt8) == 1` for strings.
+
+    See also: `fread!`
 
     ## Examples
     ```julia
+    julia> fp = fopen(c"testfile.b", c"rwb")
+    Ptr{StaticTools.FILE} @0x00007fffa35730c8
+
+    julia> fwrite(fp, (1:5)*(1:5)'); frewind(fp)
+    0
+
+    julia> a = szeros(Int,5,5);
+
+    julia> fread!(a, fp); a
+    5×5 StackMatrix{Int64, 25, (5, 5)}:
+     1   2   3   4   5
+     2   4   6   8  10
+     3   6   9  12  15
+     4   8  12  16  20
+     5  10  15  20  25
+
+    julia> fclose(fp)
+    0
     ```
     """
+    @inline function fwrite(filepath::AbstractString, data...)
+        fp = fopen(filepath, c"wb")
+        written = fwrite(fp, data...)
+        fclose(fp)
+        written
+    end
     @inline fwrite(fp::Ptr{FILE}, data::AbstractString) = fwrite(fp, data, 1, length(data))
     @inline fwrite(fp::Ptr{FILE}, data::AbstractArray{T}) where {T} = fwrite(fp, data, sizeof(T), length(data))
     @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
@@ -741,7 +794,7 @@ end
         """, "main"), Int64, Tuple{Ptr{UInt8}, Int64, Int64, Ptr{FILE}}, dp, size, n, fp)
     end
 
-## --- Base.read
+## --- Base.read / Base.write
 
     """
     ```julia
@@ -753,19 +806,13 @@ end
 
     """
     ```julia
-    read(filename::AbstractString, MallocString)
-    read(filename::AbstractString, MallocArray{T})
+    read(filename::AbstractStaticString, MallocString)
+    read(filename::AbstractStaticString, MallocArray{T})
     ```
     Read `filename` in its entirety to a `MallocString` or `MallocArray{T}` with
     eltype `T`.
     """
-    @inline function Base.read(filename::AbstractStaticString, T::Type{MallocString})
-        fp = fopen(filename, c"r")
-        buffer = read(fp, T)
-        fclose(fp)
-        return buffer
-    end
-    @inline function Base.read(filename::AbstractStaticString, T::Type{<:DenseArray})
+    @inline function Base.read(filename::AbstractStaticString, T::Type{<:Union{MallocString, MallocArray}})
         fp = fopen(filename, c"rb")
         buffer = read(fp, T)
         fclose(fp)
@@ -798,6 +845,10 @@ end
         fread!(A, fp, len)
         return A
     end
+
+
+    @inline Base.write(location::Union{AbstractStaticString, Ptr{FILE}}, data::DenseStaticArray) = fwrite(location, data)
+    @inline Base.write(location::Union{AbstractStaticString, Ptr{FILE}}, data::AbstractStaticString) = fwrite(location, data)
 
 
 ## --- printf/fprintf, just a string
