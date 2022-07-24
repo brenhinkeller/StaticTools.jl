@@ -518,3 +518,39 @@ shell> ./dlmul
 5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
 5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
 ```
+### Linking against existing libraries during compilation:
+Existing shared libraries can also be linked against simply by specifying the
+relevant compiler flags during compilation. For example, here we link at compile
+time against MPI, the Message Passing Interface used in high-performance computing
+(here via [StaticMPI.jl](https://github.com/brenhinkeller/StaticMPI.jl), which
+merely provides convenience functions to `@symbolcall` the relevant functions
+from `libmpi.dylib`):
+```julia
+julia> using StaticCompiler, StaticTools, StaticMPI
+
+julia> function mpihello(argc, argv)
+           MPI_Init(argc, argv)
+
+           comm = MPI_COMM_WORLD
+           world_size, world_rank = MPI_Comm_size(comm), MPI_Comm_rank(comm)
+
+           printf((c"Hello from ", world_rank, c" of ", world_size, c" processors!\n"))
+           MPI_Finalize()
+       end
+mpihello (generic function with 1 method)
+
+julia> compile_executable(mpihello, (Int, Ptr{Ptr{UInt8}}), "./";
+           cflags=`-lmpi -L/opt/local/lib/mpich-mp/`
+           # -lmpi instructs compiler to link against libmpi.so / libmpi.dylib
+           # -L/opt/local/lib/mpich-mp/ provides path to my local MPICH installation where libmpi can be found
+       )
+
+ld: warning: object file (./mpihello.o) was built for newer OSX version (12.0) than being linked (10.13)
+"/Users/me/code/StaticTools.jl/mpihello"
+
+shell> mpiexec -np 4 ./mpihello
+Hello from 1 of 4 processors!
+Hello from 3 of 4 processors!
+Hello from 2 of 4 processors!
+Hello from 0 of 4 processors!
+```
