@@ -64,8 +64,6 @@
     StackArray{T}(undef, dims)
     StackArray{T,N}(undef, dims)
     StackArray{T,N,L,D}(undef)
-    StackArray(data::NTuple{N,T})
-    StackArray(data::NTuple{N,T}, dims)
     ```
     Construct an uninitialized `N`-dimensional `StackArray` containing elements
     of type `T` with `N` dimensions, length `L` and dimensions `D`. Dimensionality
@@ -84,11 +82,36 @@
      0.0  0.0  0.0
     ```
     """
-    @inline StackArray(x::AbstractArray{T,N}) where {T,N} = copyto!(StackArray{T,N,length(x),size(x)}(undef), x)
-    @inline StackArray(x::NTuple, dims::Vararg{Int}) = StackArray(x, dims)
     @inline StackArray{T}(x::UndefInitializer, dims::Vararg{Int}) where {T} = StackArray{T}(x, dims)
     @inline StackArray{T}(x::UndefInitializer, dims::Dims{N}) where {T,N} = StackArray{T,N}(x, dims)
     @inline StackArray{T,N}(x::UndefInitializer, dims::Vararg{Int}) where {T,N} = StackArray{T,N}(x, dims)
+
+
+    """
+    ```julia
+    StackArray(data::NTuple{L,T})
+    StackArray(data::NTuple{L,T}, dims)
+    StackArray(data::AbstractArray{T,N})
+    ```
+    Construct a `StackArray` with eltype `T` from an existing `Tuple` or `AbstractArray`.
+
+    ### Examples
+    ```julia
+    julia> a = ntuple(i->0, 25)
+    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+    julia> StackArray(a, 5,5)
+    5×5 StackMatrix{Int64, 25, (5, 5)}:
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+    ```
+    """
+    @inline StackArray(x::NTuple, dims::Vararg{Int}) = StackArray(x, dims)
+    @inline StackArray(x::AbstractArray{T,N}) where {T,N} = copyto!(StackArray{T,N,length(x),size(x)}(undef), x)
+
 
     # Fundamentals
     @inline Base.unsafe_convert(::Type{Ptr{T}}, a::StackArray) where {T} = Ptr{T}(pointer_from_objref(a))

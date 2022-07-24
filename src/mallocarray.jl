@@ -83,7 +83,6 @@
     0
     ```
     """
-    @inline MallocArray(x::AbstractArray{T,N}) where {T,N} = copyto!(MallocArray{T,N}(undef, length(x), size(x)), x)
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
@@ -100,6 +99,33 @@
     @inline MallocArray{T}(x::PointerOrInitializer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
     @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
     @inline MallocArray{T}(x::PointerOrInitializer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
+
+    """
+    ```julia
+    MallocArray(data::AbstractArray{T,N})
+    ```
+    Construct a `MallocArray` of eltype `T` from an existing `AbstractArray`.
+
+    ### Examples
+    ```julia
+    julia> a = szeros(Int, 5,5)
+    5×5 StackMatrix{Int64, 25, (5, 5)}:
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+
+    julia> MallocArray(a)
+    5×5 MallocMatrix{Int64}:
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+     0  0  0  0  0
+    ```
+    """
+    @inline MallocArray(x::AbstractArray{T,N}) where {T,N} = copyto!(MallocArray{T,N}(undef, length(x), size(x)), x)
 
     # Destructor:
     @inline free(a::MallocArray) = free(a.pointer)
