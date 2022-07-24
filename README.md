@@ -521,8 +521,8 @@ shell> ./dlmul
 ### Linking against existing libraries during compilation:
 Existing shared libraries can also be linked against by specifying the
 relevant compiler flags during compilation, just as you would with GCC or clang.
-For example, the following is equivalent to the above example which explicitly
-`dlopen`s our `libmul`:
+For example, the following is equivalent to the above example where we explicitly
+`dlopen`ed our `libmul`:
 ```julia
 using StaticTools, StaticCompiler
 
@@ -550,10 +550,10 @@ shell> ./dlmul
 5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00    5.000000e+00
 ```
 
-For a more complicated example, here we will link at compile time against
+For a more complicated example, here we link at compile time against
 [MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface),
-the Message Passing Interface used in high-performance computing -- here via
-[StaticMPI.jl](https://github.com/brenhinkeller/StaticMPI.jl), which
+the Message Passing Interface used in high-performance computing -- in this
+case via [StaticMPI.jl](https://github.com/brenhinkeller/StaticMPI.jl), which
 merely provides convenience functions to `@symbolcall` the relevant functions
 from `libmpi.dylib`:
 ```julia
