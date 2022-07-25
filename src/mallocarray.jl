@@ -99,7 +99,13 @@
     @inline MallocArray{T}(x::PointerOrInitializer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
     @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Vararg{Int}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
     @inline MallocArray{T}(x::PointerOrInitializer, dims::Vararg{Int}) where {T} = MallocArray{T}(x, dims)
-
+    @inline function MallocArray(f::Function, T::Type, dims...)
+        M = MallocArray{T}(undef, dims...)
+        y = f(M)
+        free(M)
+        y
+    end
+    
     """
     ```julia
     MallocArray(data::AbstractArray{T,N})
@@ -126,6 +132,7 @@
     ```
     """
     @inline MallocArray(x::AbstractArray{T,N}) where {T,N} = copyto!(MallocArray{T,N}(undef, length(x), size(x)), x)
+
 
     # Destructor:
     @inline free(a::MallocArray) = free(a.pointer)
@@ -165,6 +172,12 @@
     @inline mzeros(dims::Dims{N}) where {N} = MallocArray{Float64,N}(zeros, dims)
     @inline mzeros(T::Type, dims::Vararg{Int}) = mzeros(T, dims)
     @inline mzeros(::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(zeros, dims)
+    @inline function mzeros(f::Function, args...)
+        M = mzeros(args...)
+        y = f(M)
+        free(M)
+        y
+    end
 
     """
     ```julia
@@ -186,6 +199,12 @@
     """
     @inline mones(dims...) = mones(Float64, dims...)
     @inline mones(::Type{T}, dims...) where {T} = mfill(one(T), dims...)
+    @inline function mones(f::Function, args...)
+        M = mones(T, args)
+        y = f(M)
+        free(M)
+        y
+    end
 
     """
     ```julia
@@ -211,6 +230,13 @@
         end
         return A
     end
+    @inline function meye(f::Function, args...)
+        M = meye(T, args)
+        y = f(M)
+        free(M)
+        y
+    end
+
 
     """
     ```julia
@@ -234,4 +260,10 @@
     @inline function mfill(x::T, dims::Dims{N}) where {T,N}
         A = MallocArray{T,N}(undef, prod(dims), dims)
         fill!(A, x)
+    end
+    @inline function mfill(f::Function, args...)
+        M = mfill(args...)
+        y = f(M)
+        free(M)
+        y
     end
