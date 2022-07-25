@@ -249,7 +249,7 @@
     @inline mones(dims...) = mones(Float64, dims...)
     @inline mones(::Type{T}, dims...) where {T} = mfill(one(T), dims...)
     @inline function mones(f::Function, args...)
-        M = mones(T, args)
+        M = mones(args...)
         y = f(M)
         free(M)
         y

@@ -203,3 +203,31 @@
     @test A == B
     free(A)
     free(B)
+
+## --- test "withmallocarray" pattern
+
+    s = MallocArray(Int64, 2, 2) do A
+            A .= 1
+            sum(A)
+        end
+    @test s === 4
+
+    s = mones(2, 2) do A
+            sum(A)
+        end
+    @test s === 4.0
+
+    s = mzeros(2, 2) do A
+            sum(A)
+        end
+    @test s === 0.0
+
+    s = meye(2) do A
+            sum(A)
+        end
+    @test s === 2.0
+
+    s = mfill(3.14, 2, 2) do A
+            sum(A)
+        end
+    @test s === 12.56
