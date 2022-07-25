@@ -4,7 +4,6 @@ scratch = tempdir()
 cd(scratch)
 
 ## --- Times table, file IO, mallocarray
-
 let
     # Attempt to compile
     # We have to start a new Julia process to get around the fact that Pkg.test
@@ -38,13 +37,36 @@ let
     @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
 end
 
-## --- Random number generation
-
+## --- "withmallocarray"-type do-block pattern
 let
-    # Attempt to compile...
-    # We have to start a new Julia process to get around the fact that Pkg.test
-    # disables `@inbounds`, but ironically we can use `--compile=min` to make that
-    # faster.
+    # Compile...
+    status = -1
+    try
+        isfile("withmallocarray") && rm("withmallocarray")
+        status = run(`julia --compile=min $testpath/scripts/withmallocarray.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/withmallocarray.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("5x5 uniform random matrix:")
+    status = -1
+    try
+        status = run(`./withmallocarray 5 5`)
+    catch e
+        @warn "Could not run $(scratch)/withmallocarray"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+end
+
+## --- Random number generation
+let
+    # Compile...
     status = -1
     try
         isfile("rand_matrix") && rm("rand_matrix")
@@ -70,10 +92,7 @@ let
 end
 
 let
-    # Attempt to compile...
-    # We have to start a new Julia process to get around the fact that Pkg.test
-    # disables `@inbounds`, but ironically we can use `--compile=min` to make that
-    # faster.
+    # Compile...
     status = -1
     try
         isfile("randn_matrix") && rm("randn_matrix")
@@ -103,10 +122,9 @@ let
 end
 
 ## --- Test LoopVectorization integration
-
 @static if LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2})
     let
-        # Attempt to compile...
+        # Compile...
         status = -1
         try
             isfile("loopvec_product") && rm("loopvec_product")
@@ -134,7 +152,7 @@ end
 end
 
 let
-    # Attempt to compile...
+    # Compile...
     status = -1
     try
         isfile("loopvec_matrix") && rm("loopvec_matrix")
@@ -165,7 +183,7 @@ let
 end
 
 let
-    # Attempt to compile...
+    # Compile...
     status = -1
     try
         isfile("loopvec_matrix_stack") && rm("loopvec_matrix_stack")
@@ -196,7 +214,7 @@ end
 ## --- Test string handling
 
 let
-    # Attempt to compile...
+    # Compile...
     status = -1
     try
         isfile("print_args") && rm("print_args")
@@ -224,5 +242,3 @@ end
 ## --- Clean up
 
 cd(testpath)
-
-## ---
