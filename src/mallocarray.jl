@@ -38,6 +38,11 @@
 
     """
     ```julia
+    MallocArray(T, dims) do A
+        ...
+    end
+    ```
+    ```julia
     MallocArray{T}(undef, dims)
     MallocArray{T,N}(undef, dims)
     ```
@@ -82,6 +87,17 @@
     julia> free(A)
     0
     ```
+    To avoid having to manually `free` allocated memory, it is recommended to
+    use the following supported do-block syntax whenever possible, i.e.
+    ```julia
+    julia> MallocArray(Float64, 2, 2) do A
+               A .= 0
+               printf(A)
+           end
+    0.000000e+00    0.000000e+00
+    0.000000e+00    0.000000e+00
+    0
+    ```
     """
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
@@ -105,7 +121,7 @@
         free(M)
         y
     end
-    
+
     """
     ```julia
     MallocArray(data::AbstractArray{T,N})
@@ -152,6 +168,11 @@
     # Other custom constructors
     """
     ```julia
+    mzeros([T], dims) do A
+        ...
+    end
+    ```
+    ```julia
     mzeros([T=Float64,] dims::Tuple)
     mzeros([T=Float64,] dims...)
     ```
@@ -167,6 +188,16 @@
      0  0
      0  0
     ```
+    To avoid having to manually `free` allocated memory, it is recommended to
+    use the following supported do-block syntax whenever possible, i.e.
+    ```julia
+    julia> mzeros(2,2) do A
+               printf(A)
+           end
+    0.000000e+00    0.000000e+00
+    0.000000e+00    0.000000e+00
+    0
+    ```
     """
     @inline mzeros(dims::Vararg{Int}) = mzeros(dims)
     @inline mzeros(dims::Dims{N}) where {N} = MallocArray{Float64,N}(zeros, dims)
@@ -181,6 +212,11 @@
 
     """
     ```julia
+    mones([T=Float64,] dims) do A
+        ...
+    end
+    ```
+    ```julia
     mones([T=Float64,] dims::Tuple)
     mones([T=Float64,] dims...)
     ```
@@ -191,10 +227,23 @@
 
     ## Examples
     ```julia
-    julia> mones(Int32, 2,2)
+    julia> A = mones(Int32, 2,2)
     2×2 MallocMatrix{Int32}:
      1  1
      1  1
+
+    julia> free(A)
+    0
+    ```
+    To avoid having to manually `free` allocated memory, it is recommended to
+    use the following supported do-block syntax whenever possible, i.e.
+    ```julia
+    julia> mones(2,2) do A
+               printf(A)
+           end
+    1.000000e+00    1.000000e+00
+    1.000000e+00    1.000000e+00
+    0
     ```
     """
     @inline mones(dims...) = mones(Float64, dims...)
@@ -208,6 +257,11 @@
 
     """
     ```julia
+    meye([T=Float64,] dims) do A
+        ...
+    end
+    ```
+    ```julia
     meye([T=Float64,] dim::Int)
     ```
     Create a `MallocArray{T}` containing an identity matrix of type `T`,
@@ -215,10 +269,24 @@
 
     ## Examples
     ```julia
-    julia> meye(Int32, 2)
+    julia> A = meye(Int32, 2)
+
     2×2 MallocMatrix{Int32}:
      1  0
      0  1
+
+    julia> free(A)
+    0
+    ```
+    To avoid having to manually `free` allocated memory, it is recommended to
+    use the following supported do-block syntax whenever possible, i.e.
+    ```julia
+    julia> meye(2) do A
+               printf(A)
+           end
+    1.000000e+00    0.000000e+00
+    0.000000e+00    1.000000e+00
+    0
     ```
     """
     @inline meye(dim::Int) = meye(Float64, dim)
@@ -231,7 +299,7 @@
         return A
     end
     @inline function meye(f::Function, args...)
-        M = meye(T, args)
+        M = meye(args...)
         y = f(M)
         free(M)
         y
@@ -254,6 +322,16 @@
     2×2 MallocMatrix{Int64}:
      3  3
      3  3
+    ```
+    To avoid having to manually `free` allocated memory, it is recommended to
+    use the following supported do-block syntax whenever possible, i.e.
+    ```julia
+    julia> mfill(1.5, 2,2) do A
+               printf(A)
+           end
+    1.500000e+00    1.500000e+00
+    1.500000e+00    1.500000e+00
+    0
     ```
     """
     @inline mfill(x, dims::Vararg{Int}) = mfill(x, dims)
