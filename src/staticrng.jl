@@ -268,7 +268,6 @@ julia> rand(rng)
 @inline Base.rand(::Type{UInt64}, rng::StaticRNG{1}) = splitmix64(rng)
 @inline Base.rand(::Type{UInt64}, rng::StaticRNG{4}) = xoshiro256✴︎✴︎(rng)
 
-
 # Types for Gaussian random number generators
 mutable struct BoxMuller{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}
     state::NTuple{N, UInt64}
@@ -295,7 +294,8 @@ end
 
 
 # Extend Base.randn
-@inline function Base.randn(rng::BoxMuller)
+@inline Base.randn(rng::StaticRNG) = randn(Float64, rng)
+@inline function Base.randn(::Type{Float64}, rng::BoxMuller)
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = rand(rng), rand(rng)
@@ -308,7 +308,7 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(rng::MarsagliaPolar)
+@inline function Base.randn(::Type{Float64}, rng::MarsagliaPolar)
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = upm1(rng), upm1(rng)
@@ -331,3 +331,42 @@ end
     Θ = 2pi*u₂
     z₁ = R * lcos(Θ)
 end
+
+
+# Extend Random.rand! and Random.randn!?
+@inline function rand!(rng::StaticRNG, A::AbstractArray{T}) where T
+    for i ∈ eachindex(A)
+        A[i] = rand(T, rng)
+    end
+    return A
+end
+
+@inline randn!(rng::UniformStaticRNG, A::AbstractArray) = randn!(MarsagliaPolar(rng), A)
+@inline function randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
+    for i ∈ eachindex(A)
+        A[i] = randn(T, rng)
+    end
+    return A
+end
+
+
+## --- Constructors for other types
+
+# StackArrays
+# @inline srand(dims::Vararg{Int}) = srand(static_rng(), Float64, dims)
+# @inline srand(T::Type, dims::Vararg{Int}) = srand(static_rng(), T, dims)
+@inline srand(rng::StaticRNG, dims::Vararg{Int}) = srand(rng, Float64, dims)
+@inline srand(rng::StaticRNG, T::Type, dims::Vararg{Int}) = srand(rng, T, dims)
+@inline function srand(rng::StaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
+    A = StackArray{T,N,prod(dims),dims}(undef)
+    randn!(rng, A)
+end
+
+@inline srandn(rng::StaticRNG, dims::Vararg{Int}) = srand(rng, Float64, dims)
+@inline srandn(rng::StaticRNG, T::Type, dims::Vararg{Int}) = srand(rng, T, dims)
+@inline function srandn(rng::StaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
+    A = StackArray{T,N,prod(dims),dims}(undef)
+    randn!(rng, A)
+end
+
+# MallocArrays

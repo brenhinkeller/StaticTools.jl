@@ -34,10 +34,12 @@ module StaticTools
     include("staticrng.jl")
 
     # Types
-    export StaticString, MallocString, StringView, AbstractStaticString
-    export MallocArray, MallocMatrix, MallocVector
-    export StackArray, StackMatrix, StackVector
+    export StaticString, MallocString, StringView, AbstractStaticString         # String types
+    export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
+    export StackArray, StackMatrix, StackVector                                 # Stack-allocated array types
     export ArrayView
+    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar                  # RNG types
+
     # Macros
     export @c_str, @m_str, @mm_str
     export @ptrcall, @symbolcall, @externptr, @externload
@@ -45,7 +47,7 @@ module StaticTools
     # Functions
     export ⅋, malloc, calloc, free, memset!, memcpy!, memcmp                    # Memory management
     export mfill, mzeros, mones, meye                                           # Other MallocArray functions
-    export sfill, szeros, sones, seye                                           # Other StackArray functions
+    export sfill, szeros, sones, seye, srand, srandn                            # Other StackArray functions
     export stdinp, stdoutp, stderrp                                             # File pointers
     export fopen, fclose, ftell, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END   # File open, close, seek
     export usleep                                                               # Other libc utility functions
@@ -54,5 +56,4 @@ module StaticTools
     export unsafe_mallocstring, strlen                                          # String management
     export printf, printdlm, parsedlm                                           # File parsing and formatting
     export static_rng, splitmix64, xoshiro256✴︎✴︎                                 # RNG functions
-    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar                  # RNG types
 end

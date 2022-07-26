@@ -201,3 +201,23 @@
     @test B[5,5] === Int32(1.0)
 
     @test A == B
+
+## -- RNG conveience functions
+
+    rng = static_rng()
+
+    A = srand(rng, 5, 5)
+    @test isa(A, StackArray{Float64, 2, 25, (5,5)})
+
+    B = srand(rng, Float64, 5, 5)
+    @test isa(B, StackArray{Float64, 2, 25, (5,5)})
+
+    # @test A != B
+
+    A = srandn(rng, 5, 5)
+    @test isa(A, StackArray{Float64, 2, 25, (5,5)})
+
+    B = srandn(rng, Float64, 5, 5)
+    @test isa(B, StackArray{Float64, 2, 25, (5,5)})
+
+    # @test A != B
