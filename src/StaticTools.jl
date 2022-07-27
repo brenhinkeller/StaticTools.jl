@@ -1,7 +1,6 @@
 module StaticTools
 
     # External dependencies
-    using Random
     using ManualMemory: MemoryBuffer, load, store!
 
     # Declare some types we'll use later
