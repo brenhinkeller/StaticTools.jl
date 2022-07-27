@@ -325,7 +325,7 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(rng::StaticRNG)
+@inline function Base.randn(::Type{Float64}, rng::StaticRNG)
     u₁, u₂ = rand(rng), rand(rng)
     R = lsqrt(-2*llog(u₁))
     Θ = 2pi*u₂
