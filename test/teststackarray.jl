@@ -202,22 +202,28 @@
 
     @test A == B
 
-## -- RNG conveience functions
+## --- RNG conveience functions
 
     rng = static_rng()
 
     A = srand(rng, 5, 5)
     @test isa(A, StackArray{Float64, 2, 25, (5,5)})
+    @test all(x -> 0 <= x <= 1, A)
 
     B = srand(rng, Float64, 5, 5)
     @test isa(B, StackArray{Float64, 2, 25, (5,5)})
+    @test all(x -> 0 <= x <= 1, A)
 
-    # @test A != B
+    @test A != B
+
+    rng = MarsagliaPolar()
 
     A = srandn(rng, 5, 5)
     @test isa(A, StackArray{Float64, 2, 25, (5,5)})
+    @test isapprox(sum(A)/length(A), 0, atol=1)
 
     B = srandn(rng, Float64, 5, 5)
     @test isa(B, StackArray{Float64, 2, 25, (5,5)})
+    @test isapprox(sum(B)/length(A), 0, atol=1)
 
-    # @test A != B
+    @test A != B

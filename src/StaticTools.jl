@@ -1,6 +1,7 @@
 module StaticTools
 
     # External dependencies
+    using Random
     using ManualMemory: MemoryBuffer, load, store!
 
     # Declare some types we'll use later
@@ -46,7 +47,7 @@ module StaticTools
 
     # Functions
     export ⅋, malloc, calloc, free, memset!, memcpy!, memcmp                    # Memory management
-    export mfill, mzeros, mones, meye                                           # Other MallocArray functions
+    export mfill, mzeros, mones, meye, mrand, mrandn                            # Other MallocArray functions
     export sfill, szeros, sones, seye, srand, srandn                            # Other StackArray functions
     export stdinp, stdoutp, stderrp                                             # File pointers
     export fopen, fclose, ftell, frewind, fseek, SEEK_SET, SEEK_CUR, SEEK_END   # File open, close, seek

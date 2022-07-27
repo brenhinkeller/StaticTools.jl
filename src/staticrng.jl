@@ -74,7 +74,7 @@ julia> rand(rng) # Draw a `Float64` between 0 and 1
     z = s
     z = (z ⊻ (z >> 30)) * 0xbf58476d1ce4e5b9
     z = (z ⊻ (z >> 27)) * 0x94d049bb133111eb
-    return z ⊻ (z >> 31)
+    z ⊻ (z >> 31)
 end
 
 # Xoshiro256✴︎✴︎
@@ -338,35 +338,58 @@ end
     for i ∈ eachindex(A)
         A[i] = rand(T, rng)
     end
-    return A
+    A
 end
 
-@inline randn!(rng::UniformStaticRNG, A::AbstractArray) = randn!(MarsagliaPolar(rng), A)
 @inline function randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
         A[i] = randn(T, rng)
     end
-    return A
+    A
 end
 
 
 ## --- Constructors for other types
 
 # StackArrays
-# @inline srand(dims::Vararg{Int}) = srand(static_rng(), Float64, dims)
-# @inline srand(T::Type, dims::Vararg{Int}) = srand(static_rng(), T, dims)
 @inline srand(rng::StaticRNG, dims::Vararg{Int}) = srand(rng, Float64, dims)
 @inline srand(rng::StaticRNG, T::Type, dims::Vararg{Int}) = srand(rng, T, dims)
 @inline function srand(rng::StaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
     A = StackArray{T,N,prod(dims),dims}(undef)
-    randn!(rng, A)
+    rand!(rng, A)
 end
 
-@inline srandn(rng::StaticRNG, dims::Vararg{Int}) = srand(rng, Float64, dims)
-@inline srandn(rng::StaticRNG, T::Type, dims::Vararg{Int}) = srand(rng, T, dims)
-@inline function srandn(rng::StaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
+@inline srandn(rng::GaussianStaticRNG, dims::Vararg{Int}) = srandn(rng, Float64, dims)
+@inline srandn(rng::GaussianStaticRNG, T::Type, dims::Vararg{Int}) = srandn(rng, T, dims)
+@inline function srandn(rng::GaussianStaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
     A = StackArray{T,N,prod(dims),dims}(undef)
     randn!(rng, A)
 end
 
 # MallocArrays
+@inline mrand(rng::StaticRNG, dims::Vararg{Int}) = mrand(rng, Float64, dims)
+@inline mrand(rng::StaticRNG, T::Type, dims::Vararg{Int}) = mrand(rng, T, dims)
+@inline function mrand(rng::StaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
+    A = MallocArray{T,N}(undef, dims)
+    rand!(rng, A)
+end
+@inline function mrand(f::Function, args...)
+    M = mrand(args...)
+    y = f(M)
+    free(M)
+    y
+end
+
+
+@inline mrandn(rng::GaussianStaticRNG, dims::Vararg{Int}) = mrandn(rng, Float64, dims)
+@inline mrandn(rng::GaussianStaticRNG, T::Type, dims::Vararg{Int}) = mrandn(rng, T, dims)
+@inline function mrandn(rng::GaussianStaticRNG, ::Type{T}, dims::Dims{N}) where {T,N}
+    A = MallocArray{T,N}(undef, dims)
+    randn!(rng, A)
+end
+@inline function mrandn(f::Function, args...)
+    M = mrandn(args...)
+    y = f(M)
+    free(M)
+    y
+end

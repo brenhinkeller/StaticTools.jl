@@ -15,6 +15,13 @@ function withmallocarray(argc::Int, argv::Ptr{Ptr{UInt8}})
     mfill(3.141592, rows, cols) do A
         printf(A)
     end
+    rng = MarsagliaPolar()
+    mrand(rng, rows, cols) do A
+        printf(A)
+    end
+    mrandn(rng, rows, cols) do A
+        printf(A)
+    end
 end
 
 # Attempt to compile

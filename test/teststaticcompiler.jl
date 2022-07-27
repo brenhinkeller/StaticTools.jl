@@ -52,10 +52,10 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Run...
-    println("5x5 uniform random matrix:")
+    println("3x3 uniform random matrix:")
     status = -1
     try
-        status = run(`./withmallocarray 5 5`)
+        status = run(`./withmallocarray 3 3`)
     catch e
         @warn "Could not run $(scratch)/withmallocarray"
         println(e)

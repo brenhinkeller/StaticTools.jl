@@ -231,3 +231,33 @@
             sum(A)
         end
     @test s === 12.56
+
+## --- RNG conveience functions
+
+    rng = static_rng()
+
+    mrand(rng, 5, 5) do A
+        @test isa(A, MallocArray{Float64, 2})
+        @test size(A) == (5,5)
+        @test all(x -> 0 <= x <= 1, A)
+    end
+
+    mrand(rng, Float64, 5, 5) do B
+        @test isa(B, MallocArray{Float64, 2})
+        @test size(B) == (5,5)
+        @test all(x -> 0 <= x <= 1, B)
+    end
+
+    rng = MarsagliaPolar()
+
+    mrandn(rng, 5, 5) do A
+        @test isa(A, MallocArray{Float64, 2})
+        @test size(A) == (5,5)
+        @test isapprox(sum(A)/length(A), 0, atol=1)
+    end
+
+    mrandn(rng, Float64, 5, 5) do B
+        @test isa(B, MallocArray{Float64, 2})
+        @test size(B) == (5,5)
+        @test isapprox(sum(B)/length(A), 0, atol=1)
+    end
