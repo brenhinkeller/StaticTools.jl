@@ -52,7 +52,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Run...
-    println("3x3 uniform random matrix:")
+    println("3x3 malloc arrays via do-block syntax:")
     status = -1
     try
         status = run(`./withmallocarray 3 3`)

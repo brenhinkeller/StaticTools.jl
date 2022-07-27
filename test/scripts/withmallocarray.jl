@@ -15,6 +15,8 @@ function withmallocarray(argc::Int, argv::Ptr{Ptr{UInt8}})
     mfill(3.141592, rows, cols) do A
         printf(A)
     end
+
+    # Random number generation
     rng = MarsagliaPolar()
     mrand(rng, rows, cols) do A
         printf(A)
@@ -25,4 +27,4 @@ function withmallocarray(argc::Int, argv::Ptr{Ptr{UInt8}})
 end
 
 # Attempt to compile
-path = compile_executable(withmallocarray, (Int64, Ptr{Ptr{UInt8}}), "./")
+path = compile_executable(withmallocarray, (Int64, Ptr{Ptr{UInt8}}), "./", cflags=`-lm`)

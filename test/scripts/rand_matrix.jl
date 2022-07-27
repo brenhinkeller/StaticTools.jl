@@ -6,6 +6,7 @@ function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
     rows = parse(Int64, argv, 2)            # First command-line argument
     cols = parse(Int64, argv, 3)            # Second command-line argument
 
+    # Manually fil matrix
     M = MallocArray{Float64}(undef, rows, cols)
     rng = static_rng()
     @inbounds for i=1:rows
