@@ -111,6 +111,7 @@
     @inline Base.unsafe_convert(::Type{Ptr{T}}, m::StaticString) where {T} = Ptr{T}(pointer_from_objref(m))
     @inline Base.pointer(m::StaticString{N}) where {N} = Ptr{UInt8}(pointer_from_objref(m))
     @inline Base.length(s::StaticString{N}) where N = N-1
+    @inline Base.sizeof(s::StaticString{N}) where N = N
     @inline Base.:(==)(::StaticString, ::StaticString) = false
     @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
         pa, pb = pointer(a), pointer(b)
