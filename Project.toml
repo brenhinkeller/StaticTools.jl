@@ -1,10 +1,11 @@
 name = "StaticTools"
 uuid = "86c06d3c-3f03-46de-9781-57580aa96d0a"
 authors = ["C. Brenhin Keller and contributors"]
-version = "0.6.2"
+version = "0.7"
 
 [deps]
 ManualMemory = "d125e4d3-2237-4719-b19c-fa641b8a4667"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 ManualMemory = "0.1.8"
