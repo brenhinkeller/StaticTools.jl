@@ -236,7 +236,15 @@ end
 
 # Extend Base.randn
 @inline Base.randn(rng::StaticRNG) = randn(rng, Float64)
-@inline function Base.randn(rng::BoxMuller, ::Type{Float64})
+@inline Base.randn(rng::BoxMuller, ::Type{Float64}) = boxmuller(rng)
+@inline Base.randn(rng::MarsagliaPolar, ::Type{Float64}) = marsagliapolar(rng)
+@inline function Base.randn(rng::StaticRNG, ::Type{Float64})
+    u₁, u₂ = rand(rng), rand(rng)
+    R = lsqrt(-2*llog(u₁))
+    Θ = 2pi*u₂
+    z₁ = R * lcos(Θ)
+end
+@inline function boxmuller(rng::BoxMuller)
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = rand(rng), rand(rng)
@@ -249,7 +257,7 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(rng::MarsagliaPolar, ::Type{Float64})
+@inline function marsagliapolar(rng::MarsagliaPolar)
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = upm1(rng), upm1(rng)
@@ -266,28 +274,25 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(rng::StaticRNG, ::Type{Float64})
-    u₁, u₂ = rand(rng), rand(rng)
-    R = lsqrt(-2*llog(u₁))
-    Θ = 2pi*u₂
-    z₁ = R * lcos(Θ)
-end
 
 
-# Extend Random.rand! and Random.randn!?
+# Extend Random.rand! and Random.randn!
 @inline function rand!(rng::StaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
         A[i] = rand(rng, T)
     end
     A
 end
+@inline randn!(rng::BoxMuller, A::DenseArray) = boxmuller!(rng, A)
+@inline randn!(rng::MarsagliaPolar, A::DenseArray) = marsagliapolar!(rng, A)
+@inline randn!(rng::UniformStaticRNG, A::DenseArray) = marsagliapolar!(rng, A)
 @inline function randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
         A[i] = randn(rng, T)
     end
     A
 end
-@inline function randn!(rng::MarsagliaPolar, A::DenseArray{T}) where T
+@inline function marsagliapolar!(rng::StaticRNG, A::DenseArray{T}) where T
     for n ∈ 1:length(A)÷2
         u₁, u₂ = upm1(rng), upm1(rng)
         s = u₁*u₁ + u₂*u₂
@@ -300,10 +305,10 @@ end
         A[i] = u₂*r
         A[i-1] = u₁*r
     end
-    (length(A) % Bool) || (A[end] = randn(rng, T))
+    length(A) % Bool && (A[end] = randn(rng, T))
     A
 end
-@inline function randn!(rng::BoxMuller, A::DenseArray{T}) where T
+@inline function boxmuller!(rng::BoxMuller, A::DenseArray{T}) where T
     for n ∈ 1:length(A)÷2
         u₁, u₂ = rand(rng), rand(rng)
         R = lsqrt(-2*llog(u₁))
@@ -312,7 +317,7 @@ end
         A[i] = R * lcos(Θ)
         A[i-1] = R * lsin(Θ)
     end
-    (length(A) % Bool) || (A[end] = randn(rng, T))
+    length(A) % Bool && (A[end] = randn(rng, T))
     A
 end
 

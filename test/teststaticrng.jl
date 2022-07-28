@@ -41,18 +41,18 @@ zig = Ziggurat(rng)
 
 # Test non-scalar methods
 
-A = sfill(10.0, 10,10)
+A = sfill(NaN, 10,10)
 randn!(bm, A)
 @test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
 
-A .= 10
+A .= NaN
 randn!(mp, A)
 @test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
 
-A .= 10
+A .= NaN
 randn!(zig, A)
 @test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
 
-# A .= 10
-# randn!(rng, A)
-# @test isapprox(sum(A)/length(A), 0.0, atol = 1)
+A .= NaN
+randn!(rng, A)
+@test isapprox(sum(A)/length(A), 0.0, atol = 1)
