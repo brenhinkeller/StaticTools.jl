@@ -2,6 +2,7 @@ module StaticTools
 
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
+    using Random # To extend rand! and randn! only
 
     # Declare some types we'll use later
     struct FILE end # Plain struct to denote and dispatch on file pointers

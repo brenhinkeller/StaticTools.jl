@@ -197,11 +197,11 @@ julia> rand(rng)
 @inline static_rng(seed=StaticTools.time()) = Xoshiro256✴︎✴︎(seed)
 
 # Extend Base.rand
-@inline Base.rand(rng::StaticRNG) = rand(Float64, rng)
-@inline Base.rand(::Type{Int64}, rng::StaticRNG) = reinterpret(Int64, rand(UInt64, rng))
-@inline Base.rand(::Type{Float64}, rng::StaticRNG) = rand(UInt64, rng) / typemax(UInt64)
-@inline Base.rand(::Type{UInt64}, rng::StaticRNG{1}) = splitmix64(rng)
-@inline Base.rand(::Type{UInt64}, rng::StaticRNG{4}) = xoshiro256✴︎✴︎(rng)
+@inline Base.rand(rng::StaticRNG) = rand(rng, Float64)
+@inline Base.rand(rng::StaticRNG{1}, ::Type{UInt64}) = splitmix64(rng)
+@inline Base.rand(rng::StaticRNG{4}, ::Type{UInt64}) = xoshiro256✴︎✴︎(rng)
+@inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
+@inline Base.rand(rng::StaticRNG, ::Type{Float64}) = rand(rng, UInt64) / typemax(UInt64)
 
 # Types for Gaussian random number generators
 mutable struct BoxMuller{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}
@@ -221,7 +221,7 @@ end
 
 
 # Utility functions for gaussian random number generation
-@inline upm1(rng) = rand(UInt64, rng)/(typemax(UInt64)/2) - 1.0
+@inline upm1(rng) = rand(rng, UInt64)/(typemax(UInt64)/2) - 1.0
 @inline lsqrt(x::Float64) = @symbolcall llvm.sqrt.f64(x::Float64)::Float64
 @inline llog(x::Float64) = @symbolcall log(x::Float64)::Float64
 @inline lsin(x::Float64) = @symbolcall llvm.sin.f64(x::Float64)::Float64
@@ -229,8 +229,8 @@ end
 
 
 # Extend Base.randn
-@inline Base.randn(rng::StaticRNG) = randn(Float64, rng)
-@inline function Base.randn(::Type{Float64}, rng::BoxMuller)
+@inline Base.randn(rng::StaticRNG) = randn(rng, Float64)
+@inline function Base.randn(rng::BoxMuller, ::Type{Float64})
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = rand(rng), rand(rng)
@@ -243,7 +243,7 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(::Type{Float64}, rng::MarsagliaPolar)
+@inline function Base.randn(rng::MarsagliaPolar, ::Type{Float64})
     if rng.n == 0
         rng.n = 1
         u₁, u₂ = upm1(rng), upm1(rng)
@@ -260,7 +260,7 @@ end
         rng.z₁
     end
 end
-@inline function Base.randn(::Type{Float64}, rng::StaticRNG)
+@inline function Base.randn(rng::StaticRNG, ::Type{Float64})
     u₁, u₂ = rand(rng), rand(rng)
     R = lsqrt(-2*llog(u₁))
     Θ = 2pi*u₂
@@ -269,16 +269,16 @@ end
 
 
 # Extend Random.rand! and Random.randn!?
-@inline function rand!(rng::StaticRNG, A::AbstractArray{T}) where T
+@inline function Random.rand!(rng::StaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
-        A[i] = rand(T, rng)
+        A[i] = rand(rng, T)
     end
     A
 end
 
-@inline function randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
+@inline function Random.randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
-        A[i] = randn(T, rng)
+        A[i] = randn(rng, T)
     end
     A
 end
