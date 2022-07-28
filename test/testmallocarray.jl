@@ -259,5 +259,5 @@
     mrandn(rng, Float64, 5, 5) do B
         @test isa(B, MallocArray{Float64, 2})
         @test size(B) == (5,5)
-        @test isapprox(sum(B)/length(A), 0, atol=1)
+        @test isapprox(sum(B)/length(B), 0, atol=1)
     end

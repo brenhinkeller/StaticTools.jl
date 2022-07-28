@@ -229,7 +229,7 @@ end
 
 
 # Utility functions for gaussian random number generation
-@inline upm1(rng) = rand(rng, UInt64)/(typemax(UInt64)/2) - 1.0
+@inline upm1(rng) = (rand(rng, UInt64) >> 11) * 0x2p-53 - 1.0
 @inline lsqrt(x::Float64) = @symbolcall llvm.sqrt.f64(x::Float64)::Float64
 @inline llog(x::Float64) = @symbolcall log(x::Float64)::Float64
 @inline lsin(x::Float64) = @symbolcall llvm.sin.f64(x::Float64)::Float64
@@ -284,10 +284,38 @@ end
     A
 end
 
-@inline function Random.randn!(rng::GaussianStaticRNG, A::AbstractArray{T}) where T
+@inline function Random.randn!(rng::StaticRNG, A::AbstractArray{T}) where T
     for i ∈ eachindex(A)
         A[i] = randn(rng, T)
     end
+    A
+end
+@inline function Random.randn!(rng::StaticRNG, A::DenseArray{T}) where T
+    for n ∈ 1:length(A)÷2
+        u₁, u₂ = upm1(rng), upm1(rng)
+        s = u₁*u₁ + u₂*u₂
+        while s > 1.0
+            u₁, u₂ = upm1(rng), upm1(rng)
+            s = u₁*u₁ + u₂*u₂
+        end
+        r = lsqrt(-2*llog(s)/s)
+        i = 2n
+        A[i] = u₂*r
+        A[i-1] = u₁*r
+    end
+    (length(A) % Bool) || (A[end] = randn(rng, T))
+    A
+end
+@inline function Random.randn!(rng::BoxMuller, A::DenseArray{T}) where T
+    for n ∈ 1:length(A)÷2
+        u₁, u₂ = rand(rng), rand(rng)
+        R = lsqrt(-2*llog(u₁))
+        Θ = 2pi*u₂
+        i = 2n
+        A[i] = R * lcos(Θ)
+        A[i-1] = R * lsin(Θ)
+    end
+    (length(A) % Bool) || (A[end] = randn(rng, T))
     A
 end
 
