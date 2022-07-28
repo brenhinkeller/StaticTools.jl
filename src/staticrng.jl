@@ -200,8 +200,6 @@ julia> rand(rng)
 @inline Base.rand(rng::StaticRNG) = rand(rng, Float64)
 @inline Base.rand(rng::StaticRNG{1}, ::Type{UInt64}) = splitmix64(rng)
 @inline Base.rand(rng::StaticRNG{4}, ::Type{UInt64}) = xoshiro256✴︎✴︎(rng)
-@inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
-@inline Base.rand(rng::StaticRNG, ::Type{Float64}) = rand(rng, UInt64) / typemax(UInt64)
 @inline Base.rand(rng::StaticRNG, ::Type{UInt32}) = rand(rng, UInt64) >> 32 % UInt32
 @inline Base.rand(rng::StaticRNG, ::Type{UInt16}) = rand(rng, UInt64) >> 48 % UInt16
 @inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
