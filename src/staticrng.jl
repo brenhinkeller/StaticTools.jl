@@ -290,7 +290,7 @@ end
     end
     A
 end
-@inline function Random.randn!(rng::StaticRNG, A::DenseArray{T}) where T
+@inline function Random.randn!(rng::MarsagliaPolar, A::DenseArray{T}) where T
     for n ∈ 1:length(A)÷2
         u₁, u₂ = upm1(rng), upm1(rng)
         s = u₁*u₁ + u₂*u₂
