@@ -36,18 +36,23 @@ bm = BoxMuller(rng)
 @test randn(bm)::Float64 ≈ 0.2706967696867094
 mp = MarsagliaPolar(rng)
 @test randn(mp)::Float64 ≈ -0.055103387336872575
+zig = Ziggurat(rng)
+@test randn(zig)::Float64 ≈ -0.5164601817068389
 
 # Test non-scalar methods
 
-A = sfill(10.0, 5,5)
-randn!(rng, A)
-@test isapprox(sum(A)/length(A), 0.0, atol = 1)
-
-A .= 10
+A = sfill(10.0, 10,10)
 randn!(bm, A)
-@show A
-@test isapprox(sum(A)/length(A), 0.0, atol = 1)
+@test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
 
 A .= 10
 randn!(mp, A)
-@test isapprox(sum(A)/length(A), 0.0, atol = 1)
+@test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
+
+A .= 10
+randn!(zig, A)
+@test isapprox(sum(A)/length(A), 0.0, atol = 0.5)
+
+# A .= 10
+# randn!(rng, A)
+# @test isapprox(sum(A)/length(A), 0.0, atol = 1)

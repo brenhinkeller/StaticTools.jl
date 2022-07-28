@@ -2,7 +2,7 @@ module StaticTools
 
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
-    using Random # To extend rand! and randn! only
+    import Random: rand!, randn!
 
     # Declare some types we'll use later
     struct FILE end # Plain struct to denote and dispatch on file pointers
@@ -33,13 +33,14 @@ module StaticTools
 
     # Random number generation
     include("staticrng.jl")
+    include("ziggurat.jl")
 
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString         # String types
     export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
     export StackArray, StackMatrix, StackVector                                 # Stack-allocated array types
     export ArrayView
-    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar                  # RNG types
+    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar, Ziggurat        # RNG types
 
     # Macros
     export @c_str, @m_str, @mm_str
