@@ -6,19 +6,19 @@
 [![CI (Integration nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml)
 [![Coverage](https://codecov.io/gh/brenhinkeller/StaticTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/brenhinkeller/StaticTools.jl)
 
-Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things. Warning: experimental! 🐛
+Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things! (Experimental! 🐛)
 
-This package currently requires Julia 1.8 for best results (in particular, 1.8.0-beta3 is known to work). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run with Julia 1.8 on x86-64 linux and mac; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
+This package currently requires Julia 1.8 or greater for best results (if in doubt, check [which versions are passing CI](https://github.com/brenhinkeller/StaticTools.jl/actions?query=workflow%3ACI++)). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run with Julia 1.8 and 1.9 on x86-64 linux and mac; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
 
-While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If I've made errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. PRs welcome!
+While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If there are errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. Please report any unexpected bugs you find, and PRs are welcome!
 
 The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
 
 In addition to the exported names, Julia `Base` functions extended for StaticTools types (i.e., `StaticString`/ `MallocString` and `StackArray`/`MallocArray`) include:
 * `print`, `println`, `error`,
-* `parse`,
-* `rand` (when using an `rng` initialied with `static_rng`, `SplitMix64`, or `Xoshiro256✴︎✴︎` )
-* `randn` (when using an `rng` initialied with `BoxMuller`, or `MarsagliaPolar` )
+* `parse`, `read`, `write`
+* `rand`/`rand!` (when using an `rng` initialied with `static_rng`, `SplitMix64`, or `Xoshiro256✴︎✴︎` )
+* `randn`/`randn!` (when using an `rng` initialied with `MarsagliaPolar`, `BoxMuller`, or `Ziggurat` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
