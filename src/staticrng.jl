@@ -113,7 +113,7 @@ end
     Xoshiro256✴︎✴︎((splitmix64(rng),splitmix64(rng),splitmix64(rng),splitmix64(rng)))
 end
 
-# Xoshiro256✴︎✴︎ PRNG implemented in LLVM IR
+# Xoshiro256✴︎✴︎ dPRNG in Julia
 """
 ```julia
 xoshiro256✴︎✴︎(rng::Xoshiro256✴︎✴︎)
@@ -202,6 +202,14 @@ julia> rand(rng)
 @inline Base.rand(rng::StaticRNG{4}, ::Type{UInt64}) = xoshiro256✴︎✴︎(rng)
 @inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
 @inline Base.rand(rng::StaticRNG, ::Type{Float64}) = rand(rng, UInt64) / typemax(UInt64)
+@inline Base.rand(rng::StaticRNG, ::Type{UInt32}) = rand(rng, UInt64) >> 32 % UInt32
+@inline Base.rand(rng::StaticRNG, ::Type{UInt16}) = rand(rng, UInt64) >> 48 % UInt16
+@inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
+@inline Base.rand(rng::StaticRNG, ::Type{Int32}) = rand(rng, UInt64) >> 32 % Int32
+@inline Base.rand(rng::StaticRNG, ::Type{Int16}) = rand(rng, UInt64) >> 48 % Int16
+@inline Base.rand(rng::StaticRNG, ::Type{Float64}) = rand(rng, UInt64) / typemax(UInt64)
+@inline Base.rand(rng::StaticRNG, ::Type{Float32}) = rand(rng, UInt32) / typemax(UInt32)
+@inline Base.rand(rng::StaticRNG, ::Type{Float16}) = rand(rng, UInt16) / typemax(UInt16)
 
 # Types for Gaussian random number generators
 mutable struct BoxMuller{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}
