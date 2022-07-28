@@ -207,9 +207,9 @@ julia> rand(rng)
 @inline Base.rand(rng::StaticRNG, ::Type{Int64}) = rand(rng, UInt64) % Int64
 @inline Base.rand(rng::StaticRNG, ::Type{Int32}) = rand(rng, UInt64) >> 32 % Int32
 @inline Base.rand(rng::StaticRNG, ::Type{Int16}) = rand(rng, UInt64) >> 48 % Int16
-@inline Base.rand(rng::StaticRNG, ::Type{Float64}) = rand(rng, UInt64) / typemax(UInt64)
-@inline Base.rand(rng::StaticRNG, ::Type{Float32}) = rand(rng, UInt32) / typemax(UInt32)
-@inline Base.rand(rng::StaticRNG, ::Type{Float16}) = rand(rng, UInt16) / typemax(UInt16)
+@inline Base.rand(rng::StaticRNG, ::Type{Float64}) = (rand(rng, UInt64) >> 11) * 0x1p-53
+@inline Base.rand(rng::StaticRNG, ::Type{Float32}) = (rand(rng, UInt32) >> 8) * Float32(0x1p-24)
+@inline Base.rand(rng::StaticRNG, ::Type{Float16}) = (rand(rng, UInt16) >> 5) * Float16(0x1p-11)
 
 # Types for Gaussian random number generators
 mutable struct BoxMuller{T<:UniformStaticRNG, N} <: GaussianStaticRNG{N}

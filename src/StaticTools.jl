@@ -56,5 +56,5 @@ module StaticTools
     export fwrite, fread!                                                       # String and Binary IO
     export unsafe_mallocstring, strlen                                          # String management
     export printf, printdlm, parsedlm                                           # File parsing and formatting
-    export static_rng, splitmix64, xoshiro256✴︎✴︎                                 # RNG functions
+    export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                  # RNG functions
 end
