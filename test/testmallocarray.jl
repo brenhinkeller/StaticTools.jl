@@ -180,6 +180,28 @@
 
 ## ---
 
+## -- test Base.unsafe_wrap
+
+    ptr = StaticTools.malloc(64)
+    A = unsafe_wrap(MallocArray, Ptr{Int8}(ptr), 64)
+    A .= 1:64
+    @test typeof(A) == MallocArray{Int8, 1}
+    @test A == 1:64
+
+    B = unsafe_wrap(MallocArray{Int64}, Ptr{Int64}(ptr), (2,4))
+    B[:] .= 1:8
+    @test typeof(B) == MallocArray{Int64,2}
+    @test B == reshape(1:8, (2,4))
+
+    C = unsafe_wrap(MallocArray{Float64,3}, Ptr{Float64}(ptr), (2,2,2))
+    C[:] .= 1.0:1.0:8.0
+    @test typeof(C) == MallocArray{Float64,3}
+    @test C == reshape(1.0:1.0:8.0, (2,2,2))
+
+    free(A)
+
+## ---
+
     A = mones(11,10)
     @test A == ones(11,10)
     @test A[1] === 1.0

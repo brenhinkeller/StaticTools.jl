@@ -165,6 +165,24 @@
         return c
     end
 
+    # Avoid Base.unsafe_wrap stack overflow
+    @inline _unsafe_wrap(::Type{MallocArray{T,N}}, ptr::Ptr, dims::Dims{N}, own::Bool = false) where {T,N} =
+        own ?
+            error("A MallocArray cannot be owned via `unsafe_wrap`. Set the keyword `own` to be false.") :
+            MallocArray{T,N}(ptr, prod(dims), dims)
+
+    # Overload Base.unsafe_wrap
+    """
+    ```julia
+    unsafe_wrap(MallocArray, ptr::Ptr{T}, dims)
+    ```
+    Create a `MallocArray{T}` wrapping around `ptr`
+    """
+    @inline Base.unsafe_wrap(::Union{Type{MallocArray},Type{MallocArray{T}},Type{MallocArray{T,N}}}, ptr::Ptr{T}, dims::Dims{N}; own = false) where {T,N} =
+        _unsafe_wrap(MallocArray{T,N}, ptr, dims, own)
+    @inline Base.unsafe_wrap(::Union{Type{MallocArray},Type{MallocArray{T}},Type{MallocArray{T,1}}}, ptr::Ptr{T}, dim::Integer; own = false) where {T} =
+        _unsafe_wrap(MallocArray{T,1}, ptr, (Int(dim),), own)
+
     # Other custom constructors
     """
     ```julia
