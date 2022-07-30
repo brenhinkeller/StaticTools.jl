@@ -720,7 +720,7 @@ julia> StaticTools.dlclose(lib)
       ret i64 %jlfp
     }
 
-    # attributes #0 = { alwaysinline nounwind ssp uwtable }
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{Nothing}, Tuple{Ptr{DYLIB}, Ptr{UInt8}}, handle, symbol)
 end
 
