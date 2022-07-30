@@ -589,4 +589,184 @@ end
 # Convenient parsing for argv (slight type piracy)
 @inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
 
+## --- dlopen
+
+const RTLD_LOCAL = Int32(1)
+const RTLD_GLOBAL = Int32(2)
+const RTLD_LAZY = Int32(4)
+const RTLD_NOW = Int32(8)
+
+"""
+```julia
+dlopen(name::AbstractString, flag=RTLD_LOCAL|RTLD_LAZY)
+```
+Libc `dlopen` function, accessed by direct `llvmcall`.
+
+Returns a handle (pointer) to a `.so`/`.dylib` shared library specified by
+`name` opened with the mode or combination of modes specified by `flag`.
+Returns `C_NULL` on failure. Valid modes include:
+
+Required:
+
+  `RTLD_LOCAL` (default): Symbols will not be made available for subsequently loaded libraries. The opposite of `RTLD_GLOBAL`.
+
+  `RTLD_GLOBAL`: Symbols will be made available for subsequently loaded libraries. The opposite of `RTLD_LOCAL`.
+
+Optional:
+
+  `RTLD_LAZY` (default): Lazy binding: only resolve symbols as the code that references them is executed. The opposite of `RLTD_NOW`.
+
+  `RTLD_NOW`: Eager binding: resolve all symbols before `dlopen` returns. The opposite of `RTLD_LAZY`
+
+Modes from the two categories can be combined with bitwise `or` (`|`)
+
+See also: `StaticTools.dlsym`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+ctime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
+@inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
+@inline dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY) = GC.@preserve name dlopen(pointer(name), flag)
+@inline function dlopen(name::Ptr{UInt8}, flag::Int32)
+    Base.llvmcall(("""
+    ; External declaration of the dlopen function
+    declare i8* @dlopen(i8*, i32)
+
+    define i64 @main(i64 %jlname, i32 %flag) #0 {
+    entry:
+      %name = inttoptr i64 %jlname to i8*
+      %fp = call i8* (i8*, i32) @dlopen(i8* %name, i32 %flag)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
+end
+
+@static if Sys.isapple()
+    const DLEXT = c".dylib"
+elseif Sys.iswindows()
+    const DLEXT = c".dll"
+else
+    const DLEXT = c".so"
+end
+
+## --- dylsym
+
+"""
+```julia
+dlsym(lib::Ptr{DYLIB}, symbol::AbstractString)
+```
+Libc `dlsym` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Takes a handle (`lib`) to a `.so`/`.dylib` shared library previously opened with
+`StaticTools.dlopen`, along with a null-terminated symbol name string (`symbol`),
+and returns the location in memory of that symbol. Returns `C_NULL` on failure.
+
+See also: `StaticTools.dlopen`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+dltime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
+@inline dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
+@inline dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
+@inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the dlsym function
+    declare i8* @dlsym(i8*, i8*)
+
+    define i64 @main(i64 %jlh, i64 %jls) #0 {
+    entry:
+      %handle = inttoptr i64 %jlh to i8*
+      %symbol = inttoptr i64 %jls to i8*
+      %fp = call i8* (i8*, i8*) @dlsym(i8* %handle, i8* %symbol)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{Nothing}, Tuple{Ptr{DYLIB}, Ptr{UInt8}}, handle, symbol)
+end
+
+# Return default handle to what Julia has already dlopened, for interactive use
+jl_RTLD_DEFAULT_handle() = @externload jl_RTLD_DEFAULT_handle::Ptr{DYLIB}
+
+## --- dlclose
+
+"""
+```julia
+dlclose(lib::Ptr{DYLIB})
+```
+Libc `dlclose` function, accessed by direct StaticCompiler-safe `llvmcall`.
+
+Close a shared library `lib` given a pointer (handle) previously obtained from
+`StaticTools.dlopen`.
+
+See also: `StaticTools.dlopen`, `StaticTools.dlsym`, `StaticTools.@ptrcall`
+
+## Examples
+```julia
+julia> lib = StaticTools.dlopen(c"libc.dylib") # on macOS
+Ptr{StaticTools.DYLIB} @0x000000010bf49b78
+
+julia> fp = StaticTools.dlsym(lib, c"time")
+Ptr{Nothing} @0x00007fffa773dfa4
+
+julia> dltime() = @ptrcall fp()::Int
+dltime (generic function with 1 method)
+
+julia> dltime()
+1654320146
+
+julia> StaticTools.dlclose(lib)
+0
+```
+"""
+@inline function dlclose(handle::Ptr{DYLIB})
+    Base.llvmcall(("""
+    ; External declaration of the dlclose function
+    declare i32 @dlclose(i8*)
+
+    define i32 @main(i64 %jlh) #0 {
+    entry:
+      %handle = inttoptr i64 %jlh to i8*
+      %status = call i32 (i8*) @dlclose(i8* %handle)
+      ret i32 %status
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Int32, Tuple{Ptr{DYLIB}}, handle)
+end
+
 ## ---

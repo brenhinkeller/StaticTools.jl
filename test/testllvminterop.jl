@@ -71,6 +71,8 @@
 
 ## --- @externptr / @externload
 
+    @test Ptr{Nothing}(StaticTools.jl_RTLD_DEFAULT_handle()) != C_NULL
+
     if Sys.isapple()
         foo() = @externload __stderrp::Ptr{UInt8}
     else
