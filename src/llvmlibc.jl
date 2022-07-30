@@ -679,6 +679,12 @@ Takes a handle (`lib`) to a `.so`/`.dylib` shared library previously opened with
 `StaticTools.dlopen`, along with a null-terminated symbol name string (`symbol`),
 and returns the location in memory of that symbol. Returns `C_NULL` on failure.
 
+Optionally, two constant pseudo-pointers are provided which can be used in place
+of a library `lib`, specifically `RTLD_DEFAULT` and `RTLD_NEXT`. These specify to
+search for the next occurrence of the specified `symbol` in the default search path,
+starting either from the beginning (`RTLD_DEFAULT`) or from the current
+object (`RTLD_NEXT`).
+
 See also: `StaticTools.dlopen`, `StaticTools.@ptrcall`, `StaticTools.dlclose`
 
 ## Examples
@@ -720,7 +726,10 @@ julia> StaticTools.dlclose(lib)
 end
 
 # Return default handle to what Julia has already dlopened, for interactive use
-jl_RTLD_DEFAULT_handle() = @externload jl_RTLD_DEFAULT_handle::Ptr{DYLIB}
+# jl_RTLD_DEFAULT_handle() = @externload jl_RTLD_DEFAULT_handle::Ptr{Nothing}
+const RTLD_DEFAULT = Ptr{DYLIB}(-2 % UInt)
+const RTLD_NEXT = Ptr{DYLIB}(-1 % UInt)
+
 
 ## --- dlclose
 
