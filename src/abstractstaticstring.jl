@@ -116,5 +116,9 @@
     # Other handy functions
     @inline function Base.contains(haystack::AbstractStaticString, needle::AbstractStaticString)
         lₕ, lₙ = length(haystack), length(needle)
-        (lₕ >= lₙ) && any(i-> (haystack[1+i:lₙ+i] == needle), 0:(lₕ-lₙ))
+        lₕ < lₙ && return false
+        for i ∈ 0:(lₕ-lₙ)
+            (haystack[1+i:lₙ+i] == needle) && return false
+        end
+        return true
     end
