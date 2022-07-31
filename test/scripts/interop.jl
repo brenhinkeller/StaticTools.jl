@@ -8,8 +8,9 @@ function interop(argc, argv)
     printf(sin)
     x = @ptrcall sin(5.0::Float64)::Float64
     printf(x)
+    newline()
     StaticTools.dlclose(lib)
 end
 
 # Attempt to compile
-path = compile_executable(interop, (Int64, Ptr{Ptr{UInt8}}), "./", cflags=`-ldl`)
+path = compile_executable(interop, (Int64, Ptr{Ptr{UInt8}}), "./", cflags=`-ldl -lm`)
