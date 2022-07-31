@@ -56,9 +56,11 @@
     @test StaticTools.dlclose(lib) == 0
 
     # Try opening without specifying extension
-    lib = StaticTools.dlopen(c"libm")
-    @test lib != C_NULL
-    @test StaticTools.dlclose(lib) == 0
+    if Sys.isapple()
+        lib = StaticTools.dlopen(c"libm")
+        @test lib != C_NULL
+        @test (lib != C_NULL) && StaticTools.dlclose(lib) == 0
+    end
 
 ## --- more ``@symbolcall`s
 
