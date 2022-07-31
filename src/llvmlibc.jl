@@ -641,8 +641,12 @@ julia> StaticTools.dlclose(lib)
 ```
 """
 @inline function dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
-    has_dlext(name) || (name *= DLEXT)
-    GC.@preserve name dlopen(pointer(name), flag)
+    namext = name*DLEXT
+    if has_dlext(name)
+        GC.@preserve name dlopen(pointer(name), flag)
+    else
+        GC.@preserve namext dlopen(pointer(namext), flag)
+    end
 end
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
 @inline function dlopen(name::Ptr{UInt8}, flag::Int32)
