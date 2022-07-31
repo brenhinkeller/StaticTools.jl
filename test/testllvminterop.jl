@@ -9,7 +9,7 @@
 
 ## --- dlopen / dlsym / dlclose / @ptrcall / @symbolcall
 
-    dlpath = c"libc" * StaticTools.DLEXT
+    dlpath = c"libc" * StaticTools.DLEXT()
     if Sys.islinux()
         dlpath *= c".6"
     end

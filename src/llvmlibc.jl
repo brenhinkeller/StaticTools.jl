@@ -641,8 +641,9 @@ julia> StaticTools.dlclose(lib)
 ```
 """
 @inline function dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
-    namext = name*DLEXT
-    if has_dlext(name)
+    dlext = DLEXT()
+    namext = name*dlext
+    if contains(name, dlext)
         GC.@preserve name dlopen(pointer(name), flag)
     else
         GC.@preserve namext dlopen(pointer(namext), flag)
@@ -666,17 +667,13 @@ end
     """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
 end
 
-@inline function has_dlext(name)
-    lₙ, lₑ = length(name), length(DLEXT)
-    (lₙ > lₑ) && any(i-> (name[1+i:lₑ+i] == DLEXT), 0:(lₙ-lₑ))
-end
-
+# Prevent this from getting converted into a bare pointer by making it a function
 @static if Sys.isapple()
-    const DLEXT = c".dylib"
+    @inline DLEXT() = c".dylib"
 elseif Sys.iswindows()
-    const DLEXT = c".dll"
+    @inline DLEXT() = c".dll"
 else
-    const DLEXT = c".so"
+    @inline DLEXT() = c".so"
 end
 
 ## --- dylsym
