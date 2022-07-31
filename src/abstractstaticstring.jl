@@ -118,7 +118,7 @@
         lₕ, lₙ = length(haystack), length(needle)
         lₕ < lₙ && return false
         for i ∈ 0:(lₕ-lₙ)
-            (haystack[1+i:lₙ+i] == needle) && return false
+            (haystack[1+i:lₙ+i] == needle) && return true
         end
-        return true
+        return false
     end
