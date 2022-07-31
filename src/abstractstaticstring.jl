@@ -112,3 +112,13 @@
         c[end] = 0x00 # Null-terminate
         return c
     end
+
+    # Other handy functions
+    @inline function Base.contains(haystack::AbstractStaticString, needle::AbstractStaticString)
+        lₕ, lₙ = length(haystack), length(needle)
+        lₕ < lₙ && return false
+        for i ∈ 0:(lₕ-lₙ)
+            (haystack[1+i:lₙ+i] == needle) && return true
+        end
+        return false
+    end

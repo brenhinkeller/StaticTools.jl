@@ -640,8 +640,22 @@ julia> StaticTools.dlclose(lib)
 0
 ```
 """
+@inline function dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
+    dlext = @static if Sys.isapple()
+        c".dylib"
+    elseif Sys.iswindows()
+        c".dll"
+    else
+        c".so"
+    end
+    namext = name*dlext
+    if contains(name, dlext)
+        GC.@preserve name dlopen(pointer(name), flag)
+    else
+        GC.@preserve namext dlopen(pointer(namext), flag)
+    end
+end
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
-@inline dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY) = GC.@preserve name dlopen(pointer(name), flag)
 @inline function dlopen(name::Ptr{UInt8}, flag::Int32)
     Base.llvmcall(("""
     ; External declaration of the dlopen function
@@ -659,12 +673,13 @@ julia> StaticTools.dlclose(lib)
     """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
 end
 
+# Prevent this from getting converted into a bare pointer by making it a function
 @static if Sys.isapple()
-    const DLEXT = c".dylib"
+    @inline DLEXT() = c".dylib"
 elseif Sys.iswindows()
-    const DLEXT = c".dll"
+    @inline DLEXT() = c".dll"
 else
-    const DLEXT = c".so"
+    @inline DLEXT() = c".so"
 end
 
 ## --- dylsym

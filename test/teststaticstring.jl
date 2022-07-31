@@ -56,3 +56,9 @@
     @test abc == c"abc"
     @test abc == abc[1:3]
     @test abc[1:3] == "abc"
+
+    # Test other convenience functions
+    str = c"foobarbaz"
+    @test contains(str, c"foo")
+    @test contains(str, c"bar")
+    @test contains(str, c"baz")

@@ -101,7 +101,7 @@ let
         @warn "Could not compile $testpath/scripts/randn_matrix.jl"
         println(e)
     end
-    @static if Sys.isapple()
+    @static if Sys.isbsd()
         @test isa(status, Base.Process)
         @test isa(status, Base.Process) && status.exitcode == 0
     end
@@ -115,7 +115,7 @@ let
         @warn "Could not run $(scratch)/randn_matrix"
         println(e)
     end
-    @static if Sys.isapple()
+    @static if Sys.isbsd()
         @test isa(status, Base.Process)
         @test isa(status, Base.Process) && status.exitcode == 0
     end
@@ -237,6 +237,36 @@ let
     end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
+end
+
+## --- Test interop
+
+@static if Sys.isbsd()
+let
+    # Compile...
+    status = -1
+    try
+        isfile("interop") && rm("interop")
+        status = run(`julia --compile=min $testpath/scripts/interop.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/interop.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("Interop:")
+    status = -1
+    try
+        status = run(`./interop`)
+    catch e
+        @warn "Could not run $(scratch)/interop"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+end
 end
 
 ## --- Clean up

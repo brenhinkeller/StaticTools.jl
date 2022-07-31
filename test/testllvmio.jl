@@ -180,7 +180,7 @@
     @test free(str) == 0
 
     @test fclose(fp) == 0
-    # @static if fp != 0 && Sys.isapple()
+    # @static if fp != 0 && Sys.isbsd()
     #     @test getchar(fp) === UInt8('1')
     #     @test getchar(fp) === UInt8('\n')
     #     @test fclose(fp) == 0
