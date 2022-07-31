@@ -232,7 +232,7 @@
     10
     ```
     """
-@static if Sys.isapple()
+@static if Sys.isbsd()
     @inline function stdoutp()
         Base.llvmcall(("""
         @__stdoutp = external global i8*
@@ -283,7 +283,7 @@ end
     10
     ```
     """
-@static if Sys.isapple()
+@static if Sys.isbsd()
     @inline function stderrp()
         Base.llvmcall(("""
         @__stderrp = external global i8*
@@ -330,7 +330,7 @@ end
     Ptr{StaticTools.FILE} @0x00007fffc92b9110
     ```
     """
-@static if Sys.isapple()
+@static if Sys.isbsd()
     @inline function stdinp()
         Base.llvmcall(("""
         @__stdinp = external global i8*

@@ -101,7 +101,7 @@ let
         @warn "Could not compile $testpath/scripts/randn_matrix.jl"
         println(e)
     end
-    @static if Sys.isapple()
+    @static if Sys.isbsd()
         @test isa(status, Base.Process)
         @test isa(status, Base.Process) && status.exitcode == 0
     end
@@ -115,7 +115,7 @@ let
         @warn "Could not run $(scratch)/randn_matrix"
         println(e)
     end
-    @static if Sys.isapple()
+    @static if Sys.isbsd()
         @test isa(status, Base.Process)
         @test isa(status, Base.Process) && status.exitcode == 0
     end

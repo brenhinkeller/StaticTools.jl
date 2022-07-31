@@ -56,7 +56,7 @@
     @test StaticTools.dlclose(lib) == 0
 
     # Try opening without specifying extension
-    if Sys.isapple()
+    if Sys.isbsd()
         lib = StaticTools.dlopen(c"libm")
         @test lib != C_NULL
         @test (lib != C_NULL) && StaticTools.dlclose(lib) == 0
@@ -78,14 +78,14 @@
 
 ## --- @externptr / @externload
 
-    if Sys.isapple()
+    if Sys.isbsd()
         foo() = @externload __stderrp::Ptr{UInt8}
     else
         foo() = @externload stderr::Ptr{UInt8}
     end
     @test foo() == stderrp()
 
-    if Sys.isapple()
+    if Sys.isbsd()
         fooptr() = @externptr __stderrp::Ptr{UInt8}
     else
         fooptr() = @externptr stderr::Ptr{UInt8}
