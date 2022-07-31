@@ -641,7 +641,13 @@ julia> StaticTools.dlclose(lib)
 ```
 """
 @inline function dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
-    dlext = DLEXT()
+    dlext = @static if Sys.isapple()
+        c".dylib"
+    elseif Sys.iswindows()
+        c".dll"
+    else
+        c".so"
+    end
     namext = name*dlext
     if contains(name, dlext)
         GC.@preserve name dlopen(pointer(name), flag)
