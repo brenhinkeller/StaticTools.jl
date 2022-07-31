@@ -640,8 +640,11 @@ julia> StaticTools.dlclose(lib)
 0
 ```
 """
+@inline function dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY)
+    has_dlext(name) || (name *= DLEXT)
+    GC.@preserve name dlopen(pointer(name), flag)
+end
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
-@inline dlopen(name, flag=RTLD_LOCAL|RTLD_LAZY) = GC.@preserve name dlopen(pointer(name), flag)
 @inline function dlopen(name::Ptr{UInt8}, flag::Int32)
     Base.llvmcall(("""
     ; External declaration of the dlopen function
@@ -657,6 +660,11 @@ julia> StaticTools.dlclose(lib)
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
+end
+
+@inline function has_dlext(name)
+    lₙ, lₑ = length(name), length(DLEXT)
+    (lₙ > lₑ) && any(i-> (name[1+i:lₑ+i] == DLEXT), 0:(lₙ-lₑ))
 end
 
 @static if Sys.isapple()

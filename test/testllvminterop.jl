@@ -55,6 +55,11 @@
 
     @test StaticTools.dlclose(lib) == 0
 
+    # Try opening without specifying extension
+    lib = StaticTools.dlopen(c"libm")
+    @test lib != C_NULL
+    @test StaticTools.dlclose(lib) == 0
+
 ## --- more ``@symbolcall`s
 
     cmalloc(nbytes) = @symbolcall malloc(nbytes::Int)::Ptr{Float64}
