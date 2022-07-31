@@ -241,6 +241,7 @@ end
 
 ## --- Test interop
 
+@static if Sys.isbsd()
 let
     # Compile...
     status = -1
@@ -265,6 +266,7 @@ let
     end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
+end
 end
 
 ## --- Clean up
