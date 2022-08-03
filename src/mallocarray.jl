@@ -102,13 +102,19 @@
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
+        nbytes = prod(dims .% Int128) * sizeof(T)
+        0 < nbytes < typemax(Int) || return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
         p = Ptr{T}(malloc(length*sizeof(T)))
+        p == C_NULL && return MallocArray{T,N}(p, 0, ntuple(i->0, N))
         MallocArray{T,N}(p, length, dims)
     end
     @inline function MallocArray{T,N}(::typeof(Base.zeros), length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
+        nbytes = prod(dims .% Int128) * sizeof(T)
+        0 < nbytes < typemax(Int) || return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
         p = Ptr{T}(calloc(length*sizeof(T)))
+        p == C_NULL && return MallocArray{T,N}(p, 0, ntuple(i->0, N))
         MallocArray{T,N}(p, length, dims)
     end
     @inline MallocArray{T,N}(x::PointerOrInitializer, dims::Dims{N}) where {T,N} = MallocArray{T,N}(x, prod(dims), dims)
