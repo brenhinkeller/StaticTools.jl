@@ -63,6 +63,10 @@
     `zeros` and flags that `calloc` should be used to obtain and zero-initialize
     the underlying memory
 
+    Attempting to create a `MallocArray` with dimensions larger than can be
+    successfully allocated will return an empty `MallocArray` with size 0 in
+    all dimensions and pointer null.
+
     ## Examples
     ```julia
     julia> A = MallocArray{Float64}(undef, 3,3) # implicit N
