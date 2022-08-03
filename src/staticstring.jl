@@ -18,6 +18,11 @@
     wish to pass them to any functions (including most system IO) that expect
     null-termination.
 
+    Indexing a `StaticString` out of bounds does not throw a `BoundsError`; much
+    as if `@inbounds` were enabled, indexing a `StaticString` incurs a strict
+    promise by the programmer that the specified index is inbounds. Breaking
+    this promise will result in segfaults or memory corruption.
+
     ## Examples
     ```julia
     julia> s = c"Hello world!"

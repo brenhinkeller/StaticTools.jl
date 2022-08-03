@@ -26,6 +26,11 @@
     wish to pass them to any functions (including most libc/system IO) that expect
     null-termination.
 
+    Indexing a `MallocString` out of bounds does not throw a `BoundsError`; much
+    as if `@inbounds` were enabled, indexing a `MallocString` incurs a strict
+    promise by the programmer that the specified index is inbounds. Breaking
+    this promise will result in segfaults or memory corruption.
+
     ## Examples
     ```julia
     julia> s = m"Hello world!"

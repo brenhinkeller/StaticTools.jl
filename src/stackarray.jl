@@ -10,6 +10,11 @@
     the Julia garbage collector (is stack allocated by `alloca`), so is
     StaticCompiler-friendly, and (2) contiguous slice indexing returns
     `ArrayView`s rather than copies.
+
+    Indexing a `StackArray` out of bounds does not throw a `BoundsError`; much
+    as if `@inbounds` were enabled, indexing a `StackArray` incurs a strict
+    promise by the programmer that the specified index is inbounds. Breaking
+    this promise will result in segfaults or memory corruption.
     """
     mutable struct StackArray{T,N,L,D} <: DenseTupleArray{T,N,L,D}
         data::NTuple{L,T}

@@ -12,6 +12,11 @@
     the Julia garbage collector (is directly allocated with `malloc`) so is
     StaticCompiler-safe, (2) should be `free`d when no longer in use, and
     (3) contiguous slice indexing returns `ArrayView`s rather than copies.
+
+    Indexing a `MallocArray` out of bounds does not throw a `BoundsError`; much
+    as if `@inbounds` were enabled, indexing a `MallocArray` incurs a strict
+    promise by the programmer that the specified index is inbounds. Breaking
+    this promise will result in segfaults or memory corruption.
     """
     struct MallocArray{T,N} <: DensePointerArray{T,N}
         pointer::Ptr{T}
@@ -61,7 +66,7 @@
     Here `undef` is the `UndefInitializer` and signals that `malloc` should be
     used to obtain the underlying memory, while `zeros` is the `Base` function
     `zeros` and flags that `calloc` should be used to obtain and zero-initialize
-    the underlying memory
+    the underlying memory.
 
     Attempting to create a `MallocArray` with dimensions larger than can be
     successfully allocated will return an empty `MallocArray` with size 0 in
@@ -131,7 +136,7 @@
         free(M)
         y
     end
-    
+
     @inline function prod_with_overflow(x)
         p, f = one(eltype(x)), false
         for i ∈ eachindex(x)
