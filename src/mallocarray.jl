@@ -106,18 +106,18 @@
     @inline function MallocArray{T,N}(::UndefInitializer, length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
-        nbytes = prod(dims .% Int128) * sizeof(T)
-        0 < nbytes < typemax(Int) || return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
-        p = Ptr{T}(malloc(length*sizeof(T)))
+        nbytes, f = prod_with_overflow((dims..., sizeof(T)))
+        (f || nbytes < 0) && return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
+        p = Ptr{T}(malloc(nbytes))
         p == C_NULL && return MallocArray{T,N}(p, 0, ntuple(i->0, N))
         MallocArray{T,N}(p, length, dims)
     end
     @inline function MallocArray{T,N}(::typeof(Base.zeros), length::Int, dims::Dims{N}) where {T,N}
         @assert Base.allocatedinline(T)
         @assert length == prod(dims)
-        nbytes = prod(dims .% Int128) * sizeof(T)
-        0 < nbytes < typemax(Int) || return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
-        p = Ptr{T}(calloc(length*sizeof(T)))
+        nbytes, f = prod_with_overflow((dims..., sizeof(T)))
+        (f || nbytes < 0) && return MallocArray{T,N}(Ptr{T}(C_NULL), 0, ntuple(i->0, N))
+        p = Ptr{T}(calloc(nbytes))
         p == C_NULL && return MallocArray{T,N}(p, 0, ntuple(i->0, N))
         MallocArray{T,N}(p, length, dims)
     end
@@ -131,6 +131,16 @@
         free(M)
         y
     end
+    
+    @inline function prod_with_overflow(x)
+        p, f = one(eltype(x)), false
+        for i ∈ eachindex(x)
+            p, fᵢ = Base.Checked.mul_with_overflow(p, x[i])
+            f |= fᵢ
+        end
+        p, f
+    end
+
 
     """
     ```julia
