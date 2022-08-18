@@ -64,6 +64,8 @@
 
     Closes a file that has been previously opened by `fopen`, given a file pointer.
 
+    Returns 0 on success.
+
     See also: `fopen`, `fseek`
 
     ## Examples
@@ -82,19 +84,23 @@
     ```
     """
     @inline function fclose(fp::Ptr{FILE})
-        Base.llvmcall(("""
-        ; External declaration of the fclose function
-        declare i32 @fclose(i8*)
+        if fp == C_NULL
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the fclose function
+            declare i32 @fclose(i8*)
 
-        define i32 @main(i64 %jlfp) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %status = call i32 (i8*) @fclose(i8* %fp)
-          ret i32 %status
-        }
+            define i32 @main(i64 %jlfp) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %status = call i32 (i8*) @fclose(i8* %fp)
+              ret i32 %status
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
+        end
     end
 
     """
@@ -124,19 +130,23 @@
     ```
     """
     @inline function ftell(fp::Ptr{FILE})
-        Base.llvmcall(("""
-        ; External declaration of the ftell function
-        declare i64 @ftell(i8*)
+        if fp == C_NULL
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the ftell function
+            declare i64 @ftell(i8*)
 
-        define i64 @main(i64 %jlfp) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %position = call i64 @ftell(i8* %fp)
-          ret i64 %position
-        }
+            define i64 @main(i64 %jlfp) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %position = call i64 @ftell(i8* %fp)
+              ret i64 %position
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int64, Tuple{Ptr{FILE}}, fp)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int64, Tuple{Ptr{FILE}}, fp)
+        end
     end
 
     # Seek in a file
@@ -163,6 +173,8 @@
 
     where `SEEK_CUR` is the default value.
 
+    Returns 0 on success.
+
     See also: `fopen`, `fclose`
 
     ## Examples
@@ -184,19 +196,23 @@
     ```
     """
     @inline function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
-        Base.llvmcall(("""
-        ; External declaration of the fseek function
-        declare i32 @fseek(i8*, i64, i32)
+        if fp == C_NULL || whence < 0 || whence > 2
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the fseek function
+            declare i32 @fseek(i8*, i64, i32)
 
-        define i32 @main(i64 %jlfp, i64 %offset, i32 %whence) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
-          ret i32 %status
-        }
+            define i32 @main(i64 %jlfp, i64 %offset, i32 %whence) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %status = call i32 @fseek(i8* %fp, i64 %offset, i32 %whence)
+              ret i32 %status
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, Int64, Int32}, fp, offset, whence)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}, Int64, Int32}, fp, offset, whence)
+        end
     end
     const SEEK_SET = Int32(0)
     const SEEK_CUR = Int32(1)
@@ -407,19 +423,23 @@ end
     end
     @inline putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
     @inline function putchar(fp::Ptr{FILE}, c::UInt8)
-        Base.llvmcall(("""
-        ; External declaration of the fputc function
-        declare i32 @fputc(i8, i8*) nounwind
+        if fp == C_NULL
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the fputc function
+            declare i32 @fputc(i8, i8*) nounwind
 
-        define i32 @main(i64 %jlfp, i8 %c) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
-          ret i32 0
-        }
+            define i32 @main(i64 %jlfp, i8 %c) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
+              ret i32 0
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
+        end
     end
 
 
@@ -497,19 +517,23 @@ end
     ```
     """
     @inline function getc(fp::Ptr{FILE})
-        Base.llvmcall(("""
-        ; External declaration of the fgetc function
-        declare i32 @fgetc(i8*)
+        if fp == C_NULL
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the fgetc function
+            declare i32 @fgetc(i8*)
 
-        define i32 @main(i64 %jlfp) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %c = call i32 (i8*) @fgetc(i8* %fp)
-          ret i32 %c
-        }
+            define i32 @main(i64 %jlfp) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %c = call i32 (i8*) @fgetc(i8* %fp)
+              ret i32 %c
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}}, fp)
+        end
     end
     const EOF = Int32(-1)
 
@@ -558,21 +582,25 @@ end
     @inline puts(fp::Ptr{FILE}, s::AbstractMallocdMemory) = puts(fp, pointer(s))
     @inline puts(fp::Ptr{FILE}, s) = GC.@preserve s puts(fp, pointer(s))
     @inline function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
-        Base.llvmcall(("""
-        ; External declaration of the puts function
-        declare i32 @fputs(i8*, i8*) nounwind
+        if fp == C_NULL
+            Int32(-1)
+        else
+            Base.llvmcall(("""
+            ; External declaration of the puts function
+            declare i32 @fputs(i8*, i8*) nounwind
 
-        define i32 @main(i64 %jlfp, i64 %jls) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %str = inttoptr i64 %jls to i8*
-          %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
-          ret i32 0
-        }
+            define i32 @main(i64 %jlfp, i64 %jls) #0 {
+            entry:
+              %fp = inttoptr i64 %jlfp to i8*
+              %str = inttoptr i64 %jls to i8*
+              %status = call i32 (i8*, i8*) @fputs(i8* %str, i8* %fp)
+              ret i32 0
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
-        newline(fp) # puts appends `\n`, but fputs doesn't (!)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+            newline(fp) # puts appends `\n`, but fputs doesn't (!)
+        end
     end
     @inline puts(s::StringView) = (printf(s); newline())
     @inline puts(fp::Ptr{FILE}, s::StringView) = (printf(fp, s); newline(fp))
