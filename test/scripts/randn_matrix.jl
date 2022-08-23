@@ -3,8 +3,8 @@ using StaticTools
 
 function randn_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
     argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
-    rows = parse(Int64, argv, 2)            # First command-line argument
-    cols = parse(Int64, argv, 3)            # Second command-line argument
+    rows = argparse(Int64, argv, 2)            # First command-line argument
+    cols = argparse(Int64, argv, 3)            # Second command-line argument
 
     M = MallocArray{Float64}(undef, rows, cols)
     rng = MarsagliaPolar(static_rng())

@@ -106,8 +106,8 @@ The `MallocArray` type is one way to do that.
 using StaticTools
 function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
     argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
-    rows = parse(Int64, argv, 2)            # First command-line argument
-    cols = parse(Int64, argv, 3)            # Second command-line argument
+    rows = argparse(Int64, argv, 2)            # First command-line argument
+    cols = argparse(Int64, argv, 3)            # Second command-line argument
 
     M = MallocArray{Int64}(undef, rows, cols)
     @inbounds for i=1:rows
@@ -146,8 +146,8 @@ These `MallocArray`s can be `reshape`d and `reinterpret`ed  without causing any 
 ```julia
 julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
            argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
-           rows = parse(Int64, argv, 2)            # First command-line argument
-           cols = parse(Int64, argv, 3)            # Second command-line argument
+           rows = argparse(Int64, argv, 2)            # First command-line argument
+           cols = argparse(Int64, argv, 3)            # Second command-line argument
 
            M = MallocArray{Int64}(undef, rows, cols)
            @inbounds for i=1:rows
@@ -211,8 +211,8 @@ shell> ./stack_times_table
 ```julia
 julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
           argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
-          rows = parse(Int64, argv, 2)            # First command-line argument
-          cols = parse(Int64, argv, 3)            # Second command-line argument
+          rows = argparse(Int64, argv, 2)            # First command-line argument
+          cols = argparse(Int64, argv, 3)            # Second command-line argument
 
           rng = static_rng()
 
@@ -263,8 +263,8 @@ end
 
 function loopvec_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
     argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
-    rows = parse(Int64, argv, 2)            # First command-line argument
-    cols = parse(Int64, argv, 3)            # Second command-line argument
+    rows = argparse(Int64, argv, 2)            # First command-line argument
+    cols = argparse(Int64, argv, 3)            # Second command-line argument
 
     # LHS
     A = MallocArray{Float64}(undef, rows, cols)

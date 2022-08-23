@@ -586,8 +586,8 @@ end
 end
 @inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: Unsigned} = T(parse(UInt64, s))
 
-# Convenient parsing for argv (slight type piracy)
-@inline Base.parse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
+# Convenient parsing for argv
+@inline argparse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
 
 ## --- dlopen
 

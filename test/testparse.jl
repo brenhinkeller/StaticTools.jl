@@ -52,8 +52,8 @@
     s1,s2 = "1", "2.0"
     a = [pointer(s1), pointer(s2)]
     argv = pointer(a)
-    @test parse(Int64, argv, 1) === 1
-    @test parse(Float64, argv, 2) === 2.0
+    @test argparse(Int64, argv, 1) === 1
+    @test argparse(Float64, argv, 2) === 2.0
 
 
 ## --- Test parsedlm
