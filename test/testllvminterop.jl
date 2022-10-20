@@ -17,11 +17,10 @@
     @test isa(lib, Ptr{StaticTools.DYLIB})
     @test lib != C_NULL
 
-    t = m"time"
+    t = c"time"
     timefp = StaticTools.dlsym(lib, t)
     @test isa(timefp, Ptr)
     @test timefp != C_NULL
-    free(t)
 
     a, b = ccall(timefp, Int64, (Ptr{Cvoid},), C_NULL), time()
     @test isapprox(a, b, atol = 5)
