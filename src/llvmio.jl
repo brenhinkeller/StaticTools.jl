@@ -131,7 +131,7 @@
     """
     @inline function ftell(fp::Ptr{FILE})
         if fp == C_NULL
-            Int32(-1)
+            Int64(-1)
         else
             Base.llvmcall(("""
             ; External declaration of the ftell function
