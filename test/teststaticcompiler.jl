@@ -38,6 +38,35 @@ let
     @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
 end
 
+## --- Reading from written files
+
+let
+    # Compile...
+    status = -1
+    try
+        isfile("readwrite") && rm("readwrite")
+        status = run(`$jlpath --compile=min $testpath/scripts/readwrite.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/readwrite.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("5x5 times table, read from file:")
+    status = -1
+    try
+        status = run(`./readwrite 5 5`)
+    catch e
+        @warn "Could not run $(scratch)/readwrite"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+end
+
+
 ## --- "withmallocarray"-type do-block pattern
 let
     # Compile...
