@@ -64,6 +64,14 @@ let
     end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
+    # Test binary output
+    @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
+    # Test ascii output
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'
+    @test parsedlm(Int, c"tableb.tsv", '\t') == (1:5)*(1:5)'
+    @test parsedlm(Int, c"tables.tsv", '\t') == (1:5)*(1:5)'
+    @test parsedlm(Int, c"tablets.tsv", '\t') == (1:5)*(1:5)'
+
 end
 
 

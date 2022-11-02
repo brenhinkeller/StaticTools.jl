@@ -19,23 +19,27 @@ function readwrite(argc::Int, argv::Ptr{Ptr{UInt8}})
 
     Mb = read(c"table.b", MallocArray{Int64})
     Mbv = ArrayView{Int64,2}(pointer(Mb), rows*cols, (rows, cols))
+    printdlm(c"tableb.tsv", Mbv)
     printf(Mbv)
 
     Ms = read(c"table.b", MallocString)
     Msv = ArrayView{Int64,2}(pointer(Ms), rows*cols, (rows, cols))
+    printdlm(c"tables.tsv", Msv)
     printf(Msv)
 
     Mts = read(c"table.tsv", MallocString)
+    fwrite(c"tablets.tsv", Mts)
     printf(Mts)
 
     # Mt = parsedlm(Int64, c"table.tsv")
 
-    match = Mb == Mbv == Msv
+    # match = M == Mb == Mbv == Msv
 
     # Clean up
     free(M), free(Mb), free(Ms), free(Mts)
 
-    return !match % Int32
+    # return !match % Int32
+    return Int32(0)
 end
 
 # Attempt to compile
