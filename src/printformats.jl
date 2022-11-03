@@ -175,116 +175,60 @@ The value of x is currently 1
 ```
 """
 @inline function printf(args::Tuple{T1, T2}) where {T1, T2}
-    printf(args[1])
-    printf(args[2])
+    Base.Cartesian.@nexprs 2 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3}) where {T1, T2, T3}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
+    Base.Cartesian.@nexprs 3 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
+    Base.Cartesian.@nexprs 4 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5}) where {T1, T2, T3, T4, T5}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
-    printf(args[5])
+    Base.Cartesian.@nexprs 5 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6}) where {T1, T2, T3, T4, T5, T6}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
-    printf(args[5])
-    printf(args[6])
+    Base.Cartesian.@nexprs 6 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
-    printf(args[5])
-    printf(args[6])
-    printf(args[7])
+    Base.Cartesian.@nexprs 7 i->printf(args[i])
     return zero(Int32)
 end
 @inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8}) where {T1, T2, T3, T4, T5, T6, T7, T8}
-    printf(args[1])
-    printf(args[2])
-    printf(args[3])
-    printf(args[4])
-    printf(args[5])
-    printf(args[6])
-    printf(args[7])
-    printf(args[8])
+    Base.Cartesian.@nexprs 8 i->printf(args[i])
     return zero(Int32)
 end
 # Print to file
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2}) where {T1, T2}
-    printf(fp, args[1])
-    printf(fp, args[2])
+    Base.Cartesian.@nexprs 2 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3}) where {T1, T2, T3}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
+    Base.Cartesian.@nexprs 3 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4}) where {T1, T2, T3, T4}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
+    Base.Cartesian.@nexprs 4 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5}) where {T1, T2, T3, T4, T5}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
-    printf(fp, args[5])
+    Base.Cartesian.@nexprs 5 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6}) where {T1, T2, T3, T4, T5, T6}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
-    printf(fp, args[5])
-    printf(fp, args[6])
+    Base.Cartesian.@nexprs 6 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7}) where {T1, T2, T3, T4, T5, T6, T7}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
-    printf(fp, args[5])
-    printf(fp, args[6])
-    printf(fp, args[7])
+    Base.Cartesian.@nexprs 7 i->printf(fp, args[i])
     return zero(Int32)
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8}) where {T1, T2, T3, T4, T5, T6, T7, T8}
-    printf(fp, args[1])
-    printf(fp, args[2])
-    printf(fp, args[3])
-    printf(fp, args[4])
-    printf(fp, args[5])
-    printf(fp, args[6])
-    printf(fp, args[7])
-    printf(fp, args[8])
+    Base.Cartesian.@nexprs 8 i->printf(fp, args[i])
     return zero(Int32)
 end
 
