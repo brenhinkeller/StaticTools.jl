@@ -16,9 +16,8 @@ function readwrite(argc::Int, argv::Ptr{Ptr{UInt8}})
     fwrite(c"table.b", M)
     printdlm(c"table.tsv", M)
 
-
     Mb = read(c"table.b", MallocArray{Int64})
-    Mbv = ArrayView{Int64,2}(pointer(Mb), rows*cols, (rows, cols))
+    Mbv = reshape(Mb, (rows, cols))
     printdlm(c"tableb.tsv", Mbv)
     printf(Mbv)
 

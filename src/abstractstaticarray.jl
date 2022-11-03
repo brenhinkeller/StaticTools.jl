@@ -137,7 +137,7 @@
         if prod(dims) == length(a)
             ArrayView{T,N}(pointer(a), length(a), dims)
         else
-            ArrayView{T,N}(Ptr{T}(0), 0, dims)
+            ArrayView{T,N}(Ptr{T}(0), 0, ntuple(i->0, Val(N)))
         end
     end
     @inline Base.reshape(a::DenseStaticArray, dims::Vararg{Int}) = reshape(a, dims)
@@ -159,7 +159,7 @@
             pointerᵣ = Ptr{Tᵣ}(pointer(a))
             ArrayView{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
         else
-            ArrayView{Tᵣ,N}(Ptr{T}(0), 0, sizeᵣ)
+            ArrayView{Tᵣ,N}(Ptr{T}(0), 0, ntuple(i->0, Val(N)))
         end
     end
 
