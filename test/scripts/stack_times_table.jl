@@ -10,11 +10,11 @@ function stack_times_table()
     end
     print(a)
     fwrite(c"table.b", a)
-    printdlm(c"table.tsv", a)
+    GC.@preserve a printdlm(c"table.tsv", a)
 
     # Test reinterpreting
     println(c"\nThe same array, reinterpreted as Int32:")
-    print(reinterpret(Int32, a))
+    GC.@preserve a print(reinterpret(Int32, a))
 end
 
 path = compile_executable(stack_times_table, (), "./")
