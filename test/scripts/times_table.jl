@@ -17,6 +17,12 @@ function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
     # Also print to file
     fwrite(c"table.b", M)
     printdlm(c"table.tsv", M)
+
+    # Test reinterpreting
+    Mr = reinterpret(Int32, M)
+    println(c"\n\nThe same array, reinterpreted as Int32:")
+    printf(Mr)
+
     # Clean up matrix
     free(M)
 end

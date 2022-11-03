@@ -129,13 +129,20 @@
 
 
     # Reshaping and Reinterpreting
-    @inline function Base.reshape(a::DenseStaticArray{T}, dims::Dims{N})  where {T,N}
+    @inline function Base.reshape(a::DenseTupleArray{T}, dims::Dims{N})  where {T,N}
         @assert prod(dims) == length(a)
         ArrayView{T,N}(pointer(a), length(a), dims)
     end
+    @inline function Base.reshape(a::DenseStaticArray{T}, dims::Dims{N})  where {T,N}
+        if prod(dims) == length(a)
+            ArrayView{T,N}(pointer(a), length(a), dims)
+        else
+            ArrayView{T,N}(Ptr{T}(0), 0, dims)
+        end
+    end
     @inline Base.reshape(a::DenseStaticArray, dims::Vararg{Int}) = reshape(a, dims)
 
-    @inline function Base.reinterpret(::Type{Tᵣ}, a::DenseStaticArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
+    @inline function Base.reinterpret(::Type{Tᵣ}, a::DenseTupleArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
         @assert Base.allocatedinline(Tᵣ)
         @assert length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
         @assert size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0
@@ -143,6 +150,17 @@
         sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
         pointerᵣ = Ptr{Tᵣ}(pointer(a))
         ArrayView{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
+    end
+    @inline function Base.reinterpret(::Type{Tᵣ}, a::DenseStaticArray{Tᵢ,N}) where {N,Tᵣ,Tᵢ}
+        @assert Base.allocatedinline(Tᵣ)
+        if (length(a)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0) && (size(a,1)*sizeof(Tᵢ) % sizeof(Tᵣ) == 0)
+            lengthᵣ = length(a)*sizeof(Tᵢ)÷sizeof(Tᵣ)
+            sizeᵣ = ntuple(i -> i==1 ? size(a,i)*sizeof(Tᵢ)÷sizeof(Tᵣ) : size(a,i), Val(N))
+            pointerᵣ = Ptr{Tᵣ}(pointer(a))
+            ArrayView{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
+        else
+            ArrayView{Tᵣ,N}(Ptr{T}(0), 0, sizeᵣ)
+        end
     end
 
     # Custom printing
