@@ -202,6 +202,14 @@ end
     Base.Cartesian.@nexprs 8 i->printf(args[i])
     return zero(Int32)
 end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8, T9}) where {T1, T2, T3, T4, T5, T6, T7, T8, T9}
+    Base.Cartesian.@nexprs 9 i->printf(args[i])
+    return zero(Int32)
+end
+@inline function printf(args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}) where {T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
+    Base.Cartesian.@nexprs 10 i->printf(args[i])
+    return zero(Int32)
+end
 # Print to file
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2}) where {T1, T2}
     Base.Cartesian.@nexprs 2 i->printf(fp, args[i])
@@ -229,6 +237,14 @@ end
 end
 @inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8}) where {T1, T2, T3, T4, T5, T6, T7, T8}
     Base.Cartesian.@nexprs 8 i->printf(fp, args[i])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8, T9}) where {T1, T2, T3, T4, T5, T6, T7, T8, T9}
+    Base.Cartesian.@nexprs 9 i->printf(fp, args[i])
+    return zero(Int32)
+end
+@inline function printf(fp::Ptr{FILE}, args::Tuple{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}) where {T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
+    Base.Cartesian.@nexprs 10 i->printf(fp, args[i])
     return zero(Int32)
 end
 
