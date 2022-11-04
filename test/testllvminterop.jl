@@ -25,7 +25,7 @@
     a, b = ccall(timefp, Int64, (Ptr{Cvoid},), C_NULL), time()
     @test isapprox(a, b, atol = 5)
 
-    dltime() = @ptrcall timefp()::Int64
+    dltime() = @ptrcall timefp(C_NULL::Ptr{Nothing})::Int64
     a, b = dltime(), time()
     @test isapprox(a, b, atol = 5)
 
