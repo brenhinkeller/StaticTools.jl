@@ -1,10 +1,12 @@
 # StaticTools
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://brenhinkeller.github.io/StaticTools.jl/dev) [![CI](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml)
-[![CI (Integration)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration.yml)
-[![CI (Julia nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Julia%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-julia-nightly.yml)
-[![CI (Integration nightly)](https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg)](https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml)
-[![Coverage](https://codecov.io/gh/brenhinkeller/StaticTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/brenhinkeller/StaticTools.jl)
+[![Docs][docs-dev-img]][docs-dev-url]
+[![CI][ci-img]][ci-url]
+[![CI (Integration)][ci-integration-img]][ci-integration-url]
+[![CI (Julia nightly)][ci-nightly-img]][ci-nightly-url]
+[![CI (Integration nightly)][ci-integration-nightly-img]][ci-integration-nightly-url]
+[![Coverage][codecov-img]][codecov-url]
+
 
 Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things! (Experimental! 🐛)
 
@@ -583,3 +585,16 @@ Hello from 3 of 4 processors!
 Hello from 2 of 4 processors!
 Hello from 0 of 4 processors!
 ```
+
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://brenhinkeller.github.io/StaticTools.jl/dev/
+[ci-img]: https://github.com/brenhinkeller/StaticTools.jl/workflows/CI/badge.svg
+[ci-url]: https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI.yml
+[ci-nightly-img]: https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Julia%20nightly)/badge.svg
+[ci-nightly-url]: https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-julia-nightly.yml
+[ci-integration-img]: https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration)/badge.svg
+[ci-integration-url]: https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration.yml
+[ci-integration-nightly-img]: https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg
+[ci-integration-nightly-url]: https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml
+[codecov-img]: http://codecov.io/github/brenhinkeller/StaticTools.jl/coverage.svg?branch=main
+[codecov-url]: http://codecov.io/github/brenhinkeller/StaticTools.jl?branch=main
