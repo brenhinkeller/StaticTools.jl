@@ -14,14 +14,14 @@ This package currently requires Julia 1.8 or greater for best results (if in dou
 
 While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If there are errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. Please report any unexpected bugs you find, and PRs are welcome!
 
-The stack-allocated statically-sized `StaticString`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly.
-
 In addition to the exported names, Julia `Base` functions extended for StaticTools types (i.e., `StaticString`/ `MallocString` and `StackArray`/`MallocArray`) include:
 * `print`, `println`, `error`,
 * `parse`, `read`, `write`
 * `rand`/`rand!` (when using an `rng` initialied with `static_rng`, `SplitMix64`, or `Xoshiro256✴︎✴︎` )
 * `randn`/`randn!` (when using an `rng` initialied with `MarsagliaPolar`, `BoxMuller`, or `Ziggurat` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
+
+The stack-allocated statically-sized `StaticString`s and `StackArray`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly, up to the stack limit size. For larger arrays, space must be allocated with `malloc`, as in `MallocArray`s. However, as in any other language, any memory `malloc`ed must be freed once and only once. If you want `malloc`-backed StaticCompiler-able arrays without taking on this risk and responsibility, you may consider a bump allocator like [Bumper.jl](https://github.com/MasonProtter/Bumper.jl)
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
 [printmandel.jl](https://gist.github.com/brenhinkeller/ca2246ab0928e109e281a4d540010b2d)
