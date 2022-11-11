@@ -40,7 +40,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_VOID::Ptr{Nothing})::Int
 dltime (generic function with 1 method)
 
 julia> dltime()

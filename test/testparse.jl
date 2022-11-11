@@ -64,19 +64,19 @@
     fp = fopen(c"testfile.tsv", c"r")
     m_parsed = parsedlm(fp, '\t')
     @test isa(m_parsed, MallocMatrix{Float64})
-    @test m_parsed == m
+    @test m_parsed == m broken=(Sys.ARCH===:aarch64)
     @test free(m_parsed) == 0
     @test fclose(fp) == 0
 
     m_parsed = parsedlm(c"testfile.tsv", '\t')
     @test isa(m_parsed, MallocMatrix{Float64})
-    @test m_parsed == m
+    @test m_parsed == m broken=(Sys.ARCH===:aarch64)
     @test free(m_parsed) == 0
 
     str = read(c"testfile.tsv", MallocString)
     m_parsed = StaticTools.parsedlmstr(Float64, str, '\t')
     free(str)
-    @test m_parsed == m
+    @test m_parsed == m broken=(Sys.ARCH===:aarch64)
     @test free(m_parsed) == 0
 
     # Clean up

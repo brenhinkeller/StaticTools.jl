@@ -22,12 +22,44 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Attempt to run
-    println("5x5 times table:")
+    println("4x4 times table (MallocArray):")
     status = -1
     try
-        status = run(`./times_table 5 5`)
+        status = run(`./times_table 4 4`)
     catch e
         @warn "Could not run $(scratch)/times_table"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    # Test ascii output
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:4)*(1:4)'
+    # Test binary output
+    @test fread!(szeros(Int, 4,4), c"table.b") == (1:4)*(1:4)'
+end
+
+## --- As above but with staticarray
+
+let
+    # Compile...
+    status = -1
+    try
+        isfile("stack_times_table") && rm("stack_times_table")
+        status = run(`$jlpath --compile=min $testpath/scripts/stack_times_table.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/stack_times_table.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run..
+    println("5x5 times table (StackArray):")
+    status = -1
+    try
+        status = run(`./stack_times_table`)
+    catch e
+        @warn "Could not run $(scratch)/stack_times_table"
         println(e)
     end
     @test isa(status, Base.Process)
@@ -37,6 +69,7 @@ let
     # Test binary output
     @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
 end
+
 
 ## --- Reading from written files
 

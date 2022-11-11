@@ -562,29 +562,24 @@ julia> parse(Int64, c"3.141592")
 3
 ```
 """
-@inline function Base.parse(::Type{Float64}, s::Union{StaticString, MallocString})
+@inline function Base.parse(::Type{Float64}, s::AbstractStaticString)
     num, pbuf = strtod(s)
     load(pointer(pbuf)) == pointer(s) && return NaN
     return num
 end
-@inline function Base.parse(::Type{Float64}, s::Ptr{UInt8})
-    num, pbuf = strtod(s)
-    load(pointer(pbuf)) == s && return NaN
-    return num
-end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: AbstractFloat} = T(parse(Float64, s))
+@inline Base.parse(::Type{T}, s::AbstractStaticString) where {T <: AbstractFloat} = T(parse(Float64, s))
 
-@inline function Base.parse(::Type{Int64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
+@inline function Base.parse(::Type{Int64}, s::AbstractStaticString)
     num, pbuf = strtol(s)
     return num
 end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: Integer} = T(parse(Int64, s))
+@inline Base.parse(::Type{T}, s::AbstractStaticString) where {T <: Integer} = T(parse(Int64, s))
 
-@inline function Base.parse(::Type{UInt64}, s::Union{StaticString, MallocString, Ptr{UInt8}})
+@inline function Base.parse(::Type{UInt64}, s::AbstractStaticString)
     num, pbuf = strtoul(s)
     return num
 end
-@inline Base.parse(::Type{T}, s::Union{StaticString, MallocString, Ptr{UInt8}}) where {T <: Unsigned} = T(parse(UInt64, s))
+@inline Base.parse(::Type{T}, s::AbstractStaticString) where {T <: Unsigned} = T(parse(UInt64, s))
 
 # Convenient parsing for argv
 @inline argparse(::Type{T}, argv::Ptr{Ptr{UInt8}}, n::Integer) where {T} = parse(T, MallocString(argv, n))
