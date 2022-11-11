@@ -109,7 +109,7 @@ end
 
 		# and perform operations on each field
 		for j = 1:maxcolumns
-			importedmatrix[i,j] = parse(T, pointer(str) + field[j])
+			importedmatrix[i,j] = parse(T, str[field[j]:end])
 		end
 		i += 1
 	end
@@ -172,7 +172,7 @@ end
 
 		# and perform operations on each field
 		for j = 1:maxcolumns
-			importedmatrix[i,j] = parse(T, pointer(str) + field[j])
+			importedmatrix[i,j] = parse(T, str[field[j]:end])
 		end
 		k += 1
 	end
