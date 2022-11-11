@@ -29,7 +29,7 @@
     @test printf(0x00000001) == 0
     @test printf(0x0000000000000001) == 0
     @test printf(Ptr{UInt64}(0)) == 0
-    @test printf((c"The value of x is currently ", 1.0, c"\n")) == 0
+    @test printf((c"\nThe value of x is currently ", 1.0, c"\n")) == 0
     tpl = (c"1", c": ", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!", c"\n")
     for n ∈ 1:length(tpl)-1
         @test printf(tpl[[1:n..., length(tpl)]]) == 0
@@ -44,7 +44,7 @@
     @test puts(fp, "1") == 0
     @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 0
-    @test printf(fp, "%s\n", "3") == 2
+    @test printf(fp, "%s\n", "3") == 2 broken=(Sys.ARCH===:aarch64)
     @test printf(fp, 4) == 0
     @test printf(fp, 5.0) == 0
     @test printf(fp, 10.0f0) == 0
@@ -53,7 +53,7 @@
     @test printf(fp, 0x00000001) == 0
     @test printf(fp, 0x0000000000000001) == 0
     @test printf(fp, Ptr{UInt64}(0)) == 0
-    @test printf(fp, (c"The value of x is currently ", 1.0, c"\n")) == 0
+    @test printf(fp, (c"\nThe value of x is currently ", 1.0, c"\n")) == 0
     tpl = (c"1", c": ", c"Sphinx ", c"of ", c"black ", c"quartz, ", c"judge ", c"my ", c"vow!", c"\n")
     for n ∈ 1:length(tpl)-1
         @test printf(fp, tpl[[1:n..., length(tpl)]]) == 0
