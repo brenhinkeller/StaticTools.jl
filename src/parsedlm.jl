@@ -94,13 +94,13 @@ end
 	@inbounds while gets!(str,fp) != C_NULL
 
 		# identify the delimited fields,
-		field[1] = 0
+		field[1] = 1
 		k, columns = 1, 1
 		while str[k] != 0x00 #UInt8('\0')
 			if str[k] == UInt8(delim)
 				str[k] = '\0'
 				columns += 1
-				field[columns] = k
+				field[columns] = k+1
 			elseif str[k] == UInt8('\n')
 				str[k] = '\0'
 			end
@@ -159,13 +159,13 @@ end
 	@inbounds for i ∈ 1:rows
 
 		# identify the delimited fields,
-		field[1] = k-1
+		field[1] = k
 		columns = 1
 		while str[k] != 0x0a
 			if str[k] == delim
 				str[k] = 0x00
 				columns += 1
-				field[columns] = k
+				field[columns] = k+1
 			end
 			k += 1
 		end
