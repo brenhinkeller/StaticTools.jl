@@ -8,5 +8,6 @@ testfile.*
 *.o
 *.c
 *.ll
-test/times_table
-test/rand_matrix
+/test/times_table
+/test/rand_matrix
+/graveyard
