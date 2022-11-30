@@ -29,7 +29,7 @@
     a, b = dltime(), time()
     @test isapprox(a, b, atol = 5)
 
-    ctime() = @symbolcall time()::Int64
+    ctime() = @symbolcall time(C_NULL::Ptr{Nothing})::Int64
     a, b = ctime(), time()
     @test isapprox(a, b, atol = 5)
 
