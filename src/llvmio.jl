@@ -410,7 +410,7 @@ end
     @inline function putchar(c::UInt8)
         Base.llvmcall(("""
         ; External declaration of the putchar function
-        declare i32 @putchar(i8 nocapture) nounwind
+        declare i32 @putchar(i8) nounwind
 
         define i32 @main(i8 %c) #0 {
         entry:
