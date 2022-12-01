@@ -17,39 +17,10 @@ julia> free(p)
 0
 ```
 """
-@inline malloc(size::Integer) = malloc(Int64(size))
-@inline function malloc(size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
-end
-@inline malloc(size::Unsigned) = malloc(UInt64(size))
-@inline function malloc(size::UInt64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
-end
-
+@inline malloc(size::Integer) = malloc(size % Int)
+@inline malloc(size::Int) = @symbolcall malloc(size::Int)::Ptr{UInt8}
+@inline malloc(size::Unsigned) = malloc(size % UInt)
+@inline malloc(size::UInt) = @symbolcall malloc(size::UInt)::Ptr{UInt8}
 
 """
 ```julia
@@ -84,24 +55,9 @@ julia> free(p)
 0
 ```
 """
-@inline calloc(nbytes::Integer) = calloc(Int64(nbytes))
-@inline calloc(nbytes::Int64) = calloc(1, nbytes)
-@inline function calloc(n::Int64, size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `calloc` function
-    declare i8* @calloc(i64, i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %n, i64 %size) #0 {
-      %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
-end
-
+@inline calloc(nbytes::Integer) = calloc(nbytes % Int)
+@inline calloc(nbytes::Int) = calloc(1, nbytes)
+@inline calloc(n::Int, size::Int) = @symbolcall calloc(n::Int, size::Int)::Ptr{UInt8}
 
 """
 ```julia
@@ -174,23 +130,41 @@ julia> a
 @inline memset!(a, char, nbytes=sizeof(a)) = GC.@preserve a memset!(pointer(a), char, nbytes)
 @inline memset!(a::AbstractMallocdMemory, char, nbytes=sizeof(a)) = memset!(pointer(a), char, nbytes)
 @inline memset!(ptr::Ptr, char::Integer, nbytes::Integer) = memset!(Ptr{UInt8}(ptr), char, nbytes)
-@inline memset!(ptr::Ptr{UInt8}, char::Integer, nbytes::Integer) = memset!(ptr, Int64(char), Int64(nbytes))
-@inline function memset!(ptr::Ptr{UInt8}, char::Int64, nbytes::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `memset` function
-    ; Function Attrs: argmemonly nounwind
-    declare void @memset(i8* nocapture writeonly, i64, i64) #0
+@inline memset!(ptr::Ptr{UInt8}, char::Integer, nbytes::Integer) = memset!(ptr, Int(char), Int(nbytes))
+@inline function memset!(ptr::Ptr{UInt8}, char::Int, nbytes::Int)
+    @static if Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the `memset` function
+        ; Function Attrs: argmemonly nounwind
+        declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
-    ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
-      %ptr = inttoptr i64 %jlp to i8*
-      call void @memset(i8* %ptr, i64 %value, i64 %n)
-      ret i32 0
-    }
+        ; Function Attrs: nounwind ssp uwtable
+        define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
+          %ptr = inttoptr i64 %jlp to i8*
+          call void @memset(i8* %ptr, i64 %value, i64 %n)
+          ret i32 0
+        }
 
-    attributes #0 = { argmemonly nounwind }
-    attributes #1 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
+        attributes #0 = { argmemonly nounwind }
+        attributes #1 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
+    else
+        Base.llvmcall(("""
+        ; External declaration of the `memset` function
+        ; Function Attrs: argmemonly nounwind
+        declare void @memset(i8* nocapture writeonly, i32, i32) #0
+
+        ; Function Attrs: nounwind ssp uwtable
+        define i32 @main(i64 %jlp, i32 %value, i32 %n) #1 {
+          %ptr = inttoptr i64 %jlp to i8*
+          call void @memset(i8* %ptr, i32 %value, i32 %n)
+          ret i32 0
+        }
+
+        attributes #0 = { argmemonly nounwind }
+        attributes #1 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Int32, Int32}, ptr, char, nbytes)
+    end
 end
 
 
