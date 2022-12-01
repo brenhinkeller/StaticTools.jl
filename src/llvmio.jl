@@ -911,12 +911,12 @@ end
     @inline function printf(s::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i64 %jls) #0 {
         entry:
           %str = inttoptr i64 %jls to i8*
-          %status = call i32 (i8*) @printf(i8* %str)
+          %status = call i32 (i8*, ...) @printf(i8* %str)
           ret i32 %status
         }
 
