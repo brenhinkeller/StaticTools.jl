@@ -114,9 +114,8 @@
     end
 @inline function MallocString(s::AbstractStaticString)
     N = length(s) + 1 # Add room for null-termination
-    c = MallocString(Ptr{UInt8}(malloc(N)), N)
+    c = MallocString(undef, N)
     c[1:length(s)] = s
-    c[end] = 0x00
     return c
 end
     @inline MallocString(p::Ptr{UInt8}) = MallocString(p, strlen(p)+1)
