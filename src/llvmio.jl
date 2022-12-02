@@ -428,17 +428,17 @@ end
         else
             Base.llvmcall(("""
             ; External declaration of the fputc function
-            declare i32 @fputc(i8, i8*) nounwind
+            declare i32 @fputc(i32, i8*) nounwind
 
-            define i32 @main(i64 %jlfp, i8 %c) #0 {
+            define i32 @main(i64 %jlfp, i32 %c) #0 {
             entry:
               %fp = inttoptr i64 %jlfp to i8*
-              %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
+              %status = call i32 (i32, i8*) @fputc(i32 %c, i8* %fp)
               ret i32 0
             }
 
             attributes #0 = { alwaysinline nounwind ssp uwtable }
-            """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
+            """, "main"), Int32, Tuple{Ptr{FILE}, Int32}, fp, c % Int32)
         end
     end
 
