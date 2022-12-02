@@ -1100,37 +1100,8 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
-    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
-        Base.llvmcall(("""
-        ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture, ...)
-
-        define i32 @main(i64 %jlf, i16 %n) #0 {
-        entry:
-          %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @printf(i8* %fmt, i16 %n)
-          ret i32 0
-        }
-
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
-    end
-    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
-        Base.llvmcall(("""
-        ; External declaration of the printf function
-        declare i32 @fprintf(i8* noalias nocapture, i8*, i16)
-
-        define i32 @main(i64 %jlfp, i64 %jlf, i16 %n) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, i8*, i16) @fprintf(i8* %fp, i8* %fmt, i16 %n)
-          ret i32 %status
-        }
-
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
-    end
+    @inline printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fmt, n % Int32)
+    @inline printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fp, fmt, n % Int32)
 
     @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
         Base.llvmcall(("""
