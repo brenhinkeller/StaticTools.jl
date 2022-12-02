@@ -80,6 +80,7 @@ julia> free(p)
 """
 @inline free(ptr::Ptr) = free(Ptr{UInt8}(ptr))
 @inline function free(ptr::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `free` function
     declare void @free(i8*)
@@ -198,6 +199,7 @@ julia> a
 @inline memcpy!(a, b, n::Int64) = GC.@preserve a b memcpy!(pointer(a), pointer(b), n)
 @inline memcpy!(dst::Ptr, src::Ptr{T}, n::Int64) where {T} = memcpy!(Ptr{UInt8}(dst), Ptr{UInt8}(src), n*sizeof(T))
 @inline function memcpy!(dst::Ptr{UInt8}, src::Ptr{UInt8}, nbytes::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `memcpy` function
     ; Function Attrs: argmemonly nounwind
@@ -239,6 +241,7 @@ julia> memcmp(c"foo", c"bar", 3)
 @inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
 @inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcpy!(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
 @inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `memcmp` function
     declare i32 @memcmp(i8*, i8*, i64)
@@ -272,6 +275,7 @@ julia> StaticTools.time()
 ```
 """
 @inline function time()
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `time` function
     declare i64 @time(i64*)
@@ -301,6 +305,7 @@ julia> usleep(1000000)
 """
 @inline usleep(μsec::Integer) = malloc(Int64(μsec))
 @inline function usleep(μsec::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `usleep` function
     declare i32 @usleep(i64)
@@ -341,6 +346,7 @@ sys 0m0.000s
 @inline system(s::AbstractMallocdMemory) = system(pointer(s))
 @inline system(s) = GC.@preserve s system(pointer(s))
 @inline function system(s::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `system` function
     declare i32 @system(...)
@@ -377,6 +383,7 @@ julia> strlen(c"foo")
 @inline strlen(s::AbstractMallocdMemory) = strlen(pointer(s))
 @inline strlen(s) = GC.@preserve s strlen(pointer(s))
 @inline function strlen(s::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strlen` function
     declare i64 @strlen(i8*)
@@ -419,6 +426,7 @@ julia> num, pbuf = StaticTools.strtod(c"5")
     return num, pbuf
 end
 @inline function strtod(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtod` function
     declare double @strtod(i8*, i8**)
@@ -461,6 +469,7 @@ julia> num, pbuf = StaticTools.strtol(c"5")
     return num, pbuf
 end
 @inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
     declare i64 @strtol(i8*, i8**, i32)
@@ -503,6 +512,7 @@ julia> num, pbuf = StaticTools.strtoul(c"5")
     return num, pbuf
 end
 @inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtoul` function
     declare i64 @strtoul(i8*, i8**, i32)
@@ -599,7 +609,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 ctime (generic function with 1 method)
 
 julia> dltime()
@@ -626,6 +636,7 @@ julia> StaticTools.dlclose(lib)
 end
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
 @inline function dlopen(name::Ptr{UInt8}, flag::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlopen function
     declare i8* @dlopen(i8*, i32)
@@ -678,7 +689,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 dltime (generic function with 1 method)
 
 julia> dltime()
@@ -691,6 +702,7 @@ julia> StaticTools.dlclose(lib)
 @inline dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
 @inline dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
 @inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlsym function
     declare i8* @dlsym(i8*, i8*)
@@ -739,7 +751,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 dltime (generic function with 1 method)
 
 julia> dltime()
@@ -750,6 +762,7 @@ julia> StaticTools.dlclose(lib)
 ```
 """
 @inline function dlclose(handle::Ptr{DYLIB})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlclose function
     declare i32 @dlclose(i8*)
