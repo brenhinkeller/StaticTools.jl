@@ -130,6 +130,7 @@
     ```
     """
     @inline function ftell(fp::Ptr{FILE})
+        @assert Int===Int64
         if fp == C_NULL
             Int64(-1)
         else
@@ -196,6 +197,7 @@
     ```
     """
     @inline function fseek(fp::Ptr{FILE}, offset::Int64, whence::Int32=SEEK_CUR)
+        @assert Int===Int64
         if fp == C_NULL || whence < 0 || whence > 2
             Int32(-1)
         else
@@ -250,6 +252,7 @@
     """
 @static if Sys.isbsd()
     @inline function stdoutp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @__stdoutp = external global i8*
 
@@ -265,6 +268,7 @@
     end
 else
     @inline function stdoutp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @stdout = external global i8*
 
@@ -301,6 +305,7 @@ end
     """
 @static if Sys.isbsd()
     @inline function stderrp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @__stderrp = external global i8*
 
@@ -316,6 +321,7 @@ end
     end
 else
     @inline function stderrp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @stderr = external global i8*
 
@@ -348,6 +354,7 @@ end
     """
 @static if Sys.isbsd()
     @inline function stdinp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @__stdinp = external global i8*
 
@@ -363,6 +370,7 @@ end
     end
 else
     @inline function stdinp()
+        @assert Int===Int64
         Base.llvmcall(("""
         @stdin = external global i8*
 
@@ -410,7 +418,7 @@ end
     @inline function putchar(c::UInt8)
         Base.llvmcall(("""
         ; External declaration of the putchar function
-        declare i32 @putchar(i8 nocapture) nounwind
+        declare i32 @putchar(i8) nounwind
 
         define i32 @main(i8 %c) #0 {
         entry:
@@ -423,22 +431,23 @@ end
     end
     @inline putchar(fp::Ptr{FILE}, c::Char) = putchar(fp, UInt8(c))
     @inline function putchar(fp::Ptr{FILE}, c::UInt8)
+        @assert Int===Int64
         if fp == C_NULL
             Int32(-1)
         else
             Base.llvmcall(("""
             ; External declaration of the fputc function
-            declare i32 @fputc(i8, i8*) nounwind
+            declare i32 @fputc(i32, i8*) nounwind
 
-            define i32 @main(i64 %jlfp, i8 %c) #0 {
+            define i32 @main(i64 %jlfp, i32 %c) #0 {
             entry:
               %fp = inttoptr i64 %jlfp to i8*
-              %status = call i32 (i8, i8*) @fputc(i8 %c, i8* %fp)
+              %status = call i32 (i32, i8*) @fputc(i32 %c, i8* %fp)
               ret i32 0
             }
 
             attributes #0 = { alwaysinline nounwind ssp uwtable }
-            """, "main"), Int32, Tuple{Ptr{FILE}, UInt8}, fp, c)
+            """, "main"), Int32, Tuple{Ptr{FILE}, Int32}, fp, c % Int32)
         end
     end
 
@@ -517,6 +526,7 @@ end
     ```
     """
     @inline function getc(fp::Ptr{FILE})
+        @assert Int===Int64
         if fp == C_NULL
             Int32(-1)
         else
@@ -564,6 +574,7 @@ end
     @inline puts(s::AbstractMallocdMemory) = puts(pointer(s))
     @inline puts(s) = GC.@preserve s puts(pointer(s))
     @inline function puts(s::Ptr{UInt8})
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the puts function
         declare i32 @puts(i8* nocapture) nounwind
@@ -582,6 +593,7 @@ end
     @inline puts(fp::Ptr{FILE}, s::AbstractMallocdMemory) = puts(fp, pointer(s))
     @inline puts(fp::Ptr{FILE}, s) = GC.@preserve s puts(fp, pointer(s))
     @inline function puts(fp::Ptr{FILE}, s::Ptr{UInt8})
+        @assert Int===Int64
         if fp == C_NULL
             Int32(-1)
         else
@@ -630,6 +642,7 @@ end
     ```
     """
     @inline function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
@@ -740,6 +753,7 @@ end
     @inline fread!(buffer::AbstractMallocdMemory, fp::Ptr{FILE}, size, n) = (fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n); buffer)
     @inline fread!(buffer, fp::Ptr{FILE}, size, n) = (GC.@preserve buffer fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n); buffer)
     @inline function fread!(bp::Ptr{UInt8}, fp::Ptr{FILE}, size::Int64, n::Int64)
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the fread function
         declare i64 @fread(i8*, i64, i64, i8*)
@@ -806,6 +820,7 @@ end
     @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
     @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
     @inline function fwrite(fp::Ptr{FILE}, dp::Ptr{UInt8}, size::Int64, n::Int64)
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the fwrite function
         declare i64 @fwrite(i8*, i64, i64, i8*)
@@ -909,14 +924,15 @@ end
     @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
     @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
     @inline function printf(s::Ptr{UInt8})
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture)
+        declare i32 @printf(i8* noalias nocapture, ...)
 
         define i32 @main(i64 %jls) #0 {
         entry:
           %str = inttoptr i64 %jls to i8*
-          %status = call i32 (i8*) @printf(i8* %str)
+          %status = call i32 (i8*, ...) @printf(i8* %str)
           ret i32 %status
         }
 
@@ -924,6 +940,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
     end
     @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*)
@@ -959,6 +976,7 @@ end
     @inline printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
     @inline printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
     @inline function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -975,6 +993,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i8*)
@@ -1000,6 +1019,7 @@ end
 
     # Floating point numbers
     @inline function printf(fmt::Ptr{UInt8}, n::Float64)
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -1015,6 +1035,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, double)
@@ -1037,6 +1058,7 @@ end
 
     # Integers
     @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -1052,6 +1074,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i64)
@@ -1069,6 +1092,7 @@ end
     end
 
     @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -1084,6 +1108,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i32)
@@ -1100,39 +1125,11 @@ end
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
 
-    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
-        Base.llvmcall(("""
-        ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture, ...)
-
-        define i32 @main(i64 %jlf, i16 %n) #0 {
-        entry:
-          %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, ...) @printf(i8* %fmt, i16 %n)
-          ret i32 0
-        }
-
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
-    end
-    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16}
-        Base.llvmcall(("""
-        ; External declaration of the printf function
-        declare i32 @fprintf(i8* noalias nocapture, i8*, i16)
-
-        define i32 @main(i64 %jlfp, i64 %jlf, i16 %n) #0 {
-        entry:
-          %fp = inttoptr i64 %jlfp to i8*
-          %fmt = inttoptr i64 %jlf to i8*
-          %status = call i32 (i8*, i8*, i16) @fprintf(i8* %fp, i8* %fmt, i16 %n)
-          ret i32 %status
-        }
-
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
-    end
+    @inline printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fmt, n % Int32)
+    @inline printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fp, fmt, n % Int32)
 
     @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @printf(i8* noalias nocapture, ...)
@@ -1148,6 +1145,7 @@ end
         """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+        @assert Int===Int64
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, i8)

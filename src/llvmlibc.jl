@@ -17,39 +17,10 @@ julia> free(p)
 0
 ```
 """
-@inline malloc(size::Integer) = malloc(Int64(size))
-@inline function malloc(size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64}, size)
-end
-@inline malloc(size::Unsigned) = malloc(UInt64(size))
-@inline function malloc(size::UInt64)
-    Base.llvmcall(("""
-    ; External declaration of the `malloc` function
-    declare i8* @malloc(i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %size) #0 {
-      %ptr = call i8* (i64) @malloc(i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{UInt64}, size)
-end
-
+@inline malloc(size::Integer) = malloc(size % Int)
+@inline malloc(size::Int) = @symbolcall malloc(size::Int)::Ptr{UInt8}
+@inline malloc(size::Unsigned) = malloc(size % UInt)
+@inline malloc(size::UInt) = @symbolcall malloc(size::UInt)::Ptr{UInt8}
 
 """
 ```julia
@@ -84,24 +55,9 @@ julia> free(p)
 0
 ```
 """
-@inline calloc(nbytes::Integer) = calloc(Int64(nbytes))
-@inline calloc(nbytes::Int64) = calloc(1, nbytes)
-@inline function calloc(n::Int64, size::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `calloc` function
-    declare i8* @calloc(i64, i64)
-
-    ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %n, i64 %size) #0 {
-      %ptr = call i8* (i64, i64) @calloc(i64 %n, i64 %size)
-      %jlp = ptrtoint i8* %ptr to i64
-      ret i64 %jlp
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Ptr{UInt8}, Tuple{Int64, Int64}, n, size)
-end
-
+@inline calloc(nbytes::Integer) = calloc(nbytes % Int)
+@inline calloc(nbytes::Int) = calloc(1, nbytes)
+@inline calloc(n::Int, size::Int) = @symbolcall calloc(n::Int, size::Int)::Ptr{UInt8}
 
 """
 ```julia
@@ -124,6 +80,7 @@ julia> free(p)
 """
 @inline free(ptr::Ptr) = free(Ptr{UInt8}(ptr))
 @inline function free(ptr::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `free` function
     declare void @free(i8*)
@@ -174,23 +131,41 @@ julia> a
 @inline memset!(a, char, nbytes=sizeof(a)) = GC.@preserve a memset!(pointer(a), char, nbytes)
 @inline memset!(a::AbstractMallocdMemory, char, nbytes=sizeof(a)) = memset!(pointer(a), char, nbytes)
 @inline memset!(ptr::Ptr, char::Integer, nbytes::Integer) = memset!(Ptr{UInt8}(ptr), char, nbytes)
-@inline memset!(ptr::Ptr{UInt8}, char::Integer, nbytes::Integer) = memset!(ptr, Int64(char), Int64(nbytes))
-@inline function memset!(ptr::Ptr{UInt8}, char::Int64, nbytes::Int64)
-    Base.llvmcall(("""
-    ; External declaration of the `memset` function
-    ; Function Attrs: argmemonly nounwind
-    declare void @memset(i8* nocapture writeonly, i64, i64) #0
+@inline memset!(ptr::Ptr{UInt8}, char::Integer, nbytes::Integer) = memset!(ptr, Int(char), Int(nbytes))
+@inline function memset!(ptr::Ptr{UInt8}, char::Int, nbytes::Int)
+    @static if Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the `memset` function
+        ; Function Attrs: argmemonly nounwind
+        declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
-    ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
-      %ptr = inttoptr i64 %jlp to i8*
-      call void @memset(i8* %ptr, i64 %value, i64 %n)
-      ret i32 0
-    }
+        ; Function Attrs: nounwind ssp uwtable
+        define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
+          %ptr = inttoptr i64 %jlp to i8*
+          call void @memset(i8* %ptr, i64 %value, i64 %n)
+          ret i32 0
+        }
 
-    attributes #0 = { argmemonly nounwind }
-    attributes #1 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
+        attributes #0 = { argmemonly nounwind }
+        attributes #1 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Int64, Int64}, ptr, char, nbytes)
+    else
+        Base.llvmcall(("""
+        ; External declaration of the `memset` function
+        ; Function Attrs: argmemonly nounwind
+        declare void @memset(i8* nocapture writeonly, i32, i32) #0
+
+        ; Function Attrs: nounwind ssp uwtable
+        define i32 @main(i64 %jlp, i32 %value, i32 %n) #1 {
+          %ptr = inttoptr i64 %jlp to i8*
+          call void @memset(i8* %ptr, i32 %value, i32 %n)
+          ret i32 0
+        }
+
+        attributes #0 = { argmemonly nounwind }
+        attributes #1 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Int32, Int32}, ptr, char, nbytes)
+    end
 end
 
 
@@ -224,6 +199,7 @@ julia> a
 @inline memcpy!(a, b, n::Int64) = GC.@preserve a b memcpy!(pointer(a), pointer(b), n)
 @inline memcpy!(dst::Ptr, src::Ptr{T}, n::Int64) where {T} = memcpy!(Ptr{UInt8}(dst), Ptr{UInt8}(src), n*sizeof(T))
 @inline function memcpy!(dst::Ptr{UInt8}, src::Ptr{UInt8}, nbytes::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `memcpy` function
     ; Function Attrs: argmemonly nounwind
@@ -265,6 +241,7 @@ julia> memcmp(c"foo", c"bar", 3)
 @inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
 @inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcpy!(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
 @inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `memcmp` function
     declare i32 @memcmp(i8*, i8*, i64)
@@ -298,6 +275,7 @@ julia> StaticTools.time()
 ```
 """
 @inline function time()
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `time` function
     declare i64 @time(i64*)
@@ -327,6 +305,7 @@ julia> usleep(1000000)
 """
 @inline usleep(μsec::Integer) = malloc(Int64(μsec))
 @inline function usleep(μsec::Int64)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `usleep` function
     declare i32 @usleep(i64)
@@ -367,6 +346,7 @@ sys 0m0.000s
 @inline system(s::AbstractMallocdMemory) = system(pointer(s))
 @inline system(s) = GC.@preserve s system(pointer(s))
 @inline function system(s::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `system` function
     declare i32 @system(...)
@@ -403,6 +383,7 @@ julia> strlen(c"foo")
 @inline strlen(s::AbstractMallocdMemory) = strlen(pointer(s))
 @inline strlen(s) = GC.@preserve s strlen(pointer(s))
 @inline function strlen(s::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strlen` function
     declare i64 @strlen(i8*)
@@ -445,6 +426,7 @@ julia> num, pbuf = StaticTools.strtod(c"5")
     return num, pbuf
 end
 @inline function strtod(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtod` function
     declare double @strtod(i8*, i8**)
@@ -487,6 +469,7 @@ julia> num, pbuf = StaticTools.strtol(c"5")
     return num, pbuf
 end
 @inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtol` function
     declare i64 @strtol(i8*, i8**, i32)
@@ -529,6 +512,7 @@ julia> num, pbuf = StaticTools.strtoul(c"5")
     return num, pbuf
 end
 @inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the `strtoul` function
     declare i64 @strtoul(i8*, i8**, i32)
@@ -625,7 +609,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 ctime (generic function with 1 method)
 
 julia> dltime()
@@ -652,6 +636,7 @@ julia> StaticTools.dlclose(lib)
 end
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
 @inline function dlopen(name::Ptr{UInt8}, flag::Int32)
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlopen function
     declare i8* @dlopen(i8*, i32)
@@ -704,7 +689,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 dltime (generic function with 1 method)
 
 julia> dltime()
@@ -717,6 +702,7 @@ julia> StaticTools.dlclose(lib)
 @inline dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
 @inline dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
 @inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlsym function
     declare i8* @dlsym(i8*, i8*)
@@ -765,7 +751,7 @@ Ptr{StaticTools.DYLIB} @0x000000010bf49b78
 julia> fp = StaticTools.dlsym(lib, c"time")
 Ptr{Nothing} @0x00007fffa773dfa4
 
-julia> dltime() = @ptrcall fp()::Int
+julia> dltime() = @ptrcall fp(C_NULL::Ptr{Nothing})::Int
 dltime (generic function with 1 method)
 
 julia> dltime()
@@ -776,6 +762,7 @@ julia> StaticTools.dlclose(lib)
 ```
 """
 @inline function dlclose(handle::Ptr{DYLIB})
+    @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlclose function
     declare i32 @dlclose(i8*)
