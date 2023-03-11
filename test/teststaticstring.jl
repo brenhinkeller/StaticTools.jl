@@ -62,3 +62,7 @@
     @test contains(str, c"foo")
     @test contains(str, c"bar")
     @test contains(str, c"baz")
+    @test startswith(str, c"foo")
+    @test !startswith(c"foo", str)
+    @test !startswith(str, c"g")
+

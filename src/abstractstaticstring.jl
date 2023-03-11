@@ -122,3 +122,66 @@
         end
         return false
     end
+    
+    # Adapted from Julia's stdlib
+    """
+        iterate(s::AbstractStaticString, i=firstindex(s))
+
+    Adapted form Julia's stdlib, but made type-stable. 
+
+    !!! warning "Return type"
+        
+        The interface is a bit different from `Base`. When iterating outside of
+        the string, it will return the Null character and the current index.
+
+    # Examples
+
+    ```jldoctest
+    julia> s = c"foo"
+    c"foo"
+
+    julia> iterate(s, 1)
+    ('f', 2)
+
+    julia> iterate(s, 99999)
+    ('\\0', 99999)
+    ```
+    """
+    @inline function Base.iterate(s::AbstractStaticString, i::Int=firstindex(s))
+        ((i % UInt) - 1 < ncodeunits(s) && s[i] ≠ 0x00) || return ('\0', i)
+        b = @inbounds codeunit(s, i)
+        u = UInt32(b) << 24
+        between(b, 0x80, 0xf7) || return reinterpret(Char, u), i+1
+        return iterate_continued(s, i, u)
+    end
+    @inline between(b::T, lo::T, hi::T) where {T<:Integer} = (lo ≤ b) & (b ≤ hi)
+    @inline function iterate_continued(s::AbstractStaticString, i::Int, u::UInt32)
+        u < 0xc0000000 && (i += 1; @goto ret)
+        n = ncodeunits(s)
+        # first continuation byte
+        (i += 1) > n && @goto ret
+        @inbounds b = codeunit(s, i)
+        b & 0xc0 == 0x80 || @goto ret
+        u |= UInt32(b) << 16
+        # second continuation byte
+        ((i += 1) > n) | (u < 0xe0000000) && @goto ret
+        @inbounds b = codeunit(s, i)
+        b & 0xc0 == 0x80 || @goto ret
+        u |= UInt32(b) << 8
+        # third continuation byte
+        ((i += 1) > n) | (u < 0xf0000000) && @goto ret
+        @inbounds b = codeunit(s, i)
+        b & 0xc0 == 0x80 || @goto ret
+        u |= UInt32(b); i += 1
+        @label ret
+        return reinterpret(Char, u), i
+    end
+    @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
+           i, j = iterate(a), iterate(b)
+           while true
+               j[1] === '\0' && return true # ran out of prefix: success!
+               i[1] === '\0' && return false # ran out of source: failure
+               i[1] == j[1] || return false # mismatch: failure
+               i, j = iterate(a, i[2]), iterate(b, j[2])
+           end
+       end
