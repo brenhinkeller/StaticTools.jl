@@ -144,3 +144,4 @@
     # Implement some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
+
