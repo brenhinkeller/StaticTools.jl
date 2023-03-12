@@ -176,12 +176,119 @@
         @label ret
         return reinterpret(Char, u), i
     end
+    @inline Base.isvalid(s::AbstractStaticString, i::Int) = checkbounds(Bool, s, i) && thisind(s, i) == i
+    @inline Base.isvalid(::Type{T}, s::Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1,Vector{UInt8}},T}) where {T <: AbstractStaticString} = ccall(:u8_isvalid, Int32, (Ptr{UInt8}, Int), s, sizeof(s)) ≠ 0
+    @inline function Base.thisind(s::AbstractStaticString, i::Int)
+        i == 0 && return 0
+        n = ncodeunits(s)
+        i == n + 1 && return i
+        @boundscheck between(i, 1, n) || throw(BoundsError(s, i))
+        @inbounds b = codeunit(s, i)
+        (b & 0xc0 == 0x80) & (i-1 > 0) || return i
+        @inbounds b = codeunit(s, i-1)
+        between(b, 0b11000000, 0b11110111) && return i-1
+        (b & 0xc0 == 0x80) & (i-2 > 0) || return i
+        @inbounds b = codeunit(s, i-2)
+        between(b, 0b11100000, 0b11110111) && return i-2
+        (b & 0xc0 == 0x80) & (i-3 > 0) || return i
+        @inbounds b = codeunit(s, i-3)
+        between(b, 0b11110000, 0b11110111) && return i-3
+        return i
+    end
+    """
+        prevind(str::AbstractStaticString, i::Integer, n::Integer=1) -> Int
+
+    Adapted form Julia's stdlib, but made type-stable. 
+
+    !!! warning "Type-stability and exceptions"
+        
+        The interface is a bit different from `Base`. To make it compile-able,
+        we need to remove all throw cases. The method behaves as close as it 
+        can from the original.
+
+        The method won't throw `BoundsError` anymore, but will return the closest
+        index (0 or `ncodeunits(s)+1`).
+
+    # Examples
+     
+    ```jldoctest
+    julia> prevind(c"α", 3)
+    1
+    julia> prevind(c"α", 1)
+    0
+    julia> prevind(c"α", 0)
+    0
+    julia> prevind(c"α", 2, 2)
+    0
+    julia> prevind(c"α", 2, 3)
+    -1
+    ```
+    """
+    @inline function Base.prevind(s::AbstractStaticString, i::Int, n::Int=1)
+        n < 0 && return i
+        z = ncodeunits(s) + 1
+        @boundscheck 0 < i ≤ z || return i<=0 ? 0 : z-1
+        n == 0 && return thisind(s, i)
+        while n > 0 && 1 < i
+            @inbounds n -= isvalid(s, i -= 1)
+        end
+        return i - n
+    end
+    """
+        nextind(s::AbstractString, i::Int, n::Int=1) -> Int
+
+    Adapted form Julia's stdlib, but made type-stable. 
+
+    !!! warning "Type-stability and exceptions"
+        
+        The interface is a bit different from `Base`. To make it compile-able,
+        we need to remove all throw cases. The method behaves as close as it 
+        can from the original.
+
+        The method won't throw `BoundsError` anymore, but will return the closest
+        index (0 or `ncodeunits(s)+1`).
+
+    # Examples
+
+    ```jldoctest
+    julia> nextind(c"α", 0)
+    1
+    julia> nextind(c"α", 1)
+    3
+    julia> nextind(c"α", 3)
+    3
+    julia> nextind(c"α", 0, 2)
+    3
+    julia> nextind(c"α", 1, 2)
+    4
+    ```
+
+    """
+    @inline function Base.nextind(s::AbstractStaticString, i::Int, n::Int=1)
+        n < 0 && return i
+        z = ncodeunits(s)
+        @boundscheck 0 ≤ i ≤ z-1 || return i<=0 ? 0 : z
+        n == 0 && return thisind(s, i)
+        while n > 0 && i < z
+            @inbounds n -= isvalid(s, i += 1)
+        end
+        return i + n
+    end
+    @inline function Base.endswith(a::AbstractStaticString, b::AbstractStaticString)
+        i, j = iterate(a, prevind(a, lastindex(a))), iterate(b, prevind(b, lastindex(b)))
+        while true
+            j[2] < firstindex(b) && return true # ran out of suffix: success!
+            i[2] < firstindex(a) && return false # ran out of source: failure
+            i[1] == j[1] || return false # mismatch: failure
+            i, j = iterate(a, prevind(a, i[2], 2)), iterate(b, prevind(b, j[2], 2))
+        end
+    end
     @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
-           i, j = iterate(a), iterate(b)
-           while true
-               j[1] === '\0' && return true # ran out of prefix: success!
-               i[1] === '\0' && return false # ran out of source: failure
-               i[1] == j[1] || return false # mismatch: failure
-               i, j = iterate(a, i[2]), iterate(b, j[2])
-           end
-       end
+       i, j = iterate(a), iterate(b)
+       while true
+           j[1] === '\0' && return true # ran out of prefix: success!
+           i[1] === '\0' && return false # ran out of source: failure
+           i[1] == j[1] || return false # mismatch: failure
+           i, j = iterate(a, i[2]), iterate(b, j[2])
+        end
+    end
