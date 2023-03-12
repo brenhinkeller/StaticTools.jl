@@ -83,3 +83,5 @@
     @test prevind(c"α", 0) == 0
     @test prevind(c"α", 2, 2) == 0
     @test prevind(c"α", 2, 3) == -1
+    @test view(c"foobar", 1:3) == "foo"
+    @test view(c"foobar", 1:3) isa StringView

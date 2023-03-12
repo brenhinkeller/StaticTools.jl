@@ -14,6 +14,8 @@
         length::Int
     end
     @inline Base.length(s::StringView) = s.length
+    @inline StringView(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StringView(pointer(s)+first(r)-1, length(r))
+
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
     function Base.show(io::IO, s::StringView)
@@ -85,6 +87,7 @@
             s[i] = x[i+ix₀]
         end
     end
+    Base.view(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StringView(s, r)
 
     # Some of the AbstractString interface
     @inline Base.ncodeunits(s::AbstractPointerString) = s.length
