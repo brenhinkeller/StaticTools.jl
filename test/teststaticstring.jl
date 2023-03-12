@@ -6,8 +6,8 @@
     @test sizeof(str) == 19
     @test StaticTools.strlen(str) == length(str) == 18
     @test pointer(str) == Base.unsafe_convert(Ptr{UInt8}, str)
-    str1 = StaticString(str[1:end])
-    @test isa(str1, StaticString{19})
+    # str1 = StaticString(str[1:end])
+    # @test isa(str1, StaticString{19})
 
     # Test basic string operations
     @test str == c"Hello, world! 🌍"

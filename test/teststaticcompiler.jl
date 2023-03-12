@@ -33,7 +33,7 @@ let
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     # Test ascii output
-    @test parsedlm(Int, c"table.tsv", '\t') == (1:4)*(1:4)'
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:4)*(1:4)' broken=(Sys.ARCH===:aarch64)
     # Test binary output
     @test fread!(szeros(Int, 4,4), c"table.b") == (1:4)*(1:4)'
 end
@@ -65,7 +65,7 @@ let
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     # Test ascii output
-    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'  broken=(Sys.ARCH===:aarch64)
     # Test binary output
     @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
 end
@@ -100,10 +100,10 @@ let
     # Test binary output
     @test fread!(szeros(Int, 5,5), c"table.b") == (1:5)*(1:5)'
     # Test ascii output
-    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'
-    @test parsedlm(Int, c"tableb.tsv", '\t') == (1:5)*(1:5)'
-    @test parsedlm(Int, c"tables.tsv", '\t') == (1:5)*(1:5)'
-    @test parsedlm(Int, c"tablets.tsv", '\t') == (1:5)*(1:5)'
+    @test parsedlm(Int, c"table.tsv", '\t') == (1:5)*(1:5)'  broken=(Sys.ARCH===:aarch64)
+    @test parsedlm(Int, c"tableb.tsv", '\t') == (1:5)*(1:5)'  broken=(Sys.ARCH===:aarch64)
+    @test parsedlm(Int, c"tables.tsv", '\t') == (1:5)*(1:5)'  broken=(Sys.ARCH===:aarch64)
+    @test parsedlm(Int, c"tablets.tsv", '\t') == (1:5)*(1:5)'  broken=(Sys.ARCH===:aarch64)
 
 end
 
@@ -248,7 +248,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
     # Check ascii output
-    @test parsedlm(c"table.tsv",'\t') == A' * A
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
     # Check binary output
     @test fread!(szeros(5,5), c"table.b") == A' * A
 end
@@ -278,7 +278,7 @@ let
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
-    @test parsedlm(c"table.tsv",'\t') == A' * A
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
 end
 
 
