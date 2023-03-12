@@ -65,4 +65,21 @@
     @test startswith(str, c"foo")
     @test !startswith(c"foo", str)
     @test !startswith(str, c"g")
-
+    @test isvalid(c"foo", 1)
+    @test !isvalid(c"foo", 9999)
+    @test endswith(c"foobar", c"bar")
+    @test !endswith(c"foobar", c"baz")
+    @test isvalid(c"α", 1)
+    @test !isvalid(c"α", 2)
+    @test thisind(c"α", 2) == 1
+    @test thisind(c"α", 1) == 1
+    @test nextind(c"α", 0) == 1
+    @test nextind(c"α", 1) == 3
+    @test nextind(c"α", 3) == 3
+    @test nextind(c"α", 0, 2) == 3
+    @test nextind(c"α", 1, 2) == 4
+    @test prevind(c"α", 3) == 1
+    @test prevind(c"α", 1) == 0
+    @test prevind(c"α", 0) == 0
+    @test prevind(c"α", 2, 2) == 0
+    @test prevind(c"α", 2, 3) == -1
