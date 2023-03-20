@@ -141,6 +141,7 @@
     @inline Base.similar(a::StackArray{T,N,L,D}) where {T,N,L,D} = StackArray{T,N,L,D}(undef)
     @inline Base.similar(a::StackArray{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
     @inline Base.similar(a::StackArray, dims::Vararg{Int}) = similar(a, dims)
+    @inline Base.similar(a::StackArray{To,N,L,D}, ::Type{T}) where {To,N,L,D,T} = StackArray{T,N,L,D}(undef)
     @inline Base.similar(a::StackArray, ::Type{T}, dims::Dims{N}) where {T,N} = StackArray{T,N}(undef, dims)
     @inline Base.similar(a::StackArray, T::Type, dims::Vararg{Int}) = similar(a, T, dims)
     @inline function Base.copy(a::StackArray{T,N,L,D}) where {T,N,L,D}
