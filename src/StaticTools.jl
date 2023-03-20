@@ -2,6 +2,7 @@ module StaticTools
 
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
+    using LoopVectorization
     import Random: rand!, randn!
 
     # Declare some types we'll use later
@@ -16,6 +17,7 @@ module StaticTools
 
     # Arrays backed by malloc'd and alloca'd memory
     include("abstractstaticarray.jl")  # Shared array infrastructure
+    include("staticlinearalgebra.jl")  # Shared array infrastructure
     include("stackarray.jl")           # StackArray, StackMatrix, StackVector
     include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
 

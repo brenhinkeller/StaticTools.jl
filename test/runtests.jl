@@ -14,6 +14,7 @@ const GROUP = get(ENV, "GROUP", "All")
     @testset "MallocString" begin include("testmallocstring.jl") end
     @testset "MallocArray" begin include("testmallocarray.jl") end
     @testset "StackArray" begin include("teststackarray.jl") end
+    @testset "StaticLinearAlgebra" begin include("teststaticlinearalgebra.jl") end
     @testset "StaticRNG" begin include("teststaticrng.jl") end
 end
 
