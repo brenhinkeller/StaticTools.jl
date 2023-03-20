@@ -25,3 +25,15 @@ B = sones(10,10)
 # Matrix-matrix multiplication
 @test A * B isa StackMatrix
 @test A * B == fill(10.0,10,10)
+
+
+# Three-arg mul!
+C = szeros(10,10)
+@test mul!(C, A, B) isa StackMatrix
+@test C == fill(10.0,10,10)
+
+# Five-arg mul!
+@test mul!(C, A, B, 2, 0) isa StackMatrix
+@test C == fill(20.0,10,10)
+@test mul!(C, A, B, 2, 1) isa StackMatrix
+@test C == fill(40.0,10,10)

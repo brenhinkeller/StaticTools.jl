@@ -25,3 +25,15 @@ end
     end
     return C
 end
+
+@inline function mul!(C::DenseStaticArray{T}, A::DenseStaticArray, B::DenseStaticArray, α::Number, β::Number) where T
+    @turbo for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+        Cmn = zero(T)
+        for k ∈ indices((A,B), (2,1))
+            Cmn += A[m,k] * B[k,n]
+        end
+        C[m,n] *= β
+        C[m,n] += Cmn * α
+    end
+    return C
+end

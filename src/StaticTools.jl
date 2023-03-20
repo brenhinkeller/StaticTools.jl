@@ -3,7 +3,9 @@ module StaticTools
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
     using LoopVectorization
+    # Import so we can extend
     import Random: rand!, randn!
+    import LinearAlgebra: mul!
 
     # Declare some types we'll use later
     struct FILE end # Plain struct to denote and dispatch on file pointers
