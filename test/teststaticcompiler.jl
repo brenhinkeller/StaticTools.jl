@@ -236,7 +236,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Run...
-    println("10x5 matrix product:")
+    println("10x5 MallocMatrix product, manual LoopVec:")
     status = -1
     try
         status = run(`./loopvec_matrix 10 5`)
@@ -267,7 +267,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
 
     # Run...
-    println("10x5 matrix product:")
+    println("10x5 StackMatrix product, manual LoopVec:")
     status = -1
     try
         status = run(`./loopvec_matrix_stack`)
@@ -281,6 +281,68 @@ let
     @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
 end
 
+## --- Test standard matrix multiplication
+let
+    # Compile...
+    status = -1
+    try
+        isfile("matmul") && rm("matmul")
+        status = run(`$jlpath --compile=min $testpath/scripts/matmul.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/matmul.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x5 MallocMatrix product:")
+    status = -1
+    try
+        status = run(`./matmul 10 5`)
+    catch e
+        @warn "Could not run $(scratch)/matmul"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    A = (1:10) * (1:5)'
+    # Check ascii output
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
+    # Check binary output
+    @test fread!(szeros(5,5), c"table.b") == A' * A
+end
+
+let
+    # Compile...
+    status = -1
+    try
+        isfile("matmul_stack") && rm("matmul_stack")
+        status = run(`$jlpath --compile=min $testpath/scripts/matmul_stack.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/matmul_stack.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x5 StackMatrix product:")
+    status = -1
+    try
+        status = run(`./matmul_stack`)
+    catch e
+        @warn "Could not run $(scratch)/matmul_stack"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    A = (1:10) * (1:5)'
+    # Check ascii output
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
+    # Check binary output
+    @test fread!(szeros(5,5), c"table.b") == A' * A
+end
 
 ## --- Test string handling
 
