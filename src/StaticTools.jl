@@ -59,7 +59,7 @@ module StaticTools
     export usleep                                                               # Other libc utility functions
     export newline, putchar, getchar, getc, puts, gets!, readline!              # Char & String IO
     export fwrite, fread!                                                       # String and Binary IO
-    export unsafe_mallocstring, strlen                                          # String management
-    export printf, printdlm, parsedlm, argparse                                # File parsing and formatting
+    export unsafe_mallocstring, strlen, iterate_stable                          # String management
+    export printf, printdlm, parsedlm, argparse                                 # File parsing and formatting
     export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                  # RNG functions
 end

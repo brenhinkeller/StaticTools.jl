@@ -174,6 +174,11 @@
     end
 
     # Some of the AbstractString interface -- where overriding AbstractStaticString defaults
+    @inline function Base.copy(s::MallocString)
+        new_s = MallocString(undef, sizeof(s))
+        new_s[:] = s
+        return new_s
+    end
     @inline Base.:*(a::MallocString, b::MallocString) = _concat_mallocstring(a,b)
     @inline Base.:*(a::MallocString, b::AbstractStaticString) = _concat_mallocstring(a,b)
     @inline Base.:*(a::MallocString, b::AbstractString) = _concat_mallocstring(a,b)
@@ -195,11 +200,7 @@
         c[end] = 0x00 # Null-terminate
         return c
     end
-    @inline function Base.copy(s::MallocString)
-        new_s = MallocString(undef, sizeof(s))
-        new_s[:] = s
-        return new_s
-    end
+    @inline Base.String(s::MallocString) = Base.unsafe_string(pointer(s))
 
     # As Base.unsafe_string, but loading to a MallocString instead
     @inline function unsafe_mallocstring(p::Ptr{UInt8})
