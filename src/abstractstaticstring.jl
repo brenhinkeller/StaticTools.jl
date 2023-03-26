@@ -129,7 +129,7 @@
 
     # Adapted from Julia's stdlib
     """
-        iterate(s::AbstractStaticString, i=firstindex(s))
+        iterate_stable(s::AbstractStaticString, i=firstindex(s))
 
     Adapted form Julia's stdlib, but made type-stable.
 
@@ -144,14 +144,14 @@
     julia> s = c"foo"
     c"foo"
 
-    julia> iterate(s, 1)
+    julia> iterate_stable(s, 1)
     ('f', 2)
 
-    julia> iterate(s, 99999)
+    julia> iterate_stable(s, 99999)
     ('\\0', 99999)
     ```
     """
-    @inline function Base.iterate(s::AbstractStaticString, i::Int=firstindex(s))
+    @inline function iterate_stable(s::AbstractStaticString, i::Int=firstindex(s))
         ((i % UInt) - 1 < ncodeunits(s) && s[i] ≠ 0x00) || return ('\0', i)
         b = @inbounds codeunit(s, i)
         u = UInt32(b) << 24
@@ -279,20 +279,20 @@
         return i + n
     end
     @inline function Base.endswith(a::AbstractStaticString, b::AbstractStaticString)
-        i, j = iterate(a, prevind(a, lastindex(a))), iterate(b, prevind(b, lastindex(b)))
+        i, j = iterate_stable(a, prevind(a, lastindex(a))), iterate_stable(b, prevind(b, lastindex(b)))
         while true
             j[2] < firstindex(b) && return true # ran out of suffix: success!
             i[2] < firstindex(a) && return false # ran out of source: failure
             i[1] == j[1] || return false # mismatch: failure
-            i, j = iterate(a, prevind(a, i[2], 2)), iterate(b, prevind(b, j[2], 2))
+            i, j = iterate_stable(a, prevind(a, i[2], 2)), iterate_stable(b, prevind(b, j[2], 2))
         end
     end
     @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
-       i, j = iterate(a), iterate(b)
+       i, j = iterate_stable(a), iterate_stable(b)
        while true
            j[1] === '\0' && return true # ran out of prefix: success!
            i[1] === '\0' && return false # ran out of source: failure
            i[1] == j[1] || return false # mismatch: failure
-           i, j = iterate(a, i[2]), iterate(b, j[2])
+           i, j = iterate_stable(a, i[2]), iterate_stable(b, j[2])
         end
     end
