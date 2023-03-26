@@ -79,7 +79,7 @@
     c"Hello"
     ```
     """
-    @inline function StaticString(s::AbstractStaticString)
+    @inline function StaticString(s::AbstractString)
         c = StaticString{length(s)+1}(undef)
         c[1:length(s)] = s
         c[end] = 0x00
@@ -144,4 +144,3 @@
     # Implement some of the AbstractString interface -- where overriding AbstractStaticString defaults
     @inline Base.ncodeunits(s::StaticString{N}) where N = N
     @inline Base.codeunits(s::StaticString) = s.data
-

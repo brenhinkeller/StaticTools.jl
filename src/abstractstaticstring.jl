@@ -6,6 +6,7 @@
 
     # A subtype for strings that are backed by a pointer and a length alone
     abstract type AbstractPointerString <: AbstractStaticString end
+    @inline Base.String(s::AbstractPointerString) = Base.unsafe_string(pointer(s))
 
     # Lightweight type for taking a view into an existing string
     # Like MallocString, but not necessarily null-terminated
@@ -125,15 +126,15 @@
         end
         return false
     end
-    
+
     # Adapted from Julia's stdlib
     """
         iterate(s::AbstractStaticString, i=firstindex(s))
 
-    Adapted form Julia's stdlib, but made type-stable. 
+    Adapted form Julia's stdlib, but made type-stable.
 
     !!! warning "Return type"
-        
+
         The interface is a bit different from `Base`. When iterating outside of
         the string, it will return the Null character and the current index.
 
@@ -201,19 +202,19 @@
     """
         prevind(str::AbstractStaticString, i::Integer, n::Integer=1) -> Int
 
-    Adapted form Julia's stdlib, but made type-stable. 
+    Adapted form Julia's stdlib, but made type-stable.
 
     !!! warning "Type-stability and exceptions"
-        
+
         The interface is a bit different from `Base`. To make it compile-able,
-        we need to remove all throw cases. The method behaves as close as it 
+        we need to remove all throw cases. The method behaves as close as it
         can from the original.
 
         The method won't throw `BoundsError` anymore, but will return the closest
         index (0 or `ncodeunits(s)+1`).
 
     # Examples
-     
+
     ```jldoctest
     julia> prevind(c"α", 3)
     1
@@ -240,12 +241,12 @@
     """
         nextind(s::AbstractString, i::Int, n::Int=1) -> Int
 
-    Adapted form Julia's stdlib, but made type-stable. 
+    Adapted form Julia's stdlib, but made type-stable.
 
     !!! warning "Type-stability and exceptions"
-        
+
         The interface is a bit different from `Base`. To make it compile-able,
-        we need to remove all throw cases. The method behaves as close as it 
+        we need to remove all throw cases. The method behaves as close as it
         can from the original.
 
         The method won't throw `BoundsError` anymore, but will return the closest
