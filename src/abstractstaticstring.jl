@@ -129,14 +129,9 @@
 
     # Adapted from Julia's stdlib
     """
-        iterate_stable(s::AbstractStaticString, i=firstindex(s))
+        iterate(s::AbstractStaticString, i=firstindex(s))
 
-    Adapted form Julia's stdlib, but made type-stable.
-
-    !!! warning "Return type"
-
-        The interface is a bit different from `Base`. When iterating outside of
-        the string, it will return the Null character and the current index.
+    Adapted form Julia's stdlib.
 
     # Examples
 
@@ -144,15 +139,15 @@
     julia> s = c"foo"
     c"foo"
 
-    julia> iterate_stable(s, 1)
+    julia> iterate(s, 1)
     ('f', 2)
 
-    julia> iterate_stable(s, 99999)
-    ('\\0', 99999)
+    julia> iterate(s, 99999)
+    
     ```
     """
-    @inline function iterate_stable(s::AbstractStaticString, i::Int=firstindex(s))
-        ((i % UInt) - 1 < ncodeunits(s) && s[i] ≠ 0x00) || return ('\0', i)
+    @inline function Base.iterate(s::AbstractStaticString, i::Int=firstindex(s))
+        ((i % UInt) - 1 < ncodeunits(s) && s[i] ≠ 0x00) || return nothing
         b = @inbounds codeunit(s, i)
         u = UInt32(b) << 24
         between(b, 0x80, 0xf7) || return reinterpret(Char, u), i+1
@@ -277,22 +272,4 @@
             @inbounds n -= isvalid(s, i += 1)
         end
         return i + n
-    end
-    @inline function Base.endswith(a::AbstractStaticString, b::AbstractStaticString)
-        i, j = iterate_stable(a, prevind(a, lastindex(a))), iterate_stable(b, prevind(b, lastindex(b)))
-        while true
-            j[2] < firstindex(b) && return true # ran out of suffix: success!
-            i[2] < firstindex(a) && return false # ran out of source: failure
-            i[1] == j[1] || return false # mismatch: failure
-            i, j = iterate_stable(a, prevind(a, i[2], 2)), iterate_stable(b, prevind(b, j[2], 2))
-        end
-    end
-    @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
-       i, j = iterate_stable(a), iterate_stable(b)
-       while true
-           j[1] === '\0' && return true # ran out of prefix: success!
-           i[1] === '\0' && return false # ran out of source: failure
-           i[1] == j[1] || return false # mismatch: failure
-           i, j = iterate_stable(a, i[2]), iterate_stable(b, j[2])
-        end
     end
