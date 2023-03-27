@@ -131,12 +131,7 @@
     """
         iterate(s::AbstractStaticString, i=firstindex(s))
 
-    Adapted form Julia's stdlib, but made type-stable.
-
-    !!! warning "Return type"
-
-        The interface is a bit different from `Base`. When iterating outside of
-        the string, it will return the Null character and the current index.
+    Adapted form Julia's stdlib.
 
     # Examples
 
@@ -148,7 +143,7 @@
     ('f', 2)
 
     julia> iterate(s, 99999)
-    ('\\0', 99999)
+    
     ```
     """
     @inline function Base.iterate(s::AbstractStaticString, i::Int=firstindex(s))
