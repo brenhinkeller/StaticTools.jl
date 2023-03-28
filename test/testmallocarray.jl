@@ -223,6 +223,15 @@
     @test B[5,5] === Int32(1.0)
 
     @test A == B
+
+    # Iteration
+    let n = 0
+        for a in A
+            n += a
+        end
+        @test n == 10
+    end
+
     free(A)
     free(B)
 
