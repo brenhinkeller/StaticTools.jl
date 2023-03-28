@@ -77,3 +77,15 @@
     @test abc == abc[1:3]
     @test abc[1:3] == "abc"
     free(abc)
+
+    # Test other convenience functions
+    str = m"foobarbaz"
+    @test contains(str, c"foo")
+    @test contains(str, c"bar")
+    @test contains(str, c"baz")
+    @test startswith(str, c"foo")
+    @test !startswith(c"foo", str)
+    @test !startswith(str, c"g")
+    @test endswith(str, c"baz")
+    @test !endswith(str, c"bar")
+    free(str)

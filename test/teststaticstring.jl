@@ -67,8 +67,8 @@
     @test !startswith(str, c"g")
     @test isvalid(c"foo", 1)
     @test !isvalid(c"foo", 9999)
-    @test endswith(c"foobar", c"bar")
-    @test !endswith(c"foobar", c"baz")
+    @test endswith(str, c"baz")
+    @test !endswith(str, c"bar")
     @test isvalid(c"α", 1)
     @test !isvalid(c"α", 2)
     @test thisind(c"α", 2) == 1
