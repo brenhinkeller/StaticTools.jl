@@ -31,6 +31,10 @@
     @inline Base.stride(a::DenseStaticArray, dim::Int) = (dim <= 1) ? 1 : stride(a, dim-1) * size(a, dim-1)
     @inline Base.firstindex(::DenseStaticArray) = 1
     @inline Base.lastindex(a::DenseStaticArray) = length(a)
+    @inline function Base.iterate(s::DenseStaticArray, i::Int=firstindex(s))
+        i > length(s) && return nothing
+        return s[i], i+1
+    end
 
     # Scalar getindex
     @inline Base.getindex(a::DenseStaticArray{T,0}) where {T} = unsafe_load(pointer(a))

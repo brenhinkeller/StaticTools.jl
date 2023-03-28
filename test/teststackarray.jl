@@ -202,6 +202,16 @@
 
     @test A == B
 
+## --- Iteration
+
+    A = sfill(10,10)
+    let n = 0
+        for a in A
+            n += a
+        end
+        @test n == 100
+    end
+
 ## --- RNG conveience functions
 
     rng = static_rng()
