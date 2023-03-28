@@ -597,4 +597,4 @@ Hello from 0 of 4 processors!
 [ci-integration-nightly-img]: https://github.com/brenhinkeller/StaticTools.jl/workflows/CI%20(Integration%20nightly)/badge.svg
 [ci-integration-nightly-url]: https://github.com/brenhinkeller/StaticTools.jl/actions/workflows/CI-integration-nightly.yml
 [codecov-img]: http://codecov.io/github/brenhinkeller/StaticTools.jl/coverage.svg?branch=main
-[codecov-url]: http://codecov.io/github/brenhinkeller/StaticTools.jl?branch=main
+[codecov-url]: http://app.codecov.io/github/brenhinkeller/StaticTools.jl?branch=main
