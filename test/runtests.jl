@@ -22,3 +22,8 @@ using LoopVectorization
 @static if GROUP == "Integration" || GROUP == "All"
     @testset "StaticCompiler" begin include("teststaticcompiler.jl") end
 end
+
+@static if GROUP == "Utilities" || GROUP == "All"
+    @testset "static_type" begin include("teststatic_type.jl") end
+end
+

@@ -39,12 +39,16 @@ module StaticTools
     include("staticrng.jl")
     include("ziggurat.jl")
 
+    # Utilities
+    include("static_type.jl")   # Convert types and objects to more static-friendly versions
+
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString         # String types
     export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
     export StackArray, StackMatrix, StackVector                                 # Stack-allocated array types
     export ArrayView
     export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar, Ziggurat        # RNG types
+    export StaticContext, DefaultStaticContext                                  # Context for `static_type`
 
     # Macros
     export @c_str, @m_str, @mm_str
@@ -62,4 +66,5 @@ module StaticTools
     export unsafe_mallocstring, strlen                                          # String management
     export printf, printdlm, parsedlm, argparse                                 # File parsing and formatting
     export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                  # RNG functions
+    export static_type, static_type_contents                                    # Utilities
 end
