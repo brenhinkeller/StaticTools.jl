@@ -13,7 +13,7 @@ let
     status = -1
     try
         isfile("times_table") && rm("times_table")
-        status = run(`$jlpath --compile=min $testpath/scripts/times_table.jl`)
+        status = run(`$jlpath --startup=no $testpath/scripts/times_table.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/times_table.jl"
         println(e)
