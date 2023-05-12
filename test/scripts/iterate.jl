@@ -2,11 +2,11 @@ using StaticCompiler
 using StaticTools
 
 function iterate()
-    # if startswith(c"foobar", c"foo")
+    if startswith(c"foobar", c"foo")
         printf(c"We have iterated!")
         return Int32(0)
-    # end
-    # return Int32(1)
+    end
+    return Int32(1)
 end
 
 # Attempt to compile
