@@ -379,7 +379,7 @@ let
     status = -1
     try
         isfile("iterate") && rm("iterate")
-        status = run(`$jlpath --startup=no --compile=min $testpath/scripts/iterate.jl`)
+        status = run(`$jlpath --startup=no $testpath/scripts/iterate.jl`)
     catch e
         @warn "Could not compile $testpath/scripts/iterate.jl"
         println(e)
