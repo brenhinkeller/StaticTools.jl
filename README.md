@@ -48,6 +48,14 @@ Fortunately, going to all this trouble does have some side benefits besides comp
 * No GC means no GC pauses
 * Since we're only including what we need, binaries can be quite small (e.g. 8.4K for Hello World)
 
+### Utilities
+
+The utilities `static_type` and `static_type_contents` are utilities to help convert an object to something similar with fields and type parameters that are amenable to static compilation.  
+
+`static_type` is mainly useful for converting objects that are heavily paramaterized. The SciML infrastructure has a lot of this. The main objects like a `DiffEq.Integrator` has many type parameters, and by default, some are not amenable to static compilation. `static_type` can be used to convert them to forms that can help numerical code to be statically compiled.
+
+For the default rules, `Array`s are converted to `MallocArray`s, and `String`s are converted to `MallocString`s. The default rules can be extended or redefined by using multiple dispatch and a context variable. Note however that these `MallocArray`s and `MallocString`s must be `free`d when you are done with them.
+
 ## Examples
 
 ### Compiled command-line executables
