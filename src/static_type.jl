@@ -42,6 +42,9 @@ all type parameters and the contents of each field in an object
 constructor. In some cases, another method, `static_type_contents`
 can help by returning the components to help for a manual invocation
 of the constructor.
+
+Note that any `Malloc`-objects created through this function must still be 
+`free`d manually if you do not wish to leak memory.
 """
 static_type(x) = static_type(DefaultCtx(), x)
 static_type(ctx::DefaultStaticContext, x::Array) = MallocArray(x)
