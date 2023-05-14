@@ -3,7 +3,7 @@ using StaticTools
 
 function iterate()
     if startswith(c"foobar", c"foo")
-        printf(c"We have iterated!")
+        printf(c"We have iterated!\n")
         return Int32(0)
     end
     return Int32(1)
