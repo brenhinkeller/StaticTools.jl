@@ -166,9 +166,9 @@ julia> function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
                end
            end
            printf(M)
-           M = reinterpret(Int32, M)
-           println(c"\n\nThe same array, reinterpreted as Int32:")
-           printf(M)
+           # M = reinterpret(Int32, M)  # This line is problematic, gets you a linker error at least for some users or versions
+           # println(c"\n\nThe same array, reinterpreted as Int32:")
+           # printf(M)
            free(M)
        end
 times_table (generic function with 1 method)
@@ -217,7 +217,7 @@ shell> ./stack_times_table
 5   10  15  20  25
 ```
 
-#### Random number generation:
+#### Random-number generation:
 ```julia
 julia> function rand_matrix(argc::Int, argv::Ptr{Ptr{UInt8}})
           argc == 3 || return printf(stderrp(), c"Incorrect number of command-line arguments\n")
