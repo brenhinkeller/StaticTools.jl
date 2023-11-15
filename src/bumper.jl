@@ -1,5 +1,17 @@
 
 
+StaticTools.free(v::AllocBuffer{<:MallocArray}) = StaticTools.free(v.buf)
+
+"""
+    AllocBuffer(::Type{MallocVector}, n::Int=$(Bumper.AllocBufferImpl.default_buffer_size))
+
+Create an `AllocBuffer` backed by a `MallocArray`. This buffer should be manually `free`
+once you're done with it.
+"""
+function Bumper.AllocBufferImpl.AllocBuffer(::Type{<:MallocArray}, n::Int = Bumper.AllocBufferImpl.default_buffer_size)
+    AllocBuffer(MallocArray{UInt8}(undef, n))
+end
+
 
 struct MallocSlabBufferData
     current         ::Ptr{Nothing}
@@ -92,9 +104,6 @@ Implementation notes:
 + If the object does not fit between `current` and `slab_end`, but is smaller than `slab_size`, we'll `malloc` a new slab,  and add it to `slabs` (reallocating the `slabs` pointer if there's not enough room, as determined by `max_slabs_length`) and then set that thing as the `current` pointer, and provide that to the object.
 + If the object is bigger than `slab_size`, then we `malloc` a pointer of the requested size, and add it to the `custom_slabs` pointer  (also reallocating that pointer if necessary), leaving `current` and `slab_end` unchanged.
 + When a `@no_escape` block ends, we reset `current`, and `slab_end` to their old values, and if `slabs` or `custom_slabs` have grown, we `free` all the pointers that weren't present before, and reset their respective `length`s (but not `max_size`s).
-
-
-
 """
 struct MallocSlabBuffer
     ptr::Ptr{MallocSlabBufferData}
