@@ -10,6 +10,7 @@ const GROUP = get(ENV, "GROUP", "All")
     @testset "libc" begin include("testllvmlibc.jl") end
     @testset "interop" begin include("testllvminterop.jl") end
     @testset "Parsing" begin include("testparse.jl") end
+    @testset "MallocSlabBuffer" begin include("testslab.jl") end
     @testset "StaticString" begin include("teststaticstring.jl") end
     @testset "MallocString" begin include("testmallocstring.jl") end
     @testset "MallocArray" begin include("testmallocarray.jl") end

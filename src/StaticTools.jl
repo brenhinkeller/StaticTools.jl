@@ -3,6 +3,7 @@ module StaticTools
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
     using LoopVectorization
+    using Bumper
     # Import so we can extend
     import Random: rand!, randn!
     import LinearAlgebra: mul!
@@ -22,6 +23,7 @@ module StaticTools
     include("staticlinearalgebra.jl")  # Shared array infrastructure
     include("stackarray.jl")           # StackArray, StackMatrix, StackVector
     include("mallocarray.jl")          # MallocArray, MallocMatrix, MallocVector
+    include("bumper.jl")               # Interop with Bumper.jl for efficient bump allocation
 
     # Union of things that don't need GC.@protect
     const AbstractMallocdMemory = Union{MallocString, MallocArray}
@@ -47,12 +49,14 @@ module StaticTools
     export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
     export StackArray, StackMatrix, StackVector                                 # Stack-allocated array types
     export ArrayView
-    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar, Ziggurat        # RNG types
+    export SplitMix64, Xoshiro256✴︎✴︎, BoxMuller, MarsagliaPolar, Ziggurat      # RNG types
     export StaticContext, DefaultStaticContext                                  # Context for `static_type`
+    export MallocSlabBuffer
 
     # Macros
     export @c_str, @m_str, @mm_str
     export @ptrcall, @symbolcall, @externptr, @externload
+    export @no_escape, @alloc, @alloc_ptr
 
     # Functions
     export ⅋, malloc, calloc, free, memset!, memcpy!, memcmp                    # Memory management
@@ -65,6 +69,7 @@ module StaticTools
     export fwrite, fread!                                                       # String and Binary IO
     export unsafe_mallocstring, strlen                                          # String management
     export printf, printdlm, parsedlm, argparse                                 # File parsing and formatting
-    export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                  # RNG functions
+    export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                # RNG functions
     export static_type, static_type_contents                                    # Utilities
+
 end

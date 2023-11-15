@@ -21,7 +21,9 @@ In addition to the exported names, Julia `Base` functions extended for StaticToo
 * `randn`/`randn!` (when using an `rng` initialied with `MarsagliaPolar`, `BoxMuller`, or `Ziggurat` )
 * and much or all of the `AbstractArray` and `AbstractString` interfaces where relevant.
 
-The stack-allocated statically-sized `StaticString`s and `StackArray`s in this package are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly, up to the stack limit size. For larger arrays, space must be allocated with `malloc`, as in `MallocArray`s. However, as in any other language, any memory `malloc`ed must be freed once and only once. If you want `malloc`-backed StaticCompiler-able arrays without taking on this risk and responsibility, you may consider a bump allocator like [Bumper.jl](https://github.com/MasonProtter/Bumper.jl)
+StaticTools.jl provides a large zoo of types and functions for dealing with arrays and strings, but the main way we recommend you create and manipulate arrays is by using the `MallocSlabBuffer` exported by StaticTools together with `@no_escape`, `@alloc`, and `@alloc_ptr` which are also exported from StaticTools, but defined in [Bumper.jl](https://github.com/MasonProtter/Bumper.jl).  
+
+Beyond that, there are the stack-allocated statically-sized `StaticString`s and `StackArray`s in this package which are heavily inspired by the techniques used in [JuliaSIMD/ManualMemory.jl](https://github.com/JuliaSIMD/ManualMemory.jl); you can use that package via [StrideArraysCore.jl](https://github.com/JuliaSIMD/StrideArraysCore.jl) or [StrideArrays.jl](https://github.com/chriselrod/StrideArrays.jl) to obtain fast stack-allocated statically-sized arrays which should also be StaticCompiler-friendly, up to the stack limit size. For larger arrays where you want direct control over their memory management, space may be allocated with `malloc`, as in `MallocArray`s. However, as in any other language, any memory `malloc`ed must be freed once and only once (as opposed to using `MallocSlabBuffer` together with the Bumper.jl interface will deal with allocation and freeing of memory for you).
 
 [![Mandelbrot Set in the terminal with compiled Julia](docs/mandelcompilemov.jpg)](http://www.youtube.com/watch?v=YsNC4oO0rLA)
 [printmandel.jl](https://gist.github.com/brenhinkeller/ca2246ab0928e109e281a4d540010b2d)
@@ -109,12 +111,57 @@ shell> ls -lh $filepath
 ```
 Note that the resulting executable is only 8.4 kilobytes in size!
 
+#### Using MallocSlabBuffer for memory management
+
+``` julia
+using StaticTools
+function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
+    argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
+    rows = argparse(Int64, argv, 2)            # First command-line argument
+    cols = argparse(Int64, argv, 3)            # Second command-line argument
+
+    buf = MallocSlabBuffer()
+    @no_escape buf begin
+        M = @alloc(Int, rows, cols)
+        for i=1:rows
+            for j=1:cols
+                M[i,j] = i*j
+            end
+        end
+        printf(M)
+    end
+    free(buf)
+end
+
+using StaticCompiler
+filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
+```
+giving 
+```
+shell> ls -lh $filepath
+-rwxr-xr-x 1 mason mason 16K Nov 15 19:10 times_table
+
+shell> ./times_table 12, 7
+1   2   3   4   5   6   7
+2   4   6   8   10  12  14
+3   6   9   12  15  18  21
+4   8   12  16  20  24  28
+5   10  15  20  25  30  35
+6   12  18  24  30  36  42
+7   14  21  28  35  42  49
+8   16  24  32  40  48  56
+9   18  27  36  45  54  63
+10  20  30  40  50  60  70
+11  22  33  44  55  66  77
+12  24  36  48  60  72  84
+```
+
 #### MallocArrays with size determined at runtime:
 If we want to have dynamically-sized arrays, we'll have to allocate them ourselves.
 The `MallocArray` type is one way to do that.
 ```julia
 using StaticTools
-function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
+function times_table_malloc(argc::Int, argv::Ptr{Ptr{UInt8}})
     argc == 3 || return printf(c"Incorrect number of command-line arguments\n")
     rows = argparse(Int64, argv, 2)            # First command-line argument
     cols = argparse(Int64, argv, 3)            # Second command-line argument
@@ -130,14 +177,14 @@ function times_table(argc::Int, argv::Ptr{Ptr{UInt8}})
 end
 
 using StaticCompiler
-filepath = compile_executable(times_table, (Int64, Ptr{Ptr{UInt8}}), "./")
+filepath = compile_executable(times_table_malloc, (Int64, Ptr{Ptr{UInt8}}), "./")
 ```
 which gives us...
 ```
 shell> ls -lh $filepath
--rwxr-xr-x  1 user  staff   8.6K May 22 14:00 times_table
+-rwxr-xr-x  1 user  staff   8.6K May 22 14:00 times_table_malloc
 
-shell> ./times_table 12, 7
+shell> ./times_table_malloc 12, 7
 1   2   3   4   5   6   7
 2   4   6   8   10  12  14
 3   6   9   12  15  18  21
