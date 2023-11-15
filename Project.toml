@@ -1,7 +1,7 @@
 name = "StaticTools"
 uuid = "86c06d3c-3f03-46de-9781-57580aa96d0a"
 authors = ["C. Brenhin Keller and contributors"]
-version = "0.8.8"
+version = "0.8.9"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -13,5 +13,5 @@ Bumper = "8ce10254-0962-460f-a3d8-1f77fea1446e"
 [compat]
 ManualMemory = "0.1.8"
 LoopVectorization = "0.12"
-Bumper = "0.5.3"
+Bumper = "0.5.3, 0.6"
 julia = "1.7"
