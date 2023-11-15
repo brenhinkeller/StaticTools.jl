@@ -2,6 +2,7 @@ module StaticTools
 
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
+
     using LoopVectorization
     # Import so we can extend
     import Random: rand!, randn!
