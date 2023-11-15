@@ -193,7 +193,7 @@ let
 end
 
 ## --- Test LoopVectorization integration
-@static if LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2})
+@static if Bool(LoopVectorization.VectorizationBase.has_feature(Val{:x86_64_avx2}))
     let
         # Compile...
         status = -1
