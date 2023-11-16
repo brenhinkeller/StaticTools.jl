@@ -13,5 +13,5 @@ Bumper = "8ce10254-0962-460f-a3d8-1f77fea1446e"
 [compat]
 ManualMemory = "0.1.8"
 LoopVectorization = "0.12"
-Bumper = "0.5.3, 0.6"
+Bumper = "0.6"
 julia = "1.7"
