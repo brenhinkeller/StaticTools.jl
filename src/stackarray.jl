@@ -2,7 +2,7 @@
     # Definition and constructors:
     """
     ```julia
-    StackArray{T,N,L,D} <: DenseTupleArray{T,N,L,D} <: DenseArray{T,N} <: AbstractArray{T,N}
+    StackArray{T,N,L,D} <: DenseTupleArray{T,N,L,D} <: DenseStaticArray{T,N} <: DenseArray{T,N} <: AbstractArray{T,N}
     ```
     `N`-dimensional dense stack-allocated array with elements of type `T`.
 
