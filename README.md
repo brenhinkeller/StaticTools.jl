@@ -37,7 +37,7 @@ In order to be standalone-compileable without linking to libjulia, you need to a
 * Anything that could cause a `BoundsError` -- so `@inbounds` (or else `julia --check-bounds=no`) is mandatory. Consequently, `@inbounds` is _always on_ for `MallocArray`s and `StackArray`s; be sure to treat them accordingly when indexing!
 * Functions that don't want to inline (can cause sneaky allocations due to boxing) -- feel free to use `@inline` liberally to avoid.
 * Multithreading
-* Microsoft Windows (not supported by StaticCompiler yet), except via WSL
+* Microsoft Windows (StaticCompiler supports Windows by now, the minor limitations are in this package), except via WSL. E.g. `read` "works" on Windows (and WSL), but the result of it can't be printed, likely related to UTF-16, or some functions assuming or or UTF-8 and not others.
 
 This package can help you with avoiding some of the above, but you'll still need to be quite careful in how you write your code! I'd recommend starting small and adding features slowly.
 
