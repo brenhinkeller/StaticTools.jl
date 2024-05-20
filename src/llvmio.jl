@@ -266,6 +266,22 @@
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
+elseif Sys.iswindows()
+    @inline function stdoutp()
+        @assert Int===Int64
+        Base.llvmcall(("""
+        declare i8* @__acrt_iob_func(i32 noundef)
+
+        define i64 @main() #0 {
+        entry:
+          %ptr = call i8* @__acrt_iob_func(i32 noundef 1)
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
 else
     @inline function stdoutp()
         @assert Int===Int64
@@ -319,6 +335,22 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Ptr{FILE}, Tuple{})
     end
+elseif Sys.iswindows()
+    @inline function stderrp()
+        @assert Int===Int64
+        Base.llvmcall(("""
+        declare i8* @__acrt_iob_func(i32 noundef)
+
+        define i64 @main() #0 {
+        entry:
+          %ptr = call i8* @__acrt_iob_func(i32 noundef 2)
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
 else
     @inline function stderrp()
         @assert Int===Int64
@@ -361,6 +393,22 @@ end
         define i64 @main() #0 {
         entry:
           %ptr = load i8*, i8** @__stdinp, align 8
+          %jlfp = ptrtoint i8* %ptr to i64
+          ret i64 %jlfp
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Ptr{FILE}, Tuple{})
+    end
+elseif Sys.iswindows()
+    @inline function stdinp()
+        @assert Int===Int64
+        Base.llvmcall(("""
+        declare i8* @__acrt_iob_func(i32 noundef)
+
+        define i64 @main() #0 {
+        entry:
+          %ptr = call i8* @__acrt_iob_func(i32 noundef 0)
           %jlfp = ptrtoint i8* %ptr to i64
           ret i64 %jlfp
         }
