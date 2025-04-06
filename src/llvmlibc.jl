@@ -333,7 +333,7 @@ julia> sleep_win(2.5)
 0
 ```
 """
-@inline sleep_win(secs::Real) = @symbolcall Sleep(round(Int, sec * 1000)) :: Int
+@inline sleep_win(secs::Real) = @symbolcall Sleep(round(Int, sec * 1000)::Int) :: Int
 
 
 """
