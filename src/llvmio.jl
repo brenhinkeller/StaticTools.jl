@@ -741,7 +741,7 @@ end
             linelen += 1
             c = getc(fp)
         end
-        offset_fseek = Sys.iswindows() ? 2 : 1
+        offset_fseek = Sys.iswindows() ? 1 : 1
         fseek(fp, (c < 0) - linelen - offset_fseek)
         str = MallocString(undef, linelen + 1) # str[end] == 0x00
         if linelen > 0
