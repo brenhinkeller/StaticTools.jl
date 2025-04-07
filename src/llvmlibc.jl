@@ -323,6 +323,24 @@ end
 
 """
 ```julia
+sleep_win(sec::Real)
+```
+sleep function for Windows using Sleep()
+
+## Examples
+```julia
+julia> sleep_win(2.5)
+0
+```
+"""
+function sleep_win(secs::Real)
+    millisecs = round(Int, secs * 1000)
+    @symbolcall Sleep(millisecs :: Int) :: Int
+end
+
+
+"""
+```julia
 system(s)
 ```
 Libc `system` function, accessed by direct StaticCompiler-safe `llvmcall`.

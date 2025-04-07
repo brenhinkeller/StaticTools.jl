@@ -741,11 +741,12 @@ end
             linelen += 1
             c = getc(fp)
         end
-        fseek(fp, (c < 0) - linelen - 1)
+        offset_fseek = Sys.iswindows() ? 2 : 1
+        fseek(fp, (c < 0) - linelen - offset_fseek)
         str = MallocString(undef, linelen + 1) # str[end] == 0x00
         if linelen > 0
             gets!(str, fp, linelen)
-            fseek(fp, 1) # Advance by 1
+            fseek(fp, offset_fseek) # Advance by the offset
         end
         return str
     end
