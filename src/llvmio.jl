@@ -1,5 +1,8 @@
 ## --- File IO primitives
 
+    _pointer(a) = Base.pointer(a)
+    _pointer(a::Ptr) = a
+    
     # Open a file
     """
     ```julia
@@ -7,7 +10,7 @@
     ```
     Libc `fopen` function, accessed by direct `llvmcall`.
 
-    Returns a file pointer to a file at location specified by `name` opened for
+    Returns a file _pointer to a file at location specified by `name` opened for
     reading, writing, or both as specified by `mode`. Valid modes include:
 
       `c"r"`: Read, from an existing file.
@@ -35,8 +38,8 @@
     Here is a string
     ```
     """
-    @inline fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
-    @inline fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
+    @inline fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(_pointer(name), _pointer(mode))
+    @inline fopen(name, mode) = GC.@preserve name mode fopen(_pointer(name), _pointer(mode))
     @inline function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fopen function
@@ -619,8 +622,8 @@ end
     0
     ```
     """
-    @inline puts(s::AbstractMallocdMemory) = puts(pointer(s))
-    @inline puts(s) = GC.@preserve s puts(pointer(s))
+    @inline puts(s::AbstractMallocdMemory) = puts(_pointer(s))
+    @inline puts(s) = GC.@preserve s puts(_pointer(s))
     @inline function puts(s::Ptr{UInt8})
         @assert Int===Int64
         Base.llvmcall(("""
@@ -866,8 +869,8 @@ end
     end
     @inline fwrite(fp::Ptr{FILE}, data::AbstractString) = fwrite(fp, data, 1, length(data))
     @inline fwrite(fp::Ptr{FILE}, data::AbstractArray{T}) where {T} = fwrite(fp, data, sizeof(T), length(data))
-    @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
-    @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
+    @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(_pointer(data)), size, n)
+    @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(_pointer(data)), size, n)
     @inline function fwrite(fp::Ptr{FILE}, dp::Ptr{UInt8}, size::Int64, n::Int64)
         @assert Int===Int64
         Base.llvmcall(("""
@@ -968,10 +971,10 @@ end
     13
     ```
     """
-    @inline printf(s::MallocString) = printf(pointer(s))
-    @inline printf(s) = GC.@preserve s printf(pointer(s))
-    @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
-    @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
+    @inline printf(s::MallocString) = printf(_pointer(s))
+    @inline printf(s) = GC.@preserve s printf(_pointer(s))
+    @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, _pointer(s))
+    @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, _pointer(s))
     @inline function printf(s::Ptr{UInt8})
         @assert Int===Int64
         Base.llvmcall(("""
@@ -1020,10 +1023,10 @@ end
 
 ## --- printf/fprintf, with a format string, just like in C
 
-    @inline printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
-    @inline printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
-    @inline printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
-    @inline printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+    @inline printf(fmt::MallocString, s::MallocString) = printf(_pointer(fmt), _pointer(s))
+    @inline printf(fmt, s) = GC.@preserve fmt s printf(_pointer(fmt), _pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, _pointer(fmt), _pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, _pointer(fmt), _pointer(s))
     @inline function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
         @assert Int===Int64
         Base.llvmcall(("""
@@ -1035,7 +1038,7 @@ end
           %fmt = inttoptr i64 %jlf to i8*
           %str = inttoptr i64 %jls to i8*
           %status = call i32 (i8*, ...) @printf(i8* %fmt, i8* %str)
-          ret i32 0
+          ret i32 %status
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -1061,10 +1064,10 @@ end
     end
 
 
-    @inline printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
-    @inline printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(pointer(fmt), n)
-    @inline printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, pointer(fmt), n)
-    @inline printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, pointer(fmt), n)
+    # @inline printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(_pointer(fmt), n)
+    # @inline printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(_pointer(fmt), n)
+    # @inline printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, _pointer(fmt), n)
+    # @inline printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, _pointer(fmt), n)
 
     # Floating point numbers
     @inline function printf(fmt::Ptr{UInt8}, n::Float64)
@@ -1077,7 +1080,7 @@ end
         entry:
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @printf(i8* %fmt, double %d)
-          ret i32 0
+          ret i32 %status
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -1116,7 +1119,7 @@ end
         entry:
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @printf(i8* %fmt, i64 %n)
-          ret i32 0
+          ret i32 %status
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -1150,7 +1153,7 @@ end
         entry:
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @printf(i8* %fmt, i32 %n)
-          ret i32 0
+          ret i32 %status
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -1187,7 +1190,7 @@ end
         entry:
           %fmt = inttoptr i64 %jlf to i8*
           %status = call i32 (i8*, ...) @printf(i8* %fmt, i8 %n)
-          ret i32 0
+          ret i32 %status
         }
 
         attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -1210,5 +1213,205 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
     end
+
+# Mapping from Julia types to their corresponding LLVM IR type representations
+const JL_TO_LLVM = Dict(
+    Float64 => "double",
+    Float32 => "float",
+    Float16 => "half",
+    Bool    => "i8",
+    Int64   => "i64",
+    Int32   => "i32",
+    Int16   => "i16",
+    Int8    => "i8",
+    UInt64  => "i64",
+    UInt32  => "i32",
+    UInt16  => "i16",
+    UInt8   => "i8",
+    Cint    => "i32",
+    Clong   => "i64",
+    Cshort  => "i16",
+    Cchar   => "i8",
+    Cfloat  => "float",
+    Cdouble => "double",
+    Ptr{UInt8}   => "i8*",
+    Ptr{Cvoid}   => "i8*",
+    Ptr{Float64} => "double*",
+    Ptr{Float32} => "float*",
+    Ptr{Int64}   => "i64*",
+    Ptr{Int32}   => "i32*",
+    Ptr{Int16}   => "i16*",
+    Ptr{Int8}    => "i8*",
+    Ptr{Cchar}   => "i8*",
+    Ptr{Cint}    => "i32*",
+    Ptr{Cfloat}  => "float*",
+    Ptr{Cdouble} => "double*"
+)
+
+"""
+    to_llvm_type(::Type{T}) -> String
+
+Convert Julia type `T` to its corresponding LLVM type string.
+"""
+@inline function to_llvm_type(::Type{T}) where {T}
+    if haskey(JL_TO_LLVM, T)
+        return JL_TO_LLVM[T]
+    elseif isstructtype(T)
+        return "i8*"  # fallback for struct types
+    else
+        error("Unsupported type: $T")
+    end
+end
+
+"""
+    gen_printf_ir(arg_types::NTuple, func::String = "@printf") -> String
+
+Generate LLVM IR code for calling printf-like functions.
+"""
+function gen_printf_ir(arg_types::NTuple{N, DataType}, func::String = "@printf") where {N}
+    args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types)])
+    return """
+    declare i32 $func(i8* noalias nocapture, ...)
+
+    define i32 @main(i64 %jlf$args_ir) #0 {
+    entry:
+        %fmt = inttoptr i64 %jlf to i8*
+        %status = call i32 (i8*, ...) $func(i8* %fmt$args_ir)
+        ret i32 %status
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """
+end
+
+"""
+    to_printf_arg(x) -> LLVM-compatible value
+
+Convert Julia value to an LLVM-compatible printf argument.
+"""
+@inline function to_printf_arg(x::T) where {T}
+    if T <: Base.RefValue
+        return isprimitivetype(eltype(T)) ? x[] : _pointer_from_objref(x)
+    elseif ismutabletype(T) || T <: Ref
+        return _pointer(x)
+    elseif isprimitivetype(T)
+        return x
+    else
+        error("Cannot print $x of type $T with printf.")
+    end
+end
+
+# Disallow direct Julia strings in C-style printf
+@inline to_printf_arg(::String) = error("Cannot print Julia String using printf().")
+@inline to_printf_arg(x::MallocString) = _pointer(x)
+
+"""
+    @generated function emit_printf(fmt::Ptr{UInt8}, args::Tuple)
+
+Emit LLVM call for printf.
+"""
+@generated function emit_printf(fmt::Ptr{UInt8}, args::T) where {T <: Tuple}
+    ir = gen_printf_ir(tuple(T.parameters...))
+    sig = Tuple{Ptr{UInt8}, T.parameters...}
+    return :(Base.llvmcall(($ir, "main"), Int32, $sig, fmt, args...))
+end
+
+@generated function emit_fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, args::T) where {T <: Tuple}
+    ir = gen_printf_ir(tuple(Ptr{UInt8}, T.parameters...), "@fprintf")
+    sig = Tuple{Ptr{FILE}, Ptr{UInt8}, T.parameters...}
+    return :(Base.llvmcall(($ir, "main"), Int32, $sig, fp, fmt, args...))
+end
+
+@generated function emit_sprintf(buf::Ptr{UInt8}, fmt::Ptr{UInt8}, args::T) where {T <: Tuple}
+    ir = gen_printf_ir(tuple(Ptr{UInt8}, T.parameters...), "@sprintf")
+    sig = Tuple{Ptr{UInt8}, Ptr{UInt8}, T.parameters...}
+    return :(Base.llvmcall(($ir, "main"), Int32, $sig, buf, fmt, args...))
+end
+
+# Supported C-style string types (can be extended)
+const CStringLike = Union{MallocString, StaticString}
+
+# Public printf-style APIs
+@inline function printf(fmt::CStringLike, args...)
+    GC.@preserve fmt args emit_printf(_pointer(fmt), map(to_printf_arg, args))
+end
+
+@inline function printf(fp::Ptr{FILE}, fmt::CStringLike, args...)
+    GC.@preserve fp fmt args emit_fprintf(fp, _pointer(fmt), map(to_printf_arg, args))
+end
+
+@inline fprintf(fp::Ptr{FILE}, fmt::CStringLike, args...) = printf(fp, fmt, args...)
+
+"""
+    printf!(buf::Ptr{UInt8}, fmt::CStringLike, args...)
+
+Write formatted output to a buffer, similar to the C `sprintf` function.
+
+# Arguments
+- `buf::Ptr{UInt8}`: A _pointer to a buffer where the output string will be written.
+- `fmt::CStringLike`: A C-style format string, such as a `MallocString` or `StaticString`.
+- `args...`: Arguments to be formatted and inserted into the format string.
+
+# Returns
+- The number of characters written to the buffer, as returned by `sprintf`.
+
+# Notes
+- This function uses `llvmcall` internally to emit an LLVM `sprintf` function call.
+- It does **not** perform bounds checking on the buffer.
+- The buffer must be large enough to hold the formatted output.
+
+# Example
+```julia
+buf = Base.unsafe_convert(Ptr{UInt8}, Libc.malloc(100))
+fmt = MallocString("%d + %d = %d\n")
+printf!(buf, fmt, 2, 3, 5)
+str = unsafe_string(buf)
+@show str  # "2 + 3 = 5\n"
+Libc.free(buf)
+```
+"""
+@inline function printf!(buf::Ptr{UInt8}, fmt::CStringLike, args...)
+    GC.@preserve buf fmt args emit_sprintf(buf, _pointer(fmt), map(to_printf_arg, args))
+end
+
+"""
+    printf(fmt::String, args...)
+
+Wrapper for `printf` that accepts a Julia `String` as the format string.
+
+# Warning
+This method converts the Julia `String` to a `StaticString` and passes it to the main `printf` implementation.
+Since Julia `String` is not null-terminated like C strings, this conversion may incur a slight overhead and is discouraged in performance-critical code.
+
+# Arguments
+- `fmt::String`: The format string in Julia `String` form.
+- `args...`: Values to be formatted according to `fmt`.
+
+# Returns
+- The result of the `printf` call with the converted format string.
+
+# Example
+```julia
+printf("Value: %d\n", 42)
+```
+"""
+@inline function printf(fmt::String, args...)
+    printf(PRINTF_FMT_STRING_WARNING)
+    GC.@preserve fmt args emit_printf(_pointer(fmt), map(to_printf_arg, args))
+end
+const PRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf fmt\n")
+
+const FPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in fprintf fmt\n")
+@inline function printf(fp::Ptr{FILE}, fmt::String, args...)
+    printf(FPRINTF_FMT_STRING_WARNING)
+    GC.@preserve fp fmt args emit_fprintf(fp, _pointer(fmt), map(to_printf_arg, args))
+end
+
+const SPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf! fmt\n")
+@inline function printf!(buf::Ptr{UInt8}, fmt::String, args...)
+    printf(SPRINTF_FMT_STRING_WARNING)
+    GC.@preserve buf fmt args emit_sprintf(buf, _pointer(fmt), map(to_printf_arg, args))
+end
+@inline fprintf(fp::Ptr{FILE}, fmt::String, args...) = printf(fp, fmt, args...)
 
 ## ---

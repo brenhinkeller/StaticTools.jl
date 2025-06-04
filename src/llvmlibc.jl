@@ -652,9 +652,19 @@ julia> StaticTools.dlclose(lib)
         GC.@preserve namext dlopen(pointer(namext), flag)
     end
 end
+
 @inline dlopen(name::AbstractMallocdMemory, flag=RTLD_LOCAL|RTLD_LAZY) = dlopen(pointer(name), flag)
-@inline function dlopen(name::Ptr{UInt8}, flag::Int32)
+@inline function dlopen(name::Ptr{UInt8}, flag::Int32)::Ptr{DYLIB}
     @assert Int===Int64
+    @static if Sys.iswindows()
+      @assert flag & RTLD_GLOBAL != 0
+      dlopen_win(name)
+    else
+      dlopen_unix(name, flag)
+    end
+end
+
+@inline function dlopen_unix(name::Ptr{UInt8}, flag::Int32)
     Base.llvmcall(("""
     ; External declaration of the dlopen function
     declare i8* @dlopen(i8*, i32)
@@ -670,6 +680,24 @@ end
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}, Int32}, name, flag)
 end
+
+@inline function dlopen_win(name::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the LoadLibraryA function
+    declare i8* @LoadLibraryA(i8*)
+
+    define i64 @main(i64 %jlname) #0 {
+    entry:
+      %name = inttoptr i64 %jlname to i8*
+      %fp = call i8* (i8*) @LoadLibraryA(i8* %name)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{DYLIB}, Tuple{Ptr{UInt8}}, name)
+end
+
 
 # Prevent this from getting converted into a bare pointer by making it a function
 @static if Sys.isapple()
@@ -719,8 +747,16 @@ julia> StaticTools.dlclose(lib)
 """
 @inline dlsym(handle::Ptr{DYLIB}, symbol::AbstractMallocdMemory) = dlsym(handle, pointer(symbol))
 @inline dlsym(handle::Ptr{DYLIB}, symbol) = GC.@preserve symbol dlsym(handle, pointer(symbol))
-@inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+@inline function dlsym(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})::Ptr{Nothing}
     @assert Int===Int64
+    @static if Sys.iswindows()
+      dlsym_win(handle, symbol)
+    else
+      dlsym_unix(handle, symbol)
+    end
+end  
+
+@inline function dlsym_unix(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the dlsym function
     declare i8* @dlsym(i8*, i8*)
@@ -736,6 +772,24 @@ julia> StaticTools.dlclose(lib)
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Ptr{Nothing}, Tuple{Ptr{DYLIB}, Ptr{UInt8}}, handle, symbol)
+end
+
+@inline function dlsym_win(handle::Ptr{DYLIB}, symbol::Ptr{UInt8})
+    Base.llvmcall(("""
+    ; External declaration of the GetProcAddress function
+    declare i8* @GetProcAddress(i8*, i8*)
+
+    define i64 @main(i64 %jlh, i64 %jls) #0 {
+    entry:
+      %handle = inttoptr i64 %jlh to i8*
+      %symbol = inttoptr i64 %jls to i8*
+      %fp = call i8* (i8*, i8*) @GetProcAddress(i8* %handle, i8* %symbol)
+      %jlfp = ptrtoint i8* %fp to i64
+      ret i64 %jlfp
+    }
+
+    attributes #0 = { alwaysinline nounwind ssp uwtable }
+    """, "main"), Ptr{Nothing}, Tuple{Ptr{Nothing}, Ptr{UInt8}}, handle, symbol)
 end
 
 # Return default handle to what Julia has already dlopened, for interactive use
@@ -779,7 +833,16 @@ julia> StaticTools.dlclose(lib)
 0
 ```
 """
-@inline function dlclose(handle::Ptr{DYLIB})
+@inline function dlclose(handle::Ptr{DYLIB})::Int32
+    @assert Int === Int64
+    @static if Sys.iswindows()
+        dlclose_win(handle) != 0 ? Int32(0) : Int32(1)
+    else
+        dlclose_unix(handle)
+    end
+end
+
+@inline function dlclose_unix(handle::Ptr{DYLIB})
     @assert Int===Int64
     Base.llvmcall(("""
     ; External declaration of the dlclose function
@@ -794,6 +857,24 @@ julia> StaticTools.dlclose(lib)
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{DYLIB}}, handle)
+end
+
+# in windows, successful close return true (1) otherwise return zero.
+@inline function dlclose_win(handle::Ptr{DYLIB})
+  @assert Int===Int64
+  Base.llvmcall(("""
+  ; External declaration of the dlclose function
+  declare i32 @FreeLibrary(i8*)
+
+  define i32 @main(i64 %jlh) #0 {
+  entry:
+    %handle = inttoptr i64 %jlh to i8*
+    %status = call i32 (i8*) @FreeLibrary(i8* %handle)
+    ret i32 %status
+  }
+
+  attributes #0 = { alwaysinline nounwind ssp uwtable }
+  """, "main"), Int32, Tuple{Ptr{DYLIB}}, handle)
 end
 
 ## ---
