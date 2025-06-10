@@ -1023,6 +1023,10 @@ end
         return length(s) % Int32
     end
 
+
+struct EmptyNothing end
+const NULL = Ptr{EmptyNothing}(C_NULL)
+
 # Mapping from Julia types to their corresponding LLVM IR type representations
 const JL_TO_LLVM = Dict(
     Float64 => "double",
@@ -1057,7 +1061,7 @@ const JL_TO_LLVM = Dict(
     Ptr{Cchar}   => "i8*",
     Ptr{Cint}    => "i32*",
     Ptr{Cfloat}  => "float*",
-    Ptr{Cdouble} => "double*"
+    Ptr{Cdouble} => "double*",
 )
 
 """
@@ -1071,16 +1075,13 @@ Convert Julia type `T` to its corresponding LLVM type string.
     elseif isstructtype(T)
         return "i8*"  # fallback for struct types
     elseif T <: Ptr 
-        return "i*"
+        return "i64"
     else
         error("Unsupported type: $T")
     end
 end
 
-struct EmptyNothing
-    i::Int
-end
-const NULL = EmptyNothing(0)
+
 
 """
     gen_printf_ir(arg_types::NTuple, func::String = "@printf") -> String
@@ -1091,11 +1092,11 @@ function gen_printf_ir(arg_types::NTuple{N, DataType}, func::String = "@printf")
     buf = func != "@printf" ? ", i8* %buf" : ""
 
     main_args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types)])
-    args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types) if t != EmptyNothing])
+    args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types) if t != Ptr{EmptyNothing}])
     return """
     declare i32 $func(i8* noalias nocapture, ...)
 
-    define i32 @main(i64 %jlf$buf$args_ir) #0 {
+    define i32 @main(i64 %jlf$buf$main_args_ir) #0 {
     entry:
         %fmt = inttoptr i64 %jlf to i8*
         %status = call i32 (i8*, ...) $func(i8* %fmt $buf $args_ir)
@@ -1126,7 +1127,7 @@ end
 # Disallow direct Julia strings in C-style printf
 # @inline to_printf_arg(::String) = error("Cannot print Julia String using printf().")
 @inline to_printf_arg(x::MallocString) = _pointer(x)
-@inline to_printf_arg(::EmptyNothing) = NULL
+@inline to_printf_arg(::Ptr{EmptyNothing}) = NULL
 const τ = to_printf_arg
 
 """
@@ -1158,6 +1159,17 @@ end
 @inline printf(fmt, args...) = _printf_N(fmt, args...)
 
 @inline printf(fp::Ptr{FILE}, fmt, args...) = _printf_N(fp, fmt, args...)
+
+@generated function emit_printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, a1::T1,a2::T2,a3::T3,a4::T4,a5::T5,a6::T6,a7::T7,a8::T8,a9::T9,a10::T10,a11::T11,a12::T12,a13::T13,args::T) where {T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T<:Tuple}
+    types = tuple(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T.parameters...)
+    ir = gen_printf_ir(types)
+    :(Base.llvmcall(($ir, "main"), Int32, Tuple{Ptr{UInt8},$types...}, fmt,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,args...))
+end
+
+#@inline function _printf_N(fmt,a1, a2 = NULL,args...)
+#    GC.@preserve fmt a1 a2 args emit_printf(
+#        _pointer(fmt), τ(a1), τ(a2), map(to_printf_arg, args))
+#end
 
 @inline function _printf_N(fmt,a1, a2 = NULL, a3 = NULL, a4 = NULL, a5 = NULL, a6 = NULL, a7 = NULL, a8 = NULL, a9 = NULL, a10 = NULL, a11 = NULL, a12 = NULL, a13 = NULL, a14 = NULL,args...)
     GC.@preserve fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 args emit_printf(
