@@ -2,7 +2,8 @@
 
     @inline _pointer(a) = GC.@preserve Base.pointer(a)
     @inline _pointer(a::Ptr) = a
-    
+    @inline _pointer(a::SubString) = error("SubString is not a NULL-terminated string")
+
     # Open a file
     """
     ```julia
@@ -10,7 +11,7 @@
     ```
     Libc `fopen` function, accessed by direct `llvmcall`.
 
-    Returns a file _pointer to a file at location specified by `name` opened for
+    Returns a file pointer to a file at location specified by `name` opened for
     reading, writing, or both as specified by `mode`. Valid modes include:
 
       `c"r"`: Read, from an existing file.
@@ -971,12 +972,50 @@ end
     13
     ```
     """
+    @inline printf(s::MallocString) = printf(pointer(s))
+    @inline printf(s) = GC.@preserve s printf(pointer(s))
+    @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
+    @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
+    @inline function printf(s::Ptr{UInt8})
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
+
+        define i32 @main(i64 %jls) #0 {
+        entry:
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %str)
+          ret i32 %status
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
+    end
+    @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the fprintf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*)
+
+        define i32 @main(i64 %jlfp, i64 %jls) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
+          ret i32 %status
+        }
+
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+    end
     @inline function printf(s::StringView)
         for i ∈ eachindex(s)
             putchar(s[i])
         end
         return length(s) % Int32
     end
+
     @inline function printf(fp::Ptr{FILE}, s::StringView)
         for i ∈ eachindex(s)
             putchar(fp, s[i])
@@ -1004,7 +1043,10 @@ const JL_TO_LLVM = Dict(
     Cchar   => "i8",
     Cfloat  => "float",
     Cdouble => "double",
-    Ptr{UInt8}   => "i8*",
+    Ptr{UInt64}   => "i64*",
+    Ptr{UInt32}   => "i32*",
+    Ptr{UInt16}   => "i16*",
+    Ptr{UInt8}    => "i8*",
     Ptr{Cvoid}   => "i8*",
     Ptr{Float64} => "double*",
     Ptr{Float32} => "float*",
@@ -1028,6 +1070,8 @@ Convert Julia type `T` to its corresponding LLVM type string.
         return JL_TO_LLVM[T]
     elseif isstructtype(T)
         return "i8*"  # fallback for struct types
+    elseif T <: Ptr 
+        return "i*"
     else
         error("Unsupported type: $T")
     end
@@ -1080,7 +1124,7 @@ Convert Julia value to an LLVM-compatible printf argument.
 end
 
 # Disallow direct Julia strings in C-style printf
-@inline to_printf_arg(::String) = error("Cannot print Julia String using printf().")
+# @inline to_printf_arg(::String) = error("Cannot print Julia String using printf().")
 @inline to_printf_arg(x::MallocString) = _pointer(x)
 @inline to_printf_arg(::EmptyNothing) = NULL
 const τ = to_printf_arg
@@ -1115,26 +1159,47 @@ end
 
 @inline printf(fp::Ptr{FILE}, fmt, args...) = _printf_N(fp, fmt, args...)
 
-@inline function _printf_N(fmt,a1 = NULL, a2 = NULL, a3 = NULL, a4 = NULL, a5 = NULL, a6 = NULL, a7 = NULL, a8 = NULL, a9 = NULL, a10 = NULL, a11 = NULL, a12 = NULL, a13 = NULL, a14 = NULL,args...)
+@inline function _printf_N(fmt,a1, a2 = NULL, a3 = NULL, a4 = NULL, a5 = NULL, a6 = NULL, a7 = NULL, a8 = NULL, a9 = NULL, a10 = NULL, a11 = NULL, a12 = NULL, a13 = NULL, a14 = NULL,args...)
     GC.@preserve fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 args emit_printf(
         _pointer(fmt), τ(a1), τ(a2), τ(a3), τ(a4), τ(a5), τ(a6), τ(a7), τ(a8), τ(a9), τ(a10), τ(a11), τ(a12), τ(a13), τ(a14), map(to_printf_arg, args))
 end
 
-@inline function _printf_N(fp::Ptr{FILE}, fmt, a1=NULL,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
+@inline function _printf_N(fp::Ptr{FILE}, fmt, a1,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
     GC.@preserve fp fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 args emit_fprintf(
         fp, _pointer(fmt), τ(a1),τ(a2),τ(a3),τ(a4),τ(a5),τ(a6),τ(a7),τ(a8),τ(a9),τ(a10),τ(a11),τ(a12),τ(a13), map(to_printf_arg, args))
 end
 
-@inline function _printf_N!(buf::Ptr{UInt8}, fmt, a1=NULL,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
+@inline function _printf_N!(buf::Ptr{UInt8}, fmt, a1,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
     GC.@preserve buf fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 args emit_sprintf(
         buf, _pointer(fmt), τ(a1),τ(a2),τ(a3),τ(a4),τ(a5),τ(a6),τ(a7),τ(a8),τ(a9),τ(a10),τ(a11),τ(a12),τ(a13), map(to_printf_arg, args))
 end
 
+"""
+    fprintf(fp::Ptr{FILE}, fmt, args...)
 
-@inline fprintf(fp::Ptr{FILE}, fmt, args...) = printf(fp, fmt, args...)
-@inline sprintf(buf::Ptr{UInt8}, fmt, args...) = printf!(buf, fmt, args...)
-@inline sprintf(buf::MallocString, fmt, args...) = printf!(buf, fmt, args...)
-@inline printf!(buf::MallocString, fmt, args...) = printf!(pointer(buf), fmt, args...)
+Prints formatted output to the given file stream (like `stdout`, `stderr`, or a file pointer).
+
+Writes formatted output to the given buffer. The buffer must be preallocated.
+
+- `fp::Ptr{FILE}`: A pointer to a C-File hanlde.
+- `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
+- `args...`: Arguments to be formatted and inserted into the format string.
+"""
+@inline fprintf(fp::Ptr{FILE}, fmt, a, args...) = printf(fp, fmt, a, args...)
+
+"""
+    sprintf(buf::Ptr{UInt8}, fmt, args...)
+
+Writes formatted output to the given buffer. The buffer must be preallocated.
+
+- `buf::Ptr{UInt8}`: A pointer to a buffer where the output string will be written.
+- `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
+- `args...`: Arguments to be formatted and inserted into the format string.
+"""
+@inline sprintf(buf::Ptr{UInt8}, fmt, a, args...) = printf!(buf, fmt, a, args...)
+
+@inline sprintf(buf::MallocString, fmt, a, args...) = printf!(buf, fmt, a, args...)
+@inline printf!(buf::MallocString, fmt, a, args...) = printf!(pointer(buf), fmt, a, args...)
 
 """
     printf!(buf::Ptr{UInt8}, fmt, args...)
@@ -1142,7 +1207,7 @@ end
 Write formatted output to a buffer, similar to the C `sprintf` function.
 
 # Arguments
-- `buf::Ptr{UInt8}`: A _pointer to a buffer where the output string will be written.
+- `buf::Ptr{UInt8}`: A pointer to a buffer where the output string will be written.
 - `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
 - `args...`: Arguments to be formatted and inserted into the format string.
 
@@ -1164,7 +1229,7 @@ str = unsafe_string(buf)
 Libc.free(buf)
 ```
 """
-@inline printf!(buf::Ptr{UInt8}, fmt, args...) = _printf_N!(buf, fmt, args...)
+@inline printf!(buf::Ptr{UInt8}, fmt, a, args...) = _printf_N!(buf, fmt, a, args...)
 
 """
     printf(fmt::String, args...)
@@ -1188,20 +1253,20 @@ printf("Value: %d\n", 42)
 ```
 """
 @inline function printf(fmt::String, args...)
-    printf(PRINTF_FMT_STRING_WARNING)
+    @boundscheck printf(PRINTF_FMT_STRING_WARNING)
     GC.@preserve fmt args printf(pointer(fmt), args...)
 end
 const PRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf fmt\n")
 
 const FPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in fprintf fmt\n")
 @inline function printf(fp::Ptr{FILE}, fmt::String, args...)
-    printf(FPRINTF_FMT_STRING_WARNING)
+    @boundscheck printf(FPRINTF_FMT_STRING_WARNING)
     GC.@preserve fp fmt args printf(fp, pointer(fmt), args...)
 end
 
 const SPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf! fmt\n")
 @inline function printf!(buf::Ptr{UInt8}, fmt::String, args...)
-    printf(SPRINTF_FMT_STRING_WARNING)
+    @boundscheck printf(SPRINTF_FMT_STRING_WARNING)
     GC.@preserve buf fmt args printf!(buf, pointer(fmt), args...)
 end
 
