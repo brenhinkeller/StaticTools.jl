@@ -42,7 +42,7 @@
     @test fp != 0
 
     @test puts(fp, "1") == 0
-    @test printf(fp, "2") == 1
+    @test printf(fp, c"2") == 1
     @test putchar(fp, '\n') == 0
     @test printf(fp, "%s\n", "3") == 2 broken=(Sys.ARCH===:aarch64)
     @test printf(fp, 4) == 0
