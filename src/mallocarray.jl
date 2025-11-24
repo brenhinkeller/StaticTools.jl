@@ -182,7 +182,7 @@
     @inline Base.similar(a::MallocArray{T,N}) where {T,N} = MallocArray{T,N}(undef, size(a))
     @inline Base.similar(a::MallocArray{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
     @inline Base.similar(a::MallocArray, dims::Vararg{Int}) = similar(a, dims)
-    @inline Base.similar(a::MallocArray{To,N}, ::Type{T}) where {To,N,T} = MallocArray{T,N}(undef, dims)
+    @inline Base.similar(a::MallocArray{To,N}, ::Type{T}) where {To,N,T} = MallocArray{T,N}(undef, size(a))
     @inline Base.similar(a::MallocArray, ::Type{T}, dims::Dims{N}) where {T,N} = MallocArray{T,N}(undef, dims)
     @inline Base.similar(a::MallocArray, T::Type, dims::Vararg{Int}) = similar(a, T, dims)
     @inline function Base.copy(a::MallocArray{T,N}) where {T,N}
