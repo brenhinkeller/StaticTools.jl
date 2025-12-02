@@ -1,9 +1,5 @@
 ## --- File IO primitives
 
-    @inline _pointer(a) = GC.@preserve Base.pointer(a)
-    @inline _pointer(a::Ptr) = a
-    @inline _pointer(a::SubString) = error("SubString is not a NULL-terminated string")
-
     # Open a file
     """
     ```julia
@@ -39,8 +35,8 @@
     Here is a string
     ```
     """
-    @inline fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(_pointer(name), _pointer(mode))
-    @inline fopen(name, mode) = GC.@preserve name mode fopen(_pointer(name), _pointer(mode))
+    @inline fopen(name::AbstractMallocdMemory, mode::AbstractMallocdMemory) = fopen(pointer(name), pointer(mode))
+    @inline fopen(name, mode) = GC.@preserve name mode fopen(pointer(name), pointer(mode))
     @inline function fopen(name::Ptr{UInt8}, mode::Ptr{UInt8})
         Base.llvmcall(("""
         ; External declaration of the fopen function
@@ -623,8 +619,8 @@ end
     0
     ```
     """
-    @inline puts(s::AbstractMallocdMemory) = puts(_pointer(s))
-    @inline puts(s) = GC.@preserve s puts(_pointer(s))
+    @inline puts(s::AbstractMallocdMemory) = puts(pointer(s))
+    @inline puts(s) = GC.@preserve s puts(pointer(s))
     @inline function puts(s::Ptr{UInt8})
         @assert Int===Int64
         Base.llvmcall(("""
@@ -870,8 +866,8 @@ end
     end
     @inline fwrite(fp::Ptr{FILE}, data::AbstractString) = fwrite(fp, data, 1, length(data))
     @inline fwrite(fp::Ptr{FILE}, data::AbstractArray{T}) where {T} = fwrite(fp, data, sizeof(T), length(data))
-    @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(_pointer(data)), size, n)
-    @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(_pointer(data)), size, n)
+    @inline fwrite(fp::Ptr{FILE}, data::AbstractMallocdMemory, size::Int64, n::Int64) = fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
+    @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
     @inline function fwrite(fp::Ptr{FILE}, dp::Ptr{UInt8}, size::Int64, n::Int64)
         @assert Int===Int64
         Base.llvmcall(("""
@@ -1015,7 +1011,6 @@ end
         end
         return length(s) % Int32
     end
-
     @inline function printf(fp::Ptr{FILE}, s::StringView)
         for i ∈ eachindex(s)
             putchar(fp, s[i])
@@ -1023,263 +1018,197 @@ end
         return length(s) % Int32
     end
 
+## --- printf/fprintf, with a format string, just like in C
 
-struct EmptyNothing end
-const NULL = Ptr{EmptyNothing}(C_NULL)
+    @inline printf(fmt::MallocString, s::MallocString) = printf(pointer(fmt), pointer(s))
+    @inline printf(fmt, s) = GC.@preserve fmt s printf(pointer(fmt), pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt::MallocString, s::MallocString) = printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+    @inline printf(fp::Ptr{FILE}, fmt, s) = GC.@preserve fmt s printf(fp::Ptr{FILE}, pointer(fmt), pointer(s))
+    @inline function printf(fmt::Ptr{UInt8}, s::Ptr{UInt8})
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
 
-# Mapping from Julia types to their corresponding LLVM IR type representations
-const JL_TO_LLVM = Dict(
-    Float64 => "double",
-    Float32 => "float",
-    Float16 => "half",
-    Bool    => "i8",
-    Int64   => "i64",
-    Int32   => "i32",
-    Int16   => "i16",
-    Int8    => "i8",
-    UInt64  => "i64",
-    UInt32  => "i32",
-    UInt16  => "i16",
-    UInt8   => "i8",
-    Cint    => "i32",
-    Clong   => "i64",
-    Cshort  => "i16",
-    Cchar   => "i8",
-    Cfloat  => "float",
-    Cdouble => "double",
-    Ptr{UInt64}   => "i64*",
-    Ptr{UInt32}   => "i32*",
-    Ptr{UInt16}   => "i16*",
-    Ptr{UInt8}    => "i8*",
-    Ptr{Cvoid}   => "i8*",
-    Ptr{Float64} => "double*",
-    Ptr{Float32} => "float*",
-    Ptr{Int64}   => "i64*",
-    Ptr{Int32}   => "i32*",
-    Ptr{Int16}   => "i16*",
-    Ptr{Int8}    => "i8*",
-    Ptr{Cchar}   => "i8*",
-    Ptr{Cint}    => "i32*",
-    Ptr{Cfloat}  => "float*",
-    Ptr{Cdouble} => "double*",
-)
+        define i32 @main(i64 %jlf, i64 %jls) #0 {
+        entry:
+          %fmt = inttoptr i64 %jlf to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i8* %str)
+          ret i32 0
+        }
 
-"""
-    to_llvm_type(::Type{T}) -> String
-
-Convert Julia type `T` to its corresponding LLVM type string.
-"""
-@inline function to_llvm_type(::Type{T}) where {T}
-    if haskey(JL_TO_LLVM, T)
-        return JL_TO_LLVM[T]
-    elseif isstructtype(T)
-        return "i8*"  # fallback for struct types
-    elseif T <: Ptr 
-        return "i64"
-    else
-        error("Unsupported type: $T")
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, fmt, s)
     end
-end
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the fprintf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i8*)
 
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %jls) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %str = inttoptr i64 %jls to i8*
+          %status = call i32 (i8*, i8*, i8*) @fprintf(i8* %fp, i8* %fmt, i8* %str)
+          ret i32 %status
+        }
 
-
-"""
-    gen_printf_ir(arg_types::NTuple, func::String = "@printf") -> String
-
-Generate LLVM IR code for calling printf-like functions.
-"""
-function gen_printf_ir(arg_types::NTuple{N, DataType}, func::String = "@printf") where {N}
-    buf = func != "@printf" ? ", i8* %buf" : ""
-
-    main_args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types)])
-    args_ir = join([", $(to_llvm_type(t)) %arg$i" for (i, t) in enumerate(arg_types) if t != Ptr{EmptyNothing}])
-    return """
-    declare i32 $func(i8* noalias nocapture, ...)
-
-    define i32 @main(i64 %jlf$buf$main_args_ir) #0 {
-    entry:
-        %fmt = inttoptr i64 %jlf to i8*
-        %status = call i32 (i8*, ...) $func(i8* %fmt $buf $args_ir)
-        ret i32 %status
-    }
-
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """
-end
-
-"""
-    to_printf_arg(x) -> LLVM-compatible value
-
-Convert Julia value to an LLVM-compatible printf argument.
-"""
-@inline function to_printf_arg(x::T) where {T}
-    if T <: Base.RefValue
-        return isprimitivetype(eltype(T)) ? x[] : _pointer_from_objref(x)
-    elseif ismutabletype(T) || T <: Ref
-        return _pointer(x)
-    elseif isprimitivetype(T)
-        return x
-    else
-        error("Cannot print $x of type $T with printf.")
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Ptr{UInt8}}, fp, fmt, s)
     end
-end
-
-# Disallow direct Julia strings in C-style printf
-# @inline to_printf_arg(::String) = error("Cannot print Julia String using printf().")
-@inline to_printf_arg(x::MallocString) = _pointer(x)
-@inline to_printf_arg(::Ptr{EmptyNothing}) = NULL
-const τ = to_printf_arg
-
-"""
-    @generated function emit_printf(fmt::Ptr{UInt8}, args::Tuple)
-
-Emit LLVM call for printf.
-"""
-@generated function emit_printf(fmt::Ptr{UInt8}, a1::T1, a2::T2, a3::T3, a4::T4, a5::T5, a6::T6, a7::T7, a8::T8, a9::T9, a10::T10, a11::T11, a12::T12, a13::T13, a14::T14, args::T) where {T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T<:Tuple}
-    types = tuple(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T.parameters...)
-    ir = gen_printf_ir(types)
-    :(Base.llvmcall(($ir, "main"), Int32, Tuple{Ptr{UInt8},$types...}, fmt,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,args...))
-end
-
-@generated function emit_fprintf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, a1::T1,a2::T2,a3::T3,a4::T4,a5::T5,a6::T6,a7::T7,a8::T8,a9::T9,a10::T10,a11::T11,a12::T12,a13::T13,args::T) where {T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T<:Tuple}
-    types = tuple(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T.parameters...)
-    ir = gen_printf_ir(types, "@fprintf")
-    :(Base.llvmcall(($ir, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, $types...}, fp, fmt, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13, args...))
-end
-
-@generated function emit_sprintf(buf::Ptr{UInt8}, fmt::Ptr{UInt8}, a1::T1,a2::T2,a3::T3,a4::T4,a5::T5,a6::T6,a7::T7,a8::T8,a9::T9,a10::T10,a11::T11,a12::T12,a13::T13,args::T) where {T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T<:Tuple}
-    types = tuple(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T.parameters...)
-    ir = gen_printf_ir(types, "@sprintf")
-    :(Base.llvmcall(($ir, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, $types...}, buf, fmt, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13, args...))
-end
 
 
+    @inline printf(fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(pointer(fmt), n)
+    @inline printf(fmt::MallocString, n::Union{Number, Ptr}) = printf(pointer(fmt), n)
+    @inline printf(fp::Ptr{FILE}, fmt::StaticString, n::Union{Number, Ptr}) = GC.@preserve fmt printf(fp::Ptr{FILE}, pointer(fmt), n)
+    @inline printf(fp::Ptr{FILE}, fmt::MallocString, n::Union{Number, Ptr}) = printf(fp::Ptr{FILE}, pointer(fmt), n)
 
-# N-args printf-style APIs
-@inline printf(fmt, args...) = _printf_N(fmt, args...)
+    # Floating point numbers
+    @inline function printf(fmt::Ptr{UInt8}, n::Float64)
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
 
-@inline printf(fp::Ptr{FILE}, fmt, args...) = _printf_N(fp, fmt, args...)
+        define i32 @main(i64 %jlf, double %d) #0 {
+        entry:
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, double %d)
+          ret i32 0
+        }
 
-@generated function emit_printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, a1::T1,a2::T2,a3::T3,a4::T4,a5::T5,a6::T6,a7::T7,a8::T8,a9::T9,a10::T10,a11::T11,a12::T12,a13::T13,args::T) where {T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T<:Tuple}
-    types = tuple(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T.parameters...)
-    ir = gen_printf_ir(types)
-    :(Base.llvmcall(($ir, "main"), Int32, Tuple{Ptr{UInt8},$types...}, fmt,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,args...))
-end
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, Float64}, fmt, n)
+    end
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*, double)
 
-#@inline function _printf_N(fmt,a1, a2 = NULL,args...)
-#    GC.@preserve fmt a1 a2 args emit_printf(
-#        _pointer(fmt), τ(a1), τ(a2), map(to_printf_arg, args))
-#end
+        define i32 @main(i64 %jlfp, i64 %jlf, double %n) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, i8*, double) @fprintf(i8* %fp, i8* %fmt, double %n)
+          ret i32 %status
+        }
 
-@inline function _printf_N(fmt,a1, a2 = NULL, a3 = NULL, a4 = NULL, a5 = NULL, a6 = NULL, a7 = NULL, a8 = NULL, a9 = NULL, a10 = NULL, a11 = NULL, a12 = NULL, a13 = NULL, a14 = NULL,args...)
-    GC.@preserve fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 args emit_printf(
-        _pointer(fmt), τ(a1), τ(a2), τ(a3), τ(a4), τ(a5), τ(a6), τ(a7), τ(a8), τ(a9), τ(a10), τ(a11), τ(a12), τ(a13), τ(a14), map(to_printf_arg, args))
-end
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, Float64}, fp, fmt, n)
+    end
 
-@inline function _printf_N(fp::Ptr{FILE}, fmt, a1,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
-    GC.@preserve fp fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 args emit_fprintf(
-        fp, _pointer(fmt), τ(a1),τ(a2),τ(a3),τ(a4),τ(a5),τ(a6),τ(a7),τ(a8),τ(a9),τ(a10),τ(a11),τ(a12),τ(a13), map(to_printf_arg, args))
-end
+    # Just convert all other Floats to double
+    @inline printf(fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fmt::Ptr{UInt8}, Float64(n))
+    @inline printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::AbstractFloat) = printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, Float64(n))
 
-@inline function _printf_N!(buf::Ptr{UInt8}, fmt, a1,a2=NULL,a3=NULL,a4=NULL,a5=NULL,a6=NULL,a7=NULL,a8=NULL,a9=NULL,a10=NULL,a11=NULL,a12=NULL,a13=NULL, args...)
-    GC.@preserve buf fmt a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 args emit_sprintf(
-        buf, _pointer(fmt), τ(a1),τ(a2),τ(a3),τ(a4),τ(a5),τ(a6),τ(a7),τ(a8),τ(a9),τ(a10),τ(a11),τ(a12),τ(a13), map(to_printf_arg, args))
-end
+    # Integers
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
 
-"""
-    fprintf(fp::Ptr{FILE}, fmt, args...)
+        define i32 @main(i64 %jlf, i64 %n) #0 {
+        entry:
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i64 %n)
+          ret i32 0
+        }
 
-Prints formatted output to the given file stream (like `stdout`, `stderr`, or a file pointer).
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
+    end
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64, Ptr}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i64)
 
-Writes formatted output to the given buffer. The buffer must be preallocated.
+        define i32 @main(i64 %jlfp, i64 %jlf, i64 %n) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, i8*, i64) @fprintf(i8* %fp, i8* %fmt, i64 %n)
+          ret i32 %status
+        }
 
-- `fp::Ptr{FILE}`: A pointer to a C-File hanlde.
-- `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
-- `args...`: Arguments to be formatted and inserted into the format string.
-"""
-@inline fprintf(fp::Ptr{FILE}, fmt, a, args...) = printf(fp, fmt, a, args...)
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
+    end
 
-"""
-    sprintf(buf::Ptr{UInt8}, fmt, args...)
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
 
-Writes formatted output to the given buffer. The buffer must be preallocated.
+        define i32 @main(i64 %jlf, i32 %n) #0 {
+        entry:
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i32 %n)
+          ret i32 0
+        }
 
-- `buf::Ptr{UInt8}`: A pointer to a buffer where the output string will be written.
-- `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
-- `args...`: Arguments to be formatted and inserted into the format string.
-"""
-@inline sprintf(buf::Ptr{UInt8}, fmt, a, args...) = printf!(buf, fmt, a, args...)
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
+    end
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i32)
 
-@inline sprintf(buf::MallocString, fmt, a, args...) = printf!(buf, fmt, a, args...)
-@inline printf!(buf::MallocString, fmt, a, args...) = printf!(pointer(buf), fmt, a, args...)
+        define i32 @main(i64 %jlfp, i64 %jlf, i32 %n) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, i8*, i32) @fprintf(i8* %fp, i8* %fmt, i32 %n)
+          ret i32 %status
+        }
 
-"""
-    printf!(buf::Ptr{UInt8}, fmt, args...)
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
+    end
 
-Write formatted output to a buffer, similar to the C `sprintf` function.
+    @inline printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fmt, n % Int32)
+    @inline printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int16, UInt16} = printf(fp, fmt, n % Int32)
 
-# Arguments
-- `buf::Ptr{UInt8}`: A pointer to a buffer where the output string will be written.
-- `fmt`: A C-style format string, such as a `MallocString` or `StaticString`.
-- `args...`: Arguments to be formatted and inserted into the format string.
+    @inline function printf(fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @printf(i8* noalias nocapture, ...)
 
-# Returns
-- The number of characters written to the buffer, as returned by `sprintf`.
+        define i32 @main(i64 %jlf, i8 %n) #0 {
+        entry:
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, ...) @printf(i8* %fmt, i8 %n)
+          ret i32 0
+        }
 
-# Notes
-- This function uses `llvmcall` internally to emit an LLVM `sprintf` function call.
-- It does **not** perform bounds checking on the buffer.
-- The buffer must be large enough to hold the formatted output.
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{UInt8}, T}, fmt, n)
+    end
+    @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int8, UInt8}
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the printf function
+        declare i32 @fprintf(i8* noalias nocapture, i8*, i8)
 
-# Example
-```julia
-buf = Base.unsafe_convert(Ptr{UInt8}, Libc.malloc(100))
-fmt = MallocString("%d + %d = %d\n")
-printf!(buf, fmt, 2, 3, 5)
-str = unsafe_string(buf)
-@show str  # "2 + 3 = 5\n"
-Libc.free(buf)
-```
-"""
-@inline printf!(buf::Ptr{UInt8}, fmt, a, args...) = _printf_N!(buf, fmt, a, args...)
+        define i32 @main(i64 %jlfp, i64 %jlf, i8 %n) #0 {
+        entry:
+          %fp = inttoptr i64 %jlfp to i8*
+          %fmt = inttoptr i64 %jlf to i8*
+          %status = call i32 (i8*, i8*, i8) @fprintf(i8* %fp, i8* %fmt, i8 %n)
+          ret i32 %status
+        }
 
-"""
-    printf(fmt::String, args...)
-
-Wrapper for `printf` that accepts a Julia `String` as the format string.
-
-# Warning
-This method converts the Julia `String` to a `StaticString` and passes it to the main `printf` implementation.
-Since Julia `String` is not null-terminated like C strings, this conversion may incur a slight overhead and is discouraged in performance-critical code.
-
-# Arguments
-- `fmt::String`: The format string in Julia `String` form.
-- `args...`: Values to be formatted according to `fmt`.
-
-# Returns
-- The result of the `printf` call with the converted format string.
-
-# Example
-```julia
-printf("Value: %d\n", 42)
-```
-"""
-@inline function printf(fmt::String, args...)
-    @boundscheck printf(PRINTF_FMT_STRING_WARNING)
-    GC.@preserve fmt args printf(pointer(fmt), args...)
-end
-const PRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf fmt\n")
-
-const FPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in fprintf fmt\n")
-@inline function printf(fp::Ptr{FILE}, fmt::String, args...)
-    @boundscheck printf(FPRINTF_FMT_STRING_WARNING)
-    GC.@preserve fp fmt args printf(fp, pointer(fmt), args...)
-end
-
-const SPRINTF_FMT_STRING_WARNING = StaticString("  \033[33mWarning:\033[0m Using Julia String in printf! fmt\n")
-@inline function printf!(buf::Ptr{UInt8}, fmt::String, args...)
-    @boundscheck printf(SPRINTF_FMT_STRING_WARNING)
-    GC.@preserve buf fmt args printf!(buf, pointer(fmt), args...)
-end
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}, T}, fp, fmt, n)
+    end
 
 ## ---

@@ -43,6 +43,7 @@ module StaticTools
 
     # Utilities
     include("static_type.jl")   # Convert types and objects to more static-friendly versions
+
     # Types
     export StaticString, MallocString, StringView, AbstractStaticString         # String types
     export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
@@ -67,7 +68,7 @@ module StaticTools
     export newline, putchar, getchar, getc, puts, gets!, readline!              # Char & String IO
     export fwrite, fread!                                                       # String and Binary IO
     export unsafe_mallocstring, strlen                                          # String management
-    export printf, printf!, printdlm, parsedlm, argparse                                 # File parsing and formatting
+    export printf, printdlm, parsedlm, argparse                                 # File parsing and formatting
     export static_rng, splitmix64, xoshiro256✴︎✴︎, rand!, randn!                # RNG functions
     export static_type, static_type_contents                                    # Utilities
 
