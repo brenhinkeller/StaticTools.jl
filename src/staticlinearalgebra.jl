@@ -16,9 +16,9 @@ end
 end
 
 @inline function mul!(C::DenseStaticArray{T}, A::DenseStaticArray, B::DenseStaticArray) where T
-    @inbounds for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+    @inbounds for n ∈ axes(C, 2), m ∈ axes(C, 1)
         Cmn = zero(T)
-        for k ∈ indices((A,B), (2,1))
+        for k ∈ axes(A, 2)
             Cmn += A[m,k] * B[k,n]
         end
         C[m,n] = Cmn
@@ -27,13 +27,16 @@ end
 end
 
 @inline function mul!(C::DenseStaticArray{T}, A::DenseStaticArray, B::DenseStaticArray, α::Number, β::Number) where T
-    @inbounds for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+    @inbounds for n ∈ axes(C, 2), m ∈ axes(C, 1)
         Cmn = zero(T)
-        for k ∈ indices((A,B), (2,1))
+        for k ∈ axes(A, 2)
             Cmn += A[m,k] * B[k,n]
         end
-        C[m,n] *= β
-        C[m,n] += Cmn * α
+        if iszero(β) # Like BLAS, ignore (possibly uninitialized or NaN) C entirely
+            C[m,n] = Cmn * α
+        else
+            C[m,n] = C[m,n] * β + Cmn * α
+        end
     end
     return C
 end

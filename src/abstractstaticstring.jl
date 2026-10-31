@@ -64,9 +64,9 @@
     @inline Base.firstindex(s::AbstractStaticString) = 1
     @inline Base.lastindex(s::AbstractPointerString) = s.length
     @inline Base.eachindex(s::AbstractPointerString) = 1:s.length
-    @inline Base.getindex(s::AbstractStaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
-    @inline Base.setindex!(s::AbstractStaticString, x::UInt8, i::Integer) = unsafe_store!(pointer(s)+(i-1), x)
-    @inline Base.setindex!(s::AbstractStaticString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
+    @inline Base.getindex(s::AbstractStaticString, i::Int) = GC.@preserve s unsafe_load(pointer(s)+(i-1))
+    @inline Base.setindex!(s::AbstractStaticString, x::UInt8, i::Integer) = GC.@preserve s unsafe_store!(pointer(s)+(i-1), x)
+    @inline Base.setindex!(s::AbstractStaticString, x, i::Integer) = GC.@preserve s unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
     @inline Base.getindex(s::AbstractStaticString, ::Colon) = s
     @inline function Base.getindex(s::AbstractStaticString, r::UnitRange{<:Integer})
         i₀ = max(first(r), 1) - 1

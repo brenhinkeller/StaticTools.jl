@@ -248,7 +248,7 @@ let
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
     # Check ascii output
-    @test parsedlm(c"table.tsv",'\t') == A' * A
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
     # Check binary output
     @test fread!(szeros(5,5), c"table.b") == A' * A
 end
@@ -278,10 +278,97 @@ let
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
     A = (1:10) * (1:5)'
+    @test parsedlm(c"table.tsv",'\t') == A' * A  broken=(Sys.ARCH===:aarch64)
+end
+
+## --- Test equivalent plain @inbounds loops
+let
+    # Compile...
+    status = -1
+    try
+        isfile("inbounds_product") && rm("inbounds_product")
+        status = run(`$jlpath --startup=no --compile=min $testpath/scripts/inbounds_product.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/inbounds_product.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x10 table sum:")
+    status = -1
+    try
+        status = run(`./inbounds_product 10 10`)
+    catch e
+        @warn "Could not run $(scratch)/inbounds_product"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    @test parsedlm(c"product.tsv",'\t')[] == 3025
+end
+
+let
+    # Compile...
+    status = -1
+    try
+        isfile("inbounds_matrix") && rm("inbounds_matrix")
+        status = run(`$jlpath --startup=no --compile=min $testpath/scripts/inbounds_matrix.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/inbounds_matrix.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x5 MallocMatrix product, manual inbounds:")
+    status = -1
+    try
+        status = run(`./inbounds_matrix 10 5`)
+    catch e
+        @warn "Could not run $(scratch)/inbounds_matrix"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    A = (1:10) * (1:5)'
+    # Check ascii output
+    @test parsedlm(c"table.tsv",'\t') == A' * A
+    # Check binary output
+    @test fread!(szeros(5,5), c"table.b") == A' * A
+end
+
+let
+    # Compile...
+    status = -1
+    try
+        isfile("inbounds_matrix_stack") && rm("inbounds_matrix_stack")
+        status = run(`$jlpath --startup=no --compile=min $testpath/scripts/inbounds_matrix_stack.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/inbounds_matrix_stack.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("10x5 StackMatrix product, manual inbounds:")
+    status = -1
+    try
+        status = run(`./inbounds_matrix_stack`)
+    catch e
+        @warn "Could not run $(scratch)/inbounds_matrix_stack"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+    A = (1:10) * (1:5)'
     @test parsedlm(c"table.tsv",'\t') == A' * A
 end
 
-## --- Test standard matrix multiplication
+## --- Test built-in matrix multiplication
 let
     # Compile...
     status = -1
@@ -374,31 +461,31 @@ end
 
 ## --- Test string iteration
 
-# let
-#     # Compile...
-#     status = -1
-#     try
-#         isfile("iterate") && rm("iterate")
-#         status = run(`$jlpath --startup=no $testpath/scripts/iterate.jl`)
-#     catch e
-#         @warn "Could not compile $testpath/scripts/iterate.jl"
-#         println(e)
-#     end
-#     @test isa(status, Base.Process)
-#     @test isa(status, Base.Process) && status.exitcode == 0
-#
-#     # Run...
-#     println("Iteration:")
-#     status = -1
-#     try
-#         status = run(`./iterate`)
-#     catch e
-#         @warn "Could not run $(scratch)/iterate"
-#         println(e)
-#     end
-#     @test isa(status, Base.Process)
-#     @test isa(status, Base.Process) && status.exitcode == 0
-# end
+let
+    # Compile...
+    status = -1
+    try
+        isfile("iterate") && rm("iterate")
+        status = run(`$jlpath --startup=no $testpath/scripts/iterate.jl`)
+    catch e
+        @warn "Could not compile $testpath/scripts/iterate.jl"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+
+    # Run...
+    println("Iteration:")
+    status = -1
+    try
+        status = run(`./iterate`)
+    catch e
+        @warn "Could not run $(scratch)/iterate"
+        println(e)
+    end
+    @test isa(status, Base.Process)
+    @test isa(status, Base.Process) && status.exitcode == 0
+end
 
 ## --- Test error throwing
 

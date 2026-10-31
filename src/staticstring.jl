@@ -120,7 +120,7 @@
     @inline Base.:(==)(::StaticString, ::StaticString) = false
     @inline function Base.:(==)(a::StaticString{N}, b::StaticString{N}) where N
         pa, pb = pointer(a), pointer(b)
-        for n ∈ 0:N-1
+        GC.@preserve a b for n ∈ 0:N-1
             unsafe_load(pa + n) == unsafe_load(pb + n) || return false
         end
         return true
@@ -137,7 +137,7 @@
     @inline Base.firstindex(s::StaticString) = 1
     @inline Base.lastindex(s::StaticString{N}) where {N} = N
     @inline Base.eachindex(s::StaticString{N}) where {N} = 1:N
-    @inline Base.getindex(s::StaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
+    @inline Base.getindex(s::StaticString, i::Int) = GC.@preserve s unsafe_load(pointer(s)+(i-1))
     @inline Base.copy(s::StaticString) = StaticString(codeunits(s))
 
 

@@ -131,7 +131,7 @@
     @inline function Base.:(==)(a::StackArray{Ta,N,L,D}, b::StackArray{Tb,N,L,D}) where {Ta,Tb,N,L,D}
         pa, pb = pointer(a), pointer(b)
         sa, sb = sizeof(Ta), sizeof(Tb)
-        for n ∈ 0:L-1
+        GC.@preserve a b for n ∈ 0:L-1
             unsafe_load(pa + n*sa) == unsafe_load(pb + n*sb) || return false
         end
         return true

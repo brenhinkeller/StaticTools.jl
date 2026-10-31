@@ -37,8 +37,8 @@
     end
 
     # Scalar getindex
-    @inline Base.getindex(a::DenseStaticArray{T,0}) where {T} = unsafe_load(pointer(a))
-    @inline Base.getindex(a::DenseStaticArray{T}, i::Int) where T = unsafe_load(pointer(a)+(i-1)*sizeof(T))
+    @inline Base.getindex(a::DenseStaticArray{T,0}) where {T} = GC.@preserve a unsafe_load(pointer(a))
+    @inline Base.getindex(a::DenseStaticArray{T}, i::Int) where T = GC.@preserve a unsafe_load(pointer(a)+(i-1)*sizeof(T))
 
     # Getindex methods returning tuples
     @inline Base.getindex(a::DenseStaticArray, t::NTuple{N,Int}) where N = ntuple(i->a[t[i]], Val(N))
@@ -80,10 +80,10 @@
     end
 
     # Setindex methods
-    @inline Base.setindex!(a::DenseStaticArray{T,0}, x::T) where {T} = unsafe_store!(pointer(a), x)
-    @inline Base.setindex!(a::DenseStaticArray{T,0}, x) where {T} = unsafe_store!(pointer(a), convert(T,x))
-    @inline Base.setindex!(a::DenseStaticArray{T}, x::T, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
-    @inline Base.setindex!(a::DenseStaticArray{T}, x, i::Int) where {T} = unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
+    @inline Base.setindex!(a::DenseStaticArray{T,0}, x::T) where {T} = GC.@preserve a unsafe_store!(pointer(a), x)
+    @inline Base.setindex!(a::DenseStaticArray{T,0}, x) where {T} = GC.@preserve a unsafe_store!(pointer(a), convert(T,x))
+    @inline Base.setindex!(a::DenseStaticArray{T}, x::T, i::Int) where {T} = GC.@preserve a unsafe_store!(pointer(a)+(i-1)*sizeof(T), x)
+    @inline Base.setindex!(a::DenseStaticArray{T}, x, i::Int) where {T} = GC.@preserve a unsafe_store!(pointer(a)+(i-1)*sizeof(T), convert(T,x))
     @inline function Base.setindex!(a::DenseStaticArray, x::Union{AbstractArray,NTuple{L}}, r::Union{AbstractUnitRange{Int}, NTuple{L,Int}}) where {L}
         length(x) == length(r) || error(c"DimensionMismatch: indices and values not of matching length")
         for (i,xᵢ) ∈ zip(r,x)
@@ -111,7 +111,7 @@
         axes(a) == axes(b) || return false
         pa, pb = pointer(a), pointer(b)
         sa, sb = sizeof(Ta), sizeof(Tb)
-        for n in 0:length(a)-1
+        GC.@preserve a b for n in 0:length(a)-1
             unsafe_load(pa + n*sa) == unsafe_load(pb + n*sb) || return false
         end
         return true
