@@ -125,6 +125,27 @@
         return false
     end
 
+    # Base's generic versions are not inlined, which would force the (mutable)
+    # static strings to be heap-allocated, so we need our own
+    @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
+        lₐ, lᵦ = length(a), length(b)
+        lₐ < lᵦ && return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:lᵦ-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+        end
+        return true
+    end
+    @inline function Base.endswith(a::AbstractStaticString, b::AbstractStaticString)
+        lₐ, lᵦ = length(a), length(b)
+        lₐ < lᵦ && return false
+        pa, pb = pointer(a) + (lₐ - lᵦ), pointer(b)
+        for n in 0:lᵦ-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+        end
+        return true
+    end
+
     # Adapted from Julia's stdlib
     """
         iterate(s::AbstractStaticString, i=firstindex(s))
