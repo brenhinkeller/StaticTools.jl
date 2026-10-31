@@ -44,7 +44,7 @@
     @test puts(fp, "1") == 0
     @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 0
-    @test printf(fp, "%s\n", "3") == 2 broken=(Sys.ARCH===:aarch64)
+    @test printf(fp, "%s\n", "3") == 2
     @test printf(fp, 4) == 0
     @test printf(fp, 5.0) == 0
     @test printf(fp, 10.0f0) == 0
@@ -221,3 +221,15 @@
 
     rm("testfile.txt")
     rm("testfile.b")
+
+
+## --- Regression tests: 64-bit/8-bit formatting through variadic (f)printf, `%` in strings
+
+    fp = fopen(c"testfile3.txt", c"w+")
+    printf(fp, 2^40); printf(fp, UInt64(2)^40); printf(fp, c"%d|", Int8(-3)); printf(fp, c"%d|", UInt8(200))
+    printf(fp, c"%d|", Int32(5)); printf(fp, c"%f|", 2.5)
+    print(fp, c"100%d done")
+    frewind(fp)
+    @test String(read(fp, MallocString)) == "10995116277760x0000010000000000-3|200|5|2.500000|100%d done"
+    fclose(fp)
+    rm("testfile3.txt")

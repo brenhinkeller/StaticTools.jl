@@ -239,7 +239,7 @@ julia> memcmp(c"foo", c"bar", 3)
 ```
 """
 @inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
-@inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcpy!(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
+@inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcmp(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
 @inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
     @assert Int===Int64
     Base.llvmcall(("""
@@ -303,7 +303,7 @@ julia> usleep(1000000)
 0
 ```
 """
-@inline usleep(μsec::Integer) = malloc(Int64(μsec))
+@inline usleep(μsec::Integer) = usleep(Int64(μsec))
 @inline function usleep(μsec::Int64)
     @assert Int===Int64
     Base.llvmcall(("""
@@ -588,10 +588,17 @@ end
 
 ## --- dlopen
 
-const RTLD_LOCAL = Int32(1)
-const RTLD_GLOBAL = Int32(2)
-const RTLD_LAZY = Int32(4)
-const RTLD_NOW = Int32(8)
+@static if Sys.isapple()
+    const RTLD_LAZY = Int32(0x1)
+    const RTLD_NOW = Int32(0x2)
+    const RTLD_LOCAL = Int32(0x4)
+    const RTLD_GLOBAL = Int32(0x8)
+else
+    const RTLD_LAZY = Int32(0x1)
+    const RTLD_NOW = Int32(0x2)
+    const RTLD_LOCAL = Int32(0x0)
+    const RTLD_GLOBAL = Int32(0x100)
+end
 
 """
 ```julia

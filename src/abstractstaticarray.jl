@@ -48,7 +48,7 @@
     @inline Base.getindex(a::DenseStaticArray{T}, r::AbstractUnitRange{<:Integer}) where T = ArrayView(pointer(a)+(first(r)-1)*sizeof(T), length(r), (length(r),))
     @inline Base.getindex(a::DenseStaticArray, r::AbstractUnitRange{<:Integer}, inds::Vararg{Int}) = getindex(a, r, inds)
     @inline function Base.getindex(a::DenseStaticArray{T}, r::AbstractUnitRange{<:Integer}, inds::Dims{N}) where {T,N}
-        i0 = 0
+        i0 = first(r) - 1
         for i=1:N
             i0 += (inds[i]-1) * stride(a, i+1)
         end
@@ -163,7 +163,7 @@
             pointerᵣ = Ptr{Tᵣ}(pointer(a))
             ArrayView{Tᵣ,N}(pointerᵣ, lengthᵣ, sizeᵣ)
         else
-            ArrayView{Tᵣ,N}(Ptr{T}(0), 0, ntuple(i->0, Val(N)))
+            ArrayView{Tᵣ,N}(Ptr{Tᵣ}(0), 0, ntuple(i->0, Val(N)))
         end
     end
 

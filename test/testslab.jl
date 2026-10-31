@@ -26,7 +26,8 @@ sb = MallocSlabBuffer(;slab_size=16_384, slabs_max_length=1, custom_slabs_max_le
     @test sb.custom_slabs_max_length == 0
     # Allocate something too big to fit on any slab
     z = @alloc(Int, 100_000)
-    @test sb.custom_slabs_max_length == 0
+    # The (zero-capacity) custom slab list had to grow to hold z
+    @test sb.custom_slabs_max_length == 64
     
     # This doesn't effect sb.current
     @test sb.current == p + 16_384 - 2

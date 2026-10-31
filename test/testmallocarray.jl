@@ -292,3 +292,12 @@
         @test size(B) == (5,5)
         @test isapprox(sum(B)/length(B), 0, atol=1)
     end
+
+
+## --- Regression tests: sub-slices with fixed trailing indices, reinterpret fallback
+    A = MallocArray(reshape(collect(1.0:12.0), 3, 4))
+    @test A[2:3, 2] == [5.0, 6.0]
+    @test A[:, 2] == [4.0, 5.0, 6.0]
+    B = mzeros(Int32, 3)
+    @test size(reinterpret(Int64, B)) == (0,)
+    free(A); free(B)

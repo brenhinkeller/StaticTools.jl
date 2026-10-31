@@ -167,9 +167,9 @@ end
 @noinline function add_new_slab!(buf::MallocSlabBuffer, sz::Int)::Ptr{Nothing}
     if sz >= (buf.slab_size ÷ 2)
         custom = malloc(sz)
-        if buf.custom_slabs_length > buf.custom_slabs_max_length
+        if buf.custom_slabs_length >= buf.custom_slabs_max_length
             buf.custom_slabs_max_length += 64
-            new_custom_slabs::Ptr{Ptr{Nothing}} = malloc(buf.custom_slabs_max_length)
+            new_custom_slabs::Ptr{Ptr{Nothing}} = malloc(buf.custom_slabs_max_length * sizeof(Ptr{Nothing}))
             for i ∈ 1:buf.custom_slabs_length
                 unsafe_store!(new_custom_slabs, unsafe_load(buf.custom_slabs, i), i)
             end
@@ -183,7 +183,7 @@ end
         new_slab = malloc(buf.slab_size)
         if buf.slabs_length >= buf.slabs_max_length
             buf.slabs_max_length += 64
-            new_slabs::Ptr{Ptr{Nothing}} = malloc(buf.slabs_max_length + 64)
+            new_slabs::Ptr{Ptr{Nothing}} = malloc(buf.slabs_max_length * sizeof(Ptr{Nothing}))
             for i ∈ 1:buf.slabs_length
                 unsafe_store!(new_slabs, unsafe_load(buf.slabs, i), i)
             end

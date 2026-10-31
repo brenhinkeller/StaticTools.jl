@@ -211,3 +211,11 @@
         end
         return s
     end
+
+
+    # Custom printing -- n.b. `printf(s)` would treat `s` as a format string, so
+    # `%` characters would be misinterpreted. Defined here since it uses `c"..."`
+    @inline Base.print(s::AbstractStaticString) = printf(c"%s", s)
+    @inline Base.print(s::StringView) = printf(s)
+    @inline Base.print(fp::Ptr{FILE}, s::AbstractStaticString) = printf(fp, c"%s", s)
+    @inline Base.print(fp::Ptr{FILE}, s::StringView) = printf(fp, s)

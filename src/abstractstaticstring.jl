@@ -26,9 +26,7 @@
     end
 
     # Custom printing
-    @inline Base.print(s::AbstractStaticString) = printf(s)
     @inline Base.println(s::AbstractStaticString) = puts(s)
-    @inline Base.print(fp::Ptr{FILE}, s::AbstractStaticString) = printf(fp, s)
     @inline Base.println(fp::Ptr{FILE}, s::AbstractStaticString) = puts(fp, s)
 
 
@@ -72,8 +70,8 @@
     @inline Base.getindex(s::AbstractStaticString, ::Colon) = s
     @inline function Base.getindex(s::AbstractStaticString, r::UnitRange{<:Integer})
         i₀ = max(first(r), 1) - 1
-        l = min(length(r), length(s))
-        return StringView(pointer(s)+i₀, l)
+        i₁ = min(last(r), length(s))
+        return StringView(pointer(s)+i₀, max(i₁ - i₀, 0))
     end
     @inline function Base.setindex!(s::AbstractStaticString, x, r::UnitRange{<:Integer})
         is₀ = first(r)-1

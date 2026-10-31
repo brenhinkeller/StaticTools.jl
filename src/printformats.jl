@@ -3,8 +3,9 @@
 # Pick a printf format string depending on the type
 @inline printfmt(::Type{<:AbstractFloat}) = c"%e"
 @inline printfmt(::Type{<:Integer}) = c"%d"
-@inline printfmt(::Type{<:Ptr})  = c"Ptr @0x%016x" # Assume 64-bit pointers
-@inline printfmt(::Type{UInt64}) = c"0x%016x"
+@inline printfmt(::Type{Int64})  = c"%lld" # `%d` would truncate to 32 bits
+@inline printfmt(::Type{<:Ptr})  = c"Ptr @0x%016llx" # Assume 64-bit pointers
+@inline printfmt(::Type{UInt64}) = c"0x%016llx"
 @inline printfmt(::Type{UInt32}) = c"0x%08x"
 @inline printfmt(::Type{UInt16}) = c"0x%04x"
 @inline printfmt(::Type{UInt8})  = c"0x%02x"
@@ -273,13 +274,13 @@ ERROR: could not do thing
 @inline function perror(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the fprintf function
-    declare i32 @fprintf(i8*, i8*)
+    declare i32 @fprintf(i8*, i8*, ...)
 
     define i32 @main(i64 %jlfp, i64 %jls) #0 {
     entry:
       %fp = inttoptr i64 %jlfp to i8*
       %str = inttoptr i64 %jls to i8*
-      %status = call i32 (i8*, i8*) @fprintf(i8* %fp, i8* %str)
+      %status = call i32 (i8*, i8*, ...) @fprintf(i8* %fp, i8* %str)
       ret i32 0
     }
 
