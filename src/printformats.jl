@@ -276,10 +276,8 @@ ERROR: could not do thing
     ; External declaration of the fprintf function
     declare i32 @fprintf(i8*, i8*, ...)
 
-    define i32 @main(i64 %jlfp, i64 %jls) #0 {
+    define i32 @main(i8* %fp, i8* %str) #0 {
     entry:
-      %fp = inttoptr i64 %jlfp to i8*
-      %str = inttoptr i64 %jls to i8*
       %status = call i32 (i8*, i8*, ...) @fprintf(i8* %fp, i8* %str)
       ret i32 0
     }

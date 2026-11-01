@@ -70,7 +70,7 @@ macro ptrcall(expr)
     Tₐ_int = llvmtype_internal.(argument_types)
 
     # String of arguments in LLVM form
-    fpstr = Int===Int64 ? "i64 %jlfp" : "i32 %jlfp"
+    fpstr = "i8* %jlfp"
     argstr_external = fpstr
     for i ∈ 1:length(Tₐ_ext)
         argstr_external *= ", "
@@ -97,7 +97,7 @@ macro ptrcall(expr)
     inttoptrstr = ""
     for i ∈ eachindex(argument_types)
         if Tₐ_ext[i] != Tₐ_int[i] # If we need to convert int<>ptr
-            inttoptrstr *= "%$(regname[i])_ptr = inttoptr $(Tₐ_ext[i]) %$(regname[i]) to $(Tₐ_int[i])\n"
+            inttoptrstr *= "%$(regname[i])_ptr = bitcast $(Tₐ_ext[i]) %$(regname[i]) to $(Tₐ_int[i])\n"
         end
     end
 
@@ -106,7 +106,7 @@ macro ptrcall(expr)
     Tᵣ_int === :void && (callstr = "call")
 
     # Return statement
-    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
+    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = bitcast $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
     retstr *= "ret $Tᵣ_ext"
     Tᵣ_int === :void || (retstr *= " %result")
 
@@ -114,7 +114,7 @@ macro ptrcall(expr)
     llvm_str = """
     define $Tᵣ_ext @main($argstr_external) #0 {
       $inttoptrstr
-      %fptr = inttoptr $fpstr to $Tᵣ_int ($argtypestr)*
+      %fptr = bitcast $fpstr to $Tᵣ_int ($argtypestr)*
       $callstr $Tᵣ_int ($argtypestr) %fptr($argstr_internal)
       $retstr
     }
@@ -192,7 +192,7 @@ macro symbolcall(expr)
     inttoptrstr = ""
     for i ∈ eachindex(argument_types)
         if Tₐ_ext[i] != Tₐ_int[i] # If we need to convert int<>ptr
-            inttoptrstr *= "%$(regname[i])_ptr = inttoptr $(Tₐ_ext[i]) %$(regname[i]) to $(Tₐ_int[i])\n"
+            inttoptrstr *= "%$(regname[i])_ptr = bitcast $(Tₐ_ext[i]) %$(regname[i]) to $(Tₐ_int[i])\n"
         end
     end
 
@@ -201,7 +201,7 @@ macro symbolcall(expr)
     Tᵣ_int === :void && (callstr = "call")
 
     # Return statement
-    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = ptrtoint $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
+    retstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = bitcast $Tᵣ_int %result_ptr to $Tᵣ_ext\n"
     retstr *= "ret $Tᵣ_ext"
     Tᵣ_int === :void || (retstr *= " %result")
 
@@ -248,7 +248,7 @@ macro externptr(expr)
   return_type = last(expr.args)
 
   # Convert Julia types to equivalent LLVM types
-  Tᵣ_ext = Int===Int64 ? :i64 : :i32      # pointer
+  Tᵣ_ext = "i8*"      # pointer
   Tᵣ_int = llvmtype_internal(return_type)
 
   # Construct llvm IR to call
@@ -256,7 +256,7 @@ macro externptr(expr)
   @$name = external global $Tᵣ_int
 
   define $Tᵣ_ext @main() #0 {
-    %jlptr = ptrtoint $Tᵣ_int* @$name to $Tᵣ_ext
+    %jlptr = bitcast $Tᵣ_int* @$name to $Tᵣ_ext
     ret $Tᵣ_ext %jlptr
   }
   attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -294,7 +294,8 @@ macro externload(expr)
   # Convert Julia types to equivalent LLVM types
   Tᵣ_ext = llvmtype_external(return_type)
   Tᵣ_int = llvmtype_internal(return_type)
-  resultstr = Tᵣ_int == Tᵣ_ext ? "%result = %value" : "%result = ptrtoint $Tᵣ_int %value to $Tᵣ_ext"
+  resultstr = Tᵣ_int == Tᵣ_ext ? "" : "%result = bitcast $Tᵣ_int %value to $Tᵣ_ext"
+  resultname = Tᵣ_int == Tᵣ_ext ? "%value" : "%result"
 
   # Construct llvm IR to call
   llvm_str = """
@@ -303,7 +304,7 @@ macro externload(expr)
   define $Tᵣ_ext @main() #0 {
     %value = load $Tᵣ_int, $Tᵣ_int* @$name
     $resultstr
-    ret $Tᵣ_ext %result
+    ret $Tᵣ_ext $resultname
   }
   attributes #0 = { alwaysinline nounwind ssp uwtable }
   """
@@ -315,7 +316,7 @@ end
 ## --- Converting between llvm types and Julia types
 
 function llvmtype_external(t)
-    (isa(t, Expr) && first(t.args) === :Ptr) && return Int===Int64 ? :i64 : :i32
+    (isa(t, Expr) && first(t.args) === :Ptr) && return "i8*"
     (t === :Int128 || t === :UInt128) && return :i128
     (t === :Int64 || t === :UInt64) && return :i64
     (t === :Int32 || t === :UInt32) && return :i32
