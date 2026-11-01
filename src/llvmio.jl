@@ -671,6 +671,7 @@ end
     """
     @inline function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
         @assert Int===Int64
+        fp == C_NULL && return Ptr{UInt8}(C_NULL)
         Base.llvmcall(("""
         ; External declaration of the gets function
         declare i8* @fgets(i8*, i32, i8*)
@@ -780,6 +781,7 @@ end
     @inline fread!(buffer, fp::Ptr{FILE}, size, n) = (GC.@preserve buffer fread!(Ptr{UInt8}(pointer(buffer)), fp, size, n); buffer)
     @inline function fread!(bp::Ptr{UInt8}, fp::Ptr{FILE}, size::Int64, n::Int64)
         @assert Int===Int64
+        fp == C_NULL && return Int64(0)
         Base.llvmcall(("""
         ; External declaration of the fread function
         declare i64 @fread(i8*, i64, i64, i8*)
@@ -845,6 +847,7 @@ end
     @inline fwrite(fp::Ptr{FILE}, data, size::Int64, n::Int64) = GC.@preserve data fwrite(fp, Ptr{UInt8}(pointer(data)), size, n)
     @inline function fwrite(fp::Ptr{FILE}, dp::Ptr{UInt8}, size::Int64, n::Int64)
         @assert Int===Int64
+        fp == C_NULL && return Int64(0)
         Base.llvmcall(("""
         ; External declaration of the fwrite function
         declare i64 @fwrite(i8*, i64, i64, i8*)
@@ -893,6 +896,7 @@ end
     eltype `T`.
     """
     @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocString})
+        fp == C_NULL && return MallocString(undef, 1) # Missing file: empty string
         fseek(fp, 0, SEEK_END)
         len = ftell(fp)
         frewind(fp)
@@ -902,6 +906,7 @@ end
         return str
     end
     @inline function Base.read(fp::Ptr{FILE}, ::Type{MallocArray{T}}) where T
+        fp == C_NULL && return MallocArray{T}(undef, 0) # Missing file: empty array
         fseek(fp, 0, SEEK_END)
         nbytes = ftell(fp)
         len = nbytes ÷ sizeof(T)
@@ -962,6 +967,7 @@ end
     end
     @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
         @assert Int===Int64
+        fp == C_NULL && return Int32(-1)
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
@@ -1011,6 +1017,7 @@ end
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, s::Ptr{UInt8})
         @assert Int===Int64
+        fp == C_NULL && return Int32(-1)
         Base.llvmcall(("""
         ; External declaration of the fprintf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
@@ -1049,6 +1056,7 @@ end
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::Float64)
         @assert Int===Int64
+        fp == C_NULL && return Int32(-1)
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
@@ -1085,6 +1093,7 @@ end
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int64, UInt64}
         @assert Int===Int64
+        fp == C_NULL && return Int32(-1)
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
@@ -1120,6 +1129,7 @@ end
     end
     @inline function printf(fp::Ptr{FILE}, fmt::Ptr{UInt8}, n::T) where T <: Union{Int32, UInt32}
         @assert Int===Int64
+        fp == C_NULL && return Int32(-1)
         Base.llvmcall(("""
         ; External declaration of the printf function
         declare i32 @fprintf(i8* noalias nocapture, i8*, ...)

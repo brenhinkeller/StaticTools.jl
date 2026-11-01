@@ -75,7 +75,7 @@
     """
     @inline function MallocString(::UndefInitializer, N::Int)
         s = MallocString(Ptr{UInt8}(malloc(N)), N)
-        s[end] = 0x00
+        N > 0 && (s[end] = 0x00)
         return s
     end
     """
