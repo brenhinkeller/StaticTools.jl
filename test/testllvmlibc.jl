@@ -39,3 +39,9 @@
 
     @test isa(StaticTools.time(), Int64)
     @test StaticTools.time() > 10^9
+
+    # memcmp on non-byte pointers must compare, not copy
+    a, b = [1.0, 2.0], [1.0, 3.0]
+    @test memcmp(pointer(a), pointer(b), 8) == 0
+    @test memcmp(pointer(a), pointer(b), 16) != 0
+    @test a == [1.0, 2.0] && b == [1.0, 3.0]

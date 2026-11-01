@@ -86,8 +86,7 @@ julia> free(p)
     declare void @free(i8*)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jlp) #0 {
-      %ptr = inttoptr i64 %jlp to i8*
+    define i32 @main(i8* %ptr) #0 {
       call void (i8*) @free(i8* %ptr)
       ret i32 0
     }
@@ -140,8 +139,7 @@ julia> a
         declare void @memset(i8* nocapture writeonly, i64, i64) #0
 
         ; Function Attrs: nounwind ssp uwtable
-        define i32 @main(i64 %jlp, i64 %value, i64 %n) #1 {
-          %ptr = inttoptr i64 %jlp to i8*
+        define i32 @main(i8* %ptr, i64 %value, i64 %n) #1 {
           call void @memset(i8* %ptr, i64 %value, i64 %n)
           ret i32 0
         }
@@ -156,8 +154,7 @@ julia> a
         declare void @memset(i8* nocapture writeonly, i32, i32) #0
 
         ; Function Attrs: nounwind ssp uwtable
-        define i32 @main(i64 %jlp, i32 %value, i32 %n) #1 {
-          %ptr = inttoptr i64 %jlp to i8*
+        define i32 @main(i8* %ptr, i32 %value, i32 %n) #1 {
           call void @memset(i8* %ptr, i32 %value, i32 %n)
           ret i32 0
         }
@@ -206,9 +203,7 @@ julia> a
     declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
 
     ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jldest, i64 %jlsrc, i64 %nbytes) #1 {
-      %dest = inttoptr i64 %jldest to i8*
-      %src = inttoptr i64 %jlsrc to i8*
+    define i32 @main(i8* %dest, i8* %src, i64 %nbytes) #1 {
       call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dest, i8* %src, i64 %nbytes, i1 false)
       ret i32 0
     }
@@ -239,7 +234,7 @@ julia> memcmp(c"foo", c"bar", 3)
 ```
 """
 @inline memcmp(a, b, n::Int64) = GC.@preserve a b memcmp(pointer(a), pointer(b), n)
-@inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcpy!(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
+@inline memcmp(a::Ptr, b::Ptr, n::Int64) = memcmp(Ptr{UInt8}(a), Ptr{UInt8}(b), n)
 @inline function memcmp(a::Ptr{UInt8}, b::Ptr{UInt8}, nbytes::Int64)
     @assert Int===Int64
     Base.llvmcall(("""
@@ -247,9 +242,7 @@ julia> memcmp(c"foo", c"bar", 3)
     declare i32 @memcmp(i8*, i8*, i64)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jla, i64 %jlb, i64 %nbytes) #0 {
-      %a = inttoptr i64 %jla to i8*
-      %b = inttoptr i64 %jlb to i8*
+    define i32 @main(i8* %a, i8* %b, i64 %nbytes) #0 {
       %cmp = call i32 @memcmp(i8* %a, i8* %b, i64 %nbytes)
       ret i32 %cmp
     }
@@ -303,7 +296,7 @@ julia> usleep(1000000)
 0
 ```
 """
-@inline usleep(μsec::Integer) = malloc(Int64(μsec))
+@inline usleep(μsec::Integer) = usleep(Int64(μsec))
 @inline function usleep(μsec::Int64)
     @assert Int===Int64
     Base.llvmcall(("""
@@ -370,8 +363,7 @@ sys 0m0.000s
     declare i32 @system(...)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %jlstr) #0 {
-      %str = inttoptr i64 %jlstr to i8*
+    define i32 @main(i8* %str) #0 {
       %status = call i32 (i8*, ...) bitcast (i32 (...)* @system to i32 (i8*, ...)*)(i8* %str)
       ret i32 %status
     }
@@ -407,8 +399,7 @@ julia> strlen(c"foo")
     declare i64 @strlen(i8*)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %jlstr) #0 {
-      %str = inttoptr i64 %jlstr to i8*
+    define i64 @main(i8* %str) #0 {
       %li = call i64 (i8*) @strlen (i8* %str)
       ret i64 %li
     }
@@ -450,9 +441,8 @@ end
     declare double @strtod(i8*, i8**)
 
     ; Function Attrs: nounwind ssp uwtable
-    define double @main(i64 %jlstr, i64 %jlp) #0 {
-      %str = inttoptr i64 %jlstr to i8*
-      %ptr = inttoptr i64 %jlp to i8**
+    define double @main(i8* %str, i8* %jlp) #0 {
+      %ptr = bitcast i8* %jlp to i8**
       %d = call double (i8*, i8**) @strtod (i8* %str, i8** %ptr)
       ret double %d
     }
@@ -493,9 +483,8 @@ end
     declare i64 @strtol(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
-      %str = inttoptr i64 %jlstr to i8*
-      %ptr = inttoptr i64 %jlp to i8**
+    define i64 @main(i8* %str, i8* %jlp, i32 %base) #0 {
+      %ptr = bitcast i8* %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
@@ -536,9 +525,8 @@ end
     declare i64 @strtoul(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
-    define i64 @main(i64 %jlstr, i64 %jlp, i32 %base) #0 {
-      %str = inttoptr i64 %jlstr to i8*
-      %ptr = inttoptr i64 %jlp to i8**
+    define i64 @main(i8* %str, i8* %jlp, i32 %base) #0 {
+      %ptr = bitcast i8* %jlp to i8**
       %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
@@ -588,10 +576,17 @@ end
 
 ## --- dlopen
 
-const RTLD_LOCAL = Int32(1)
-const RTLD_GLOBAL = Int32(2)
-const RTLD_LAZY = Int32(4)
-const RTLD_NOW = Int32(8)
+@static if Sys.isapple()
+    const RTLD_LAZY = Int32(0x1)
+    const RTLD_NOW = Int32(0x2)
+    const RTLD_LOCAL = Int32(0x4)
+    const RTLD_GLOBAL = Int32(0x8)
+else
+    const RTLD_LAZY = Int32(0x1)
+    const RTLD_NOW = Int32(0x2)
+    const RTLD_LOCAL = Int32(0x0)
+    const RTLD_GLOBAL = Int32(0x100)
+end
 
 """
 ```julia
@@ -659,12 +654,10 @@ end
     ; External declaration of the dlopen function
     declare i8* @dlopen(i8*, i32)
 
-    define i64 @main(i64 %jlname, i32 %flag) #0 {
+    define i8* @main(i8* %name, i32 %flag) #0 {
     entry:
-      %name = inttoptr i64 %jlname to i8*
       %fp = call i8* (i8*, i32) @dlopen(i8* %name, i32 %flag)
-      %jlfp = ptrtoint i8* %fp to i64
-      ret i64 %jlfp
+      ret i8* %fp
     }
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -725,13 +718,10 @@ julia> StaticTools.dlclose(lib)
     ; External declaration of the dlsym function
     declare i8* @dlsym(i8*, i8*)
 
-    define i64 @main(i64 %jlh, i64 %jls) #0 {
+    define i8* @main(i8* %handle, i8* %symbol) #0 {
     entry:
-      %handle = inttoptr i64 %jlh to i8*
-      %symbol = inttoptr i64 %jls to i8*
       %fp = call i8* (i8*, i8*) @dlsym(i8* %handle, i8* %symbol)
-      %jlfp = ptrtoint i8* %fp to i64
-      ret i64 %jlfp
+      ret i8* %fp
     }
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
@@ -785,9 +775,8 @@ julia> StaticTools.dlclose(lib)
     ; External declaration of the dlclose function
     declare i32 @dlclose(i8*)
 
-    define i32 @main(i64 %jlh) #0 {
+    define i32 @main(i8* %handle) #0 {
     entry:
-      %handle = inttoptr i64 %jlh to i8*
       %status = call i32 (i8*) @dlclose(i8* %handle)
       ret i32 %status
     }

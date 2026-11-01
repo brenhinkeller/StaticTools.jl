@@ -37,3 +37,7 @@ C = szeros(10,10)
 @test C == fill(20.0,10,10)
 @test mul!(C, A, B, 2, 1) isa StackMatrix
 @test C == fill(40.0,10,10)
+
+# β = 0 must ignore NaNs in C
+C = sfill(NaN, 10, 10)
+@test mul!(C, A, B, 2, 0) == fill(20.0,10,10)

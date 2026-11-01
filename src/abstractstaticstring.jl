@@ -26,9 +26,7 @@
     end
 
     # Custom printing
-    @inline Base.print(s::AbstractStaticString) = printf(s)
     @inline Base.println(s::AbstractStaticString) = puts(s)
-    @inline Base.print(fp::Ptr{FILE}, s::AbstractStaticString) = printf(fp, s)
     @inline Base.println(fp::Ptr{FILE}, s::AbstractStaticString) = puts(fp, s)
 
 
@@ -66,14 +64,14 @@
     @inline Base.firstindex(s::AbstractStaticString) = 1
     @inline Base.lastindex(s::AbstractPointerString) = s.length
     @inline Base.eachindex(s::AbstractPointerString) = 1:s.length
-    @inline Base.getindex(s::AbstractStaticString, i::Int) = unsafe_load(pointer(s)+(i-1))
-    @inline Base.setindex!(s::AbstractStaticString, x::UInt8, i::Integer) = unsafe_store!(pointer(s)+(i-1), x)
-    @inline Base.setindex!(s::AbstractStaticString, x, i::Integer) = unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
+    @inline Base.getindex(s::AbstractStaticString, i::Int) = GC.@preserve s unsafe_load(pointer(s)+(i-1))
+    @inline Base.setindex!(s::AbstractStaticString, x::UInt8, i::Integer) = GC.@preserve s unsafe_store!(pointer(s)+(i-1), x)
+    @inline Base.setindex!(s::AbstractStaticString, x, i::Integer) = GC.@preserve s unsafe_store!(pointer(s)+(i-1), convert(UInt8,x))
     @inline Base.getindex(s::AbstractStaticString, ::Colon) = s
     @inline function Base.getindex(s::AbstractStaticString, r::UnitRange{<:Integer})
         i₀ = max(first(r), 1) - 1
-        l = min(length(r), length(s))
-        return StringView(pointer(s)+i₀, l)
+        i₁ = min(last(r), length(s))
+        return StringView(pointer(s)+i₀, max(i₁ - i₀, 0))
     end
     @inline function Base.setindex!(s::AbstractStaticString, x, r::UnitRange{<:Integer})
         is₀ = first(r)-1
@@ -125,6 +123,27 @@
             (haystack[1+i:lₙ+i] == needle) && return true
         end
         return false
+    end
+
+    # Base's generic versions are not inlined, which would force the (mutable)
+    # static strings to be heap-allocated, so we need our own
+    @inline function Base.startswith(a::AbstractStaticString, b::AbstractStaticString)
+        lₐ, lᵦ = length(a), length(b)
+        lₐ < lᵦ && return false
+        pa, pb = pointer(a), pointer(b)
+        for n in 0:lᵦ-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+        end
+        return true
+    end
+    @inline function Base.endswith(a::AbstractStaticString, b::AbstractStaticString)
+        lₐ, lᵦ = length(a), length(b)
+        lₐ < lᵦ && return false
+        pa, pb = pointer(a) + (lₐ - lᵦ), pointer(b)
+        for n in 0:lᵦ-1
+            unsafe_load(pa + n) == unsafe_load(pb + n) || return false
+        end
+        return true
     end
 
     # Adapted from Julia's stdlib

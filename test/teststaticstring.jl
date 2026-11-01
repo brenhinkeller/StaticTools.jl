@@ -85,3 +85,12 @@
     @test prevind(c"α", 2, 3) == -1
     @test view(c"foobar", 1:3) == "foo"
     @test view(c"foobar", 1:3) isa StringView
+
+## --- startswith / endswith
+    @test startswith(c"foobar", c"foo")
+    @test !startswith(c"foobar", c"bar")
+    @test !startswith(c"fo", c"foo")
+    @test endswith(c"foobar", c"bar")
+    @test !endswith(c"foobar", c"foo")
+    @test endswith(m"foobar", c"obar")
+    @test startswith(c"foobar", c"")

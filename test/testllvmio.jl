@@ -44,7 +44,7 @@
     @test puts(fp, "1") == 0
     @test printf(fp, "2") == 1
     @test putchar(fp, '\n') == 0
-    @test printf(fp, "%s\n", "3") == 2 broken=(Sys.ARCH===:aarch64)
+    @test printf(fp, "%s\n", "3") == 2
     @test printf(fp, 4) == 0
     @test printf(fp, 5.0) == 0
     @test printf(fp, 10.0f0) == 0
@@ -221,3 +221,29 @@
 
     rm("testfile.txt")
     rm("testfile.b")
+
+
+## --- Regression tests: 64-bit/8-bit formatting through variadic (f)printf, `%` in strings
+
+    fp = fopen(c"testfile3.txt", c"w+")
+    printf(fp, 2^40); printf(fp, UInt64(2)^40); printf(fp, c"%d|", Int8(-3)); printf(fp, c"%d|", UInt8(200))
+    printf(fp, c"%d|", Int32(5)); printf(fp, c"%f|", 2.5)
+    print(fp, c"100%d done")
+    frewind(fp)
+    @test String(read(fp, MallocString)) == "10995116277760x0000010000000000-3|200|5|2.500000|100%d done"
+    fclose(fp)
+    rm("testfile3.txt")
+
+## --- Operations on a missing file must fail gracefully, not segfault
+
+    @test fopen(c"this_file_does_not_exist.txt", c"r") == C_NULL
+    nofp = Ptr{StaticTools.FILE}(C_NULL)
+    @test gets!(MallocString(undef, 10), nofp) == C_NULL
+    @test fread!(szeros(Int, 2), nofp) == szeros(Int, 2)
+    @test fwrite(nofp, c"foo") == 0
+    @test printf(nofp, c"foo") == -1
+    @test printf(nofp, c"%d", 5) == -1
+    @test printf(nofp, c"%f", 5.0) == -1
+    @test length(read(nofp, MallocString)) == 0
+    @test length(read(nofp, MallocArray{Int})) == 0
+    @test length(parsedlm(c"this_file_does_not_exist.txt", ',')) == 0

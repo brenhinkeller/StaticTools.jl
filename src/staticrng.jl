@@ -236,6 +236,7 @@ end
 
 # Extend Base.randn
 @inline Base.randn(rng::StaticRNG) = randn(rng, Float64)
+@inline Base.randn(rng::StaticRNG, ::Type{T}) where {T<:Union{Float32,Float16}} = T(randn(rng, Float64))
 @inline Base.randn(rng::BoxMuller, ::Type{Float64}) = boxmuller(rng)
 @inline Base.randn(rng::MarsagliaPolar, ::Type{Float64}) = marsagliapolar(rng)
 @inline function Base.randn(rng::StaticRNG, ::Type{Float64})

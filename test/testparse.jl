@@ -61,23 +61,34 @@
     m = (1:10) * (1:10)'
     @test printdlm(c"testfile.tsv", m) == 0
 
-    # fp = fopen(c"testfile.tsv", c"r")
-    # m_parsed = parsedlm(fp, '\t')
-    # @test isa(m_parsed, MallocMatrix{Float64})
-    # @test m_parsed == m broken=(Sys.ARCH===:aarch64)
-    # @test free(m_parsed) == 0
-    # @test fclose(fp) == 0
-    #
-    # m_parsed = parsedlm(c"testfile.tsv", '\t')
-    # @test isa(m_parsed, MallocMatrix{Float64})
-    # @test m_parsed == m broken=(Sys.ARCH===:aarch64)
-    # @test free(m_parsed) == 0
-    #
-    # str = read(c"testfile.tsv", MallocString)
-    # m_parsed = StaticTools.parsedlmstr(Float64, str, '\t')
-    # free(str)
-    # @test m_parsed == m broken=(Sys.ARCH===:aarch64)
-    # @test free(m_parsed) == 0
+    fp = fopen(c"testfile.tsv", c"r")
+    m_parsed = parsedlm(fp, '\t')
+    @test isa(m_parsed, MallocMatrix{Float64})
+    @test m_parsed == m
+    @test free(m_parsed) == 0
+    @test fclose(fp) == 0
+
+    m_parsed = parsedlm(c"testfile.tsv", '\t')
+    @test isa(m_parsed, MallocMatrix{Float64})
+    @test m_parsed == m
+    @test free(m_parsed) == 0
+
+    str = read(c"testfile.tsv", MallocString)
+    m_parsed = StaticTools.parsedlmstr(Float64, str, '\t')
+    free(str)
+    @test m_parsed == m
+    @test free(m_parsed) == 0
+
+    # Files / strings with no trailing newline, a trailing delimiter, or short rows
+    write("testfile2.csv", "1,2,3\n4,5,6,7")
+    @test parsedlm(Int, c"testfile2.csv", ',') == [1 2 3 0; 4 5 6 7]
+    str = m"1,2,3\n4,5,6,7"
+    m_parsed = StaticTools.parsedlmstr(Int, str, ',')
+    @test m_parsed == [1 2 3 0; 4 5 6 7]
+    free(m_parsed); free(str)
+    write("testfile2.csv", "1,2,\n3,4,\n")
+    @test parsedlm(Int, c"testfile2.csv", ',') == [1 2; 3 4]
+    rm("testfile2.csv")
 
     # Clean up
     rm("testfile.tsv")

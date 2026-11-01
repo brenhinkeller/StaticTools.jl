@@ -89,3 +89,10 @@
     @test endswith(str, c"baz")
     @test !endswith(str, c"bar")
     free(str)
+
+
+## --- Regression tests: range indexing clips to the string
+    s = m"Hello"
+    @test s[4:10] == "lo"
+    @test s[1:5] == "Hello"
+    free(s)

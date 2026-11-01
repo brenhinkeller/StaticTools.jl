@@ -56,3 +56,11 @@ randn!(zig, A)
 A .= NaN
 randn!(rng, A)
 @test isapprox(sum(A)/length(A), 0.0, atol = 1)
+
+
+## --- Regression tests: Float32 Gaussians
+A = szeros(Float32, 5)
+randn!(MarsagliaPolar(1), A)
+@test all(isfinite, A)
+randn!(BoxMuller(1), A)
+@test all(isfinite, A)

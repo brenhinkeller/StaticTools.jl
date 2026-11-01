@@ -66,15 +66,25 @@ end
 			chars, columns = 0, 0
 		end
 	end
+	# If the last line isn't newline-terminated, it still needs to be counted
+	if chars > 0
+		fseek(fp, -1)
+		getc(fp) != delim && (columns += 1)
+		chars > maxchars && (maxchars = chars)
+		columns > maxcolumns && (maxcolumns = columns)
+	end
 	# If the last line isn't blank, add one more to the row counter
 	fseek(fp, -1)
 	getc(fp) != Int32('\n') && (rows += 1)
 	frewind(fp)
 
-	# If file starts with \ufeff, ignore it (with warning)
-	c1, c2 = getc(fp), getc(fp)
-	if c1 == 0xfe && c2 == 0xff
+	# If file starts with a byte order mark (U+FEFF), ignore it (with warning)
+	c1, c2, c3 = getc(fp), getc(fp), getc(fp)
+	if c1 == 0xef && c2 == 0xbb && c3 == 0xbf # UTF-8 encoded
 		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
+	elseif c1 == 0xfe && c2 == 0xff
+		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
+		fseek(fp, -1) # Un-read the third byte
 	else
 		frewind(fp)
 	end
@@ -108,8 +118,11 @@ end
 		end
 
 		# and perform operations on each field
-		for j = 1:maxcolumns
+		for j = 1:min(columns, maxcolumns)
 			importedmatrix[i,j] = parse(T, str[field[j]:end])
+		end
+		for j = (columns+1):maxcolumns # Missing fields in short rows
+			importedmatrix[i,j] = zero(T)
 		end
 		i += 1
 	end
@@ -131,15 +144,20 @@ end
 		if c == 0x0a
 			rows += 1
 			# If there is a trailing delimiter, don't add an extra column for it
-			str[i-1] != delim && (columns += 1)
+			(i == 1 || str[i-1] != delim) && (columns += 1)
 
 			# See if we have a new maximum, and reset the counters
 			columns > maxcolumns && (maxcolumns = columns)
 			columns = 0
 		end
 	end
-	# If the last line isn't blank, add one more to the row counter
-	str[end-1] != 0x0a && (rows += 1)
+	# If the last line isn't newline-terminated, it still needs to be counted
+	n = length(str)
+	if n > 0 && str[n] != 0x0a
+		rows += 1
+		str[n] != delim && (columns += 1)
+		columns > maxcolumns && (maxcolumns = columns)
+	end
 
 	# # if debug
 	# printf(c"Maximum number of characters: %d\n", maxchars)
@@ -152,7 +170,10 @@ end
 
 	# For each line,
 	k = 1
-	if str[1] == 0xfe && str[2] == 0xff
+	if n >= 3 && str[1] == 0xef && str[2] == 0xbb && str[3] == 0xbf # UTF-8 encoded
+		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
+		k += 3
+	elseif n >= 2 && str[1] == 0xfe && str[2] == 0xff
 		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
 		k += 2
 	end
@@ -161,18 +182,21 @@ end
 		# identify the delimited fields,
 		field[1] = k
 		columns = 1
-		while str[k] != 0x0a
-			if str[k] == delim
+		while (c = str[k]) != 0x0a && c != 0x00 # Stop at newline or end of string
+			if c == delim
 				str[k] = 0x00
 				columns += 1
-				field[columns] = k+1
+				columns <= maxcolumns && (field[columns] = k+1)
 			end
 			k += 1
 		end
 
 		# and perform operations on each field
-		for j = 1:maxcolumns
+		for j = 1:min(columns, maxcolumns)
 			importedmatrix[i,j] = parse(T, str[field[j]:end])
+		end
+		for j = (columns+1):maxcolumns # Missing fields in short rows
+			importedmatrix[i,j] = zero(T)
 		end
 		k += 1
 	end
