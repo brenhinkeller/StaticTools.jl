@@ -278,7 +278,7 @@ julia> StaticTools.time()
       %time = call i64 @time(i64* null)
       ret i64 %time
     }
-    """, "main"), Int64, Tuple{}, size)
+    """, "main"), Int64, Tuple{})
 end
 
 
