@@ -2,7 +2,6 @@ module StaticTools
 
     # External dependencies
     using ManualMemory: MemoryBuffer, load, store!
-    using LoopVectorization
     using Bumper
     # Import so we can extend
     import Random: rand!, randn!
@@ -45,7 +44,7 @@ module StaticTools
     include("static_type.jl")   # Convert types and objects to more static-friendly versions
 
     # Types
-    export StaticString, MallocString, StringView, AbstractStaticString         # String types
+    export StaticString, MallocString, StaticStringView, AbstractStaticString # String types
     export MallocArray, MallocMatrix, MallocVector                              # Heap-allocated array types
     export StackArray, StackMatrix, StackVector                                 # Stack-allocated array types
     export ArrayView
