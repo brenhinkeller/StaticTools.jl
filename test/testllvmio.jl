@@ -109,7 +109,7 @@
     @test printf(m"%s \n", str) >= 0
     show(str)
 
-    # Print StringView
+    # Print StaticStringView
     sview = str[1:5]
     @test puts(sview) === Int32(0)
     @test puts(fp, sview) === Int32(0)

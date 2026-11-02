@@ -642,8 +642,8 @@ end
             newline(fp) # puts appends `\n`, but fputs doesn't (!)
         end
     end
-    @inline puts(s::StringView) = (printf(s); newline())
-    @inline puts(fp::Ptr{FILE}, s::StringView) = (printf(fp, s); newline(fp))
+    @inline puts(s::StaticStringView) = (printf(s); newline())
+    @inline puts(fp::Ptr{FILE}, s::StaticStringView) = (printf(fp, s); newline(fp))
 
 ## --- gets/fgets
 
@@ -981,13 +981,13 @@ end
         attributes #0 = { alwaysinline nounwind ssp uwtable }
         """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
     end
-    @inline function printf(s::StringView)
+    @inline function printf(s::StaticStringView)
         for i ∈ eachindex(s)
             putchar(s[i])
         end
         return length(s) % Int32
     end
-    @inline function printf(fp::Ptr{FILE}, s::StringView)
+    @inline function printf(fp::Ptr{FILE}, s::StaticStringView)
         for i ∈ eachindex(s)
             putchar(fp, s[i])
         end

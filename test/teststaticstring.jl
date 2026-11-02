@@ -36,7 +36,7 @@
     @test str[8] == 0x77 # w
 
     # Test indexing
-    @test isa(str[1:end], StringView)
+    @test isa(str[1:end], StaticStringView)
     @test str == str[1:end]
     @test str == str[:]
     @test str[1:2] == str[1:2]
@@ -84,7 +84,7 @@
     @test prevind(c"α", 2, 2) == 0
     @test prevind(c"α", 2, 3) == -1
     @test view(c"foobar", 1:3) == "foo"
-    @test view(c"foobar", 1:3) isa StringView
+    @test view(c"foobar", 1:3) isa StaticStringView
 
 ## --- startswith / endswith
     @test startswith(c"foobar", c"foo")

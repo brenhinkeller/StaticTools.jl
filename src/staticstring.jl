@@ -32,7 +32,7 @@
     c"Hello there!"
 
     julia> s[1:5]
-    StringView: "Hello"
+    StaticStringView: "Hello"
 
     julia> s[1:5] == "Hello"
     true

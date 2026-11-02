@@ -10,17 +10,17 @@
 
     # Lightweight type for taking a view into an existing string
     # Like MallocString, but not necessarily null-terminated
-    struct StringView <: AbstractPointerString
+    struct StaticStringView <: AbstractPointerString
         pointer::Ptr{UInt8}
         length::Int
     end
-    @inline Base.length(s::StringView) = s.length
-    @inline StringView(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StringView(pointer(s)+first(r)-1, length(r))
+    @inline Base.length(s::StaticStringView) = s.length
+    @inline StaticStringView(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StaticStringView(pointer(s)+first(r)-1, length(r))
 
 
     # Custom replshow for interactive use (n.b. _NOT_ static-compilerable)
-    function Base.show(io::IO, s::StringView)
-        Base.print(io, "$(length(s))-byte StringView:\n \"")
+    function Base.show(io::IO, s::StaticStringView)
+        Base.print(io, "$(length(s))-byte StaticStringView:\n \"")
         Base.escape_string(io, Base.unsafe_string(pointer(s), length(s)))
         Base.print(io, "\"")
     end
@@ -71,7 +71,7 @@
     @inline function Base.getindex(s::AbstractStaticString, r::UnitRange{<:Integer})
         i₀ = max(first(r), 1) - 1
         i₁ = min(last(r), length(s))
-        return StringView(pointer(s)+i₀, max(i₁ - i₀, 0))
+        return StaticStringView(pointer(s)+i₀, max(i₁ - i₀, 0))
     end
     @inline function Base.setindex!(s::AbstractStaticString, x, r::UnitRange{<:Integer})
         is₀ = first(r)-1
@@ -86,7 +86,7 @@
             s[i] = x[i+ix₀]
         end
     end
-    Base.view(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StringView(s, r)
+    Base.view(s::AbstractStaticString, r::AbstractUnitRange{<:Integer}) = StaticStringView(s, r)
 
     # Some of the AbstractString interface
     @inline Base.ncodeunits(s::AbstractPointerString) = s.length

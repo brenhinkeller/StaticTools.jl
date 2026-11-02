@@ -37,7 +37,7 @@
     @test str[8] == 0x77 # w
 
     # Test indexing
-    @test isa(str[1:end], StringView)
+    @test isa(str[1:end], StaticStringView)
     @test str == str[1:end]
     @test str === str[:]
     @test str[1:2] === str[1:2]

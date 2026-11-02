@@ -40,7 +40,7 @@
     m"Hello there!"
 
     julia> s[1:5]
-    StringView: "Hello"
+    StaticStringView: "Hello"
 
     julia> s[1:5] == "Hello"
     true
@@ -216,6 +216,6 @@
     # Custom printing -- n.b. `printf(s)` would treat `s` as a format string, so
     # `%` characters would be misinterpreted. Defined here since it uses `c"..."`
     @inline Base.print(s::AbstractStaticString) = printf(c"%s", s)
-    @inline Base.print(s::StringView) = printf(s)
+    @inline Base.print(s::StaticStringView) = printf(s)
     @inline Base.print(fp::Ptr{FILE}, s::AbstractStaticString) = printf(fp, c"%s", s)
-    @inline Base.print(fp::Ptr{FILE}, s::StringView) = printf(fp, s)
+    @inline Base.print(fp::Ptr{FILE}, s::StaticStringView) = printf(fp, s)
