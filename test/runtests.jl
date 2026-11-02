@@ -18,9 +18,6 @@ const GROUP = get(ENV, "GROUP", "Default")
     @testset "StaticLinearAlgebra" begin include("teststaticlinearalgebra.jl") end
     @testset "StaticRNG" begin include("teststaticrng.jl") end
     @testset "static_type" begin include("teststatic_type.jl") end
-end
-
-@static if GROUP == "Utilities" || GROUP == "Default" || GROUP == "All"
     @testset "static_type" begin include("teststatic_type.jl") end
 end
 
@@ -33,7 +30,7 @@ jlpath = joinpath(Sys.BINDIR, Base.julia_exename()) # Get path to julia executab
 # To remove output files
 cleanup(files...) = foreach(f -> isfile(f) && rm(f), files)
 
-@static if GROUP == "Integration" || GROUP == "All"
+@static if GROUP == "Integration" || GROUP == "Default" || GROUP == "All"
     @testset "StaticCompiler" begin include("teststaticcompiler.jl") end
 end
 
