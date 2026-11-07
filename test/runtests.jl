@@ -7,6 +7,7 @@ const GROUP = get(ENV, "GROUP", "Default")
 
 @static if GROUP == "Core" || GROUP == "Default" || GROUP == "All"
     @testset "IO" begin include("testllvmio.jl") end
+    @testset "printf" begin include("testprintf.jl") end
     @testset "libc" begin include("testllvmlibc.jl") end
     @testset "interop" begin include("testllvminterop.jl") end
     @testset "Parsing" begin include("testparse.jl") end

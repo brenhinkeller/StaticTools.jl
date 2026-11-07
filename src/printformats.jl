@@ -23,7 +23,7 @@ defaulting to the current standard output `stdout` if not specified.
 
 Optionally, a C-style format specifier string `fmt` may be provided as well.
 
-Returns `0` on success.
+Returns `0` on success (with a format, the number of characters written, as in C).
 
 ## Examples
 ```julia
@@ -37,7 +37,7 @@ julia> printf(1/3)
 
 julia> printf(c"%f\n", 1/3)
 0.333333
-0
+9
 ```
 """
 @inline function printf(n::T) where T <: Union{Number, Ptr}
