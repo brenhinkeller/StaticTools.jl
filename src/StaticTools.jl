@@ -34,6 +34,7 @@ module StaticTools
 
     # higher-level printing, parsing, etc.
     include("printformats.jl")
+    include("printfvariadic.jl") # printf with a format and any number of arguments
     include("parsedlm.jl")
 
     # Random number generation
