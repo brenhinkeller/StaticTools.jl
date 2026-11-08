@@ -649,7 +649,7 @@ end
 
     """
     ```julia
-    gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+    gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s)-1)
     ```
     Libc `fgets` function, accessed by direct `llvmcall`.
 
@@ -669,7 +669,7 @@ end
     m"\n"
     ```
     """
-    @inline function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s))
+    @inline function gets!(s::MallocString, fp::Ptr{FILE}, n::Integer=length(s)-1)
         @assert Int===Int64
         fp == C_NULL && return Ptr{UInt8}(C_NULL)
         Base.llvmcall(("""
@@ -713,18 +713,29 @@ end
     ```
     """
     @inline function Base.readline(fp::Ptr{FILE})
+        # N.B.: only absolute seeks (to positions obtained from `ftell`) are used here,
+        # since relative seeks are unreliable on text-mode streams (e.g. on Windows)
+        start = ftell(fp)
         linelen = 0
         c = getc(fp)
         while c > 0 && c != 0x0d && c != 0x0a
             linelen += 1
             c = getc(fp)
         end
-        offset_fseek = Sys.iswindows() ? 2 : 1
-        fseek(fp, (c < 0) - linelen - offset_fseek)
+        fseek(fp, start, SEEK_SET)
         str = MallocString(undef, linelen + 1) # str[end] == 0x00
         if linelen > 0
             gets!(str, fp, linelen)
-            fseek(fp, offset_fseek) # Advance by the offset
+        else
+            str[1] = 0x00
+        end
+        # Consume the line terminator, if any (`\n`, `\r`, or `\r\n`)
+        if c >= 0
+            getc(fp) # Skip the terminator we already know is there
+            if c == 0x0d
+                pos = ftell(fp)
+                getc(fp) != 0x0a && fseek(fp, pos, SEEK_SET)
+            end
         end
         return str
     end

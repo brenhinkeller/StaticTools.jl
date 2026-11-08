@@ -154,7 +154,7 @@
     str = MallocString(undef, 100)
     @test gets!(str, fp) != C_NULL
     @test strlen(str) == 2
-    @test ftell(fp) === 2
+    @test ftell(fp) === (Sys.iswindows() ? 3 : 2) # text mode: file contains `\r\n`
     @test str[1] == UInt8('1')
 
     @test frewind(fp) == 0
@@ -162,7 +162,7 @@
     @test strlen(str) == 2
     @test str[1] == UInt8('1')
 
-    @test fseek(fp, -2, SEEK_CUR) == 0
+    @test fseek(fp, Sys.iswindows() ? -3 : -2, SEEK_CUR) == 0 # `\r\n` in text mode on Windows
     @test gets!(str, fp) != C_NULL
     @test strlen(str) == 2
     @test str[1] == UInt8('1')
