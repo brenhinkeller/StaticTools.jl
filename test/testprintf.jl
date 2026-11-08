@@ -3,7 +3,7 @@
     # what `f(fp)` writes to a file, and what it returns
     function written(f)
         path = tempname()
-        fp = fopen(path, c"w")
+        fp = fopen(path, c"wb") # binary mode: no `\n` -> `\r\n` translation on Windows
         n = f(fp)
         fclose(fp)
         text = read(path, String)
@@ -16,7 +16,7 @@
     @test written(fp -> printf(fp, c"%d %d %d %d\n", 1, 2, 3, 4))[2] == "1 2 3 4\n"
     @test written(fp -> printf(fp, c"%lld %llu %llx\n", typemin(Int64), typemax(UInt64), 0xdeadbeef))[2] ==
         "-9223372036854775808 18446744073709551615 deadbeef\n"
-    @test written(fp -> printf(fp, c"%5.2f|%-8.3e|%g\n", 12.345, 1234.5, 0.5))[2] == "12.35|1.234e+03|0.5\n"
+    @test written(fp -> printf(fp, c"%5.2f|%-8.3e|%g\n", 12.345, 1234.6, 0.5))[2] == "12.35|1.235e+03|0.5\n" # not a tie, as ties round differently on Windows
     # integers smaller than an `int`, and `Bool`, are promoted; a `Float32` is a `double`
     @test written(fp -> printf(fp, c"%d %d %d %d %d\n", Int8(-5), Int16(-300), UInt8(200), UInt16(60000), true))[2] ==
         "-5 -300 200 60000 1\n"

@@ -271,6 +271,9 @@ ERROR: could not do thing
 """
 @inline perror(s::MallocString) = perror(pointer(s))
 @inline perror(s::StaticString) = GC.@preserve s perror(pointer(s))
+@static if Sys.iswindows()
+    @inline perror(s::Ptr{UInt8}) = (fprintf_c(stderrp(), s); Int32(0))
+else
 @inline function perror(s::Ptr{UInt8})
     Base.llvmcall(("""
     ; External declaration of the fprintf function
@@ -284,6 +287,7 @@ ERROR: could not do thing
 
     attributes #0 = { alwaysinline nounwind ssp uwtable }
     """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, stderrp(), s)
+end
 end
 
 ## --- Print delimited data to file

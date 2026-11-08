@@ -961,36 +961,42 @@ end
     @inline printf(s) = GC.@preserve s printf(pointer(s))
     @inline printf(fp::Ptr{FILE}, s::MallocString) = printf(fp, pointer(s))
     @inline printf(fp::Ptr{FILE}, s) = GC.@preserve s printf(fp, pointer(s))
-    @inline function printf(s::Ptr{UInt8})
-        @assert Int===Int64
-        Base.llvmcall(("""
-        ; External declaration of the printf function
-        declare i32 @printf(i8* noalias nocapture, ...)
+    @static if Sys.iswindows()
+        # `printf` is not available in the C runtime that provides the rest of the file IO (see `printfvariadic.jl`)
+        @inline printf(s::Ptr{UInt8}) = printf_c(s)
+        @inline printf(fp::Ptr{FILE}, s::Ptr{UInt8}) = fp == C_NULL ? Int32(-1) : fprintf_c(fp, s)
+    else
+        @inline function printf(s::Ptr{UInt8})
+            @assert Int===Int64
+            Base.llvmcall(("""
+            ; External declaration of the printf function
+            declare i32 @printf(i8* noalias nocapture, ...)
 
-        define i32 @main(i8* %str) #0 {
-        entry:
-          %status = call i32 (i8*, ...) @printf(i8* %str)
-          ret i32 %status
-        }
+            define i32 @main(i8* %str) #0 {
+            entry:
+              %status = call i32 (i8*, ...) @printf(i8* %str)
+              ret i32 %status
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
-    end
-    @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
-        @assert Int===Int64
-        fp == C_NULL && return Int32(-1)
-        Base.llvmcall(("""
-        ; External declaration of the fprintf function
-        declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{UInt8}}, s)
+        end
+        @inline function printf(fp::Ptr{FILE}, s::Ptr{UInt8})
+            @assert Int===Int64
+            fp == C_NULL && return Int32(-1)
+            Base.llvmcall(("""
+            ; External declaration of the fprintf function
+            declare i32 @fprintf(i8* noalias nocapture, i8*, ...)
 
-        define i32 @main(i8* %fp, i8* %str) #0 {
-        entry:
-          %status = call i32 (i8*, i8*, ...) @fprintf(i8* %fp, i8* %str)
-          ret i32 %status
-        }
+            define i32 @main(i8* %fp, i8* %str) #0 {
+            entry:
+              %status = call i32 (i8*, i8*, ...) @fprintf(i8* %fp, i8* %str)
+              ret i32 %status
+            }
 
-        attributes #0 = { alwaysinline nounwind ssp uwtable }
-        """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+            attributes #0 = { alwaysinline nounwind ssp uwtable }
+            """, "main"), Int32, Tuple{Ptr{FILE}, Ptr{UInt8}}, fp, s)
+        end
     end
     @inline function printf(s::StaticStringView)
         for i ∈ eachindex(s)
