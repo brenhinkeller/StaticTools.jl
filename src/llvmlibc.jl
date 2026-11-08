@@ -297,38 +297,41 @@ julia> usleep(1000000)
 ```
 """
 @inline usleep(μsec::Integer) = usleep(Int64(μsec))
-@inline function usleep(μsec::Int64)
-    @assert Int===Int64
-    Base.llvmcall(("""
-    ; External declaration of the `usleep` function
-    declare i32 @usleep(i64)
+@static if Sys.iswindows()
+    # There is no `usleep` on Windows: use `Sleep` of kernel32, which takes a 32-bit number of milliseconds
+    # (rounded up, as `usleep` suspends for at least `μsec` microseconds)
+    @inline function usleep(μsec::Int64)
+        @assert Int===Int64
+        msec = clamp((μsec + 999) ÷ 1000, 0, 0x7fffffff) % Int32
+        Base.llvmcall(("""
+        ; External declaration of the `Sleep` function
+        declare void @Sleep(i32)
 
-    ; Function Attrs: nounwind ssp uwtable
-    define i32 @main(i64 %usec) #0 {
-      %status = call i32 (i64) @usleep(i64 %usec)
-      ret i32 %status
-    }
+        define i32 @main(i32 %msec) #0 {
+          call void (i32) @Sleep(i32 %msec)
+          ret i32 0
+        }
 
-    attributes #0 = { alwaysinline nounwind ssp uwtable }
-    """, "main"), Int32, Tuple{Int64}, μsec)
-end
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Int32}, msec)
+    end
+    const sleep_win = usleep # For compatibility with previous implementation
+else
+    @inline function usleep(μsec::Int64)
+        @assert Int===Int64
+        Base.llvmcall(("""
+        ; External declaration of the `usleep` function
+        declare i32 @usleep(i64)
 
+        ; Function Attrs: nounwind ssp uwtable
+        define i32 @main(i64 %usec) #0 {
+          %status = call i32 (i64) @usleep(i64 %usec)
+          ret i32 %status
+        }
 
-"""
-```julia
-sleep_win(sec::Real)
-```
-sleep function for Windows using Sleep()
-
-## Examples
-```julia
-julia> sleep_win(2.5)
-0
-```
-"""
-function sleep_win(secs::Real)
-    millisecs = round(Int, secs * 1000)
-    @symbolcall Sleep(millisecs :: Int) :: Int
+        attributes #0 = { alwaysinline nounwind ssp uwtable }
+        """, "main"), Int32, Tuple{Int64}, μsec)
+    end
 end
 
 
