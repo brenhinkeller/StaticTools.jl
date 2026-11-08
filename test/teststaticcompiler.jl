@@ -439,8 +439,9 @@ let
 end
 
 ## --- Test interop
+# (dlopen/dlsym via `-ldl` are not available on Windows)
 
-let
+@static if !Sys.iswindows() let
     # Compile...
     cleanup("interop")
     status = -1
@@ -464,7 +465,7 @@ let
     end
     @test isa(status, Base.Process)
     @test isa(status, Base.Process) && status.exitcode == 0
-end
+end end
 
 ## --- Clean up
 

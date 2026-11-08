@@ -455,7 +455,7 @@ end
 ```julia
 strtol(s)
 ```
-Libc `strtol` function, accessed by direct StaticCompiler-safe `llvmcall`.
+Libc `strtoll` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Returns an `Int64` ("long") containing the number written out in decimal form in
 null-terminated string `s`.
@@ -479,13 +479,13 @@ end
 @inline function strtol(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
     @assert Int===Int64
     Base.llvmcall(("""
-    ; External declaration of the `strtol` function
-    declare i64 @strtol(i8*, i8**, i32)
+    ; External declaration of the `strtoll` function
+    declare i64 @strtoll(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
     define i64 @main(i8* %str, i8* %jlp, i32 %base) #0 {
       %ptr = bitcast i8* %jlp to i8**
-      %li = call i64 (i8*, i8**, i32) @strtol (i8* %str, i8** %ptr, i32 %base)
+      %li = call i64 (i8*, i8**, i32) @strtoll (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
 
@@ -497,7 +497,7 @@ end
 ```julia
 strtoul(s)
 ```
-Libc `strtol` function, accessed by direct StaticCompiler-safe `llvmcall`.
+Libc `strtoull` function, accessed by direct StaticCompiler-safe `llvmcall`.
 
 Returns an `UInt64` ("unsigned long") containing the number written out in decimal
 form in null-terminated string `s`.
@@ -521,13 +521,13 @@ end
 @inline function strtoul(s::Ptr{UInt8}, p::Ptr{Ptr{UInt8}}, base::Int32)
     @assert Int===Int64
     Base.llvmcall(("""
-    ; External declaration of the `strtoul` function
-    declare i64 @strtoul(i8*, i8**, i32)
+    ; External declaration of the `strtoull` function
+    declare i64 @strtoull(i8*, i8**, i32)
 
     ; Function Attrs: nounwind ssp uwtable
     define i64 @main(i8* %str, i8* %jlp, i32 %base) #0 {
       %ptr = bitcast i8* %jlp to i8**
-      %li = call i64 (i8*, i8**, i32) @strtoul (i8* %str, i8** %ptr, i32 %base)
+      %li = call i64 (i8*, i8**, i32) @strtoull (i8* %str, i8** %ptr, i32 %base)
       ret i64 %li
     }
 

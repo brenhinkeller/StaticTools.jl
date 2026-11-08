@@ -51,31 +51,31 @@ end
 	maxcolumns, maxchars = 0, 0
 
 	# Determine maximum number of characters per row, delimiters per row, and rows
+	# N.B.: we track the previous character rather than seeking backwards, since
+	# relative `fseek`s are unreliable on text-mode streams (e.g. on Windows)
+	prev = Int32(-1)
 	@inbounds while (c = getc(fp)) > 0
 		chars += 1
 		c == delim && (columns += 1)
 		if c == 10 #Int32('\n')
 			rows += 1
 			# If there is a trailing delimiter, don't add an extra column for it
-			fseek(fp, -2)
-			getc(fp) != delim && (columns += 1)
-			fseek(fp, +1)
+			prev != delim && (columns += 1)
 			# See if we have a new maximum, and reset the counters
 			chars > maxchars && (maxchars = chars)
 			columns > maxcolumns && (maxcolumns = columns)
 			chars, columns = 0, 0
 		end
+		prev = c
 	end
 	# If the last line isn't newline-terminated, it still needs to be counted
 	if chars > 0
-		fseek(fp, -1)
-		getc(fp) != delim && (columns += 1)
+		prev != delim && (columns += 1)
 		chars > maxchars && (maxchars = chars)
 		columns > maxcolumns && (maxcolumns = columns)
 	end
 	# If the last line isn't blank, add one more to the row counter
-	fseek(fp, -1)
-	getc(fp) != Int32('\n') && (rows += 1)
+	prev != Int32('\n') && (rows += 1)
 	frewind(fp)
 
 	# If file starts with a byte order mark (U+FEFF), ignore it (with warning)
@@ -84,7 +84,8 @@ end
 		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
 	elseif c1 == 0xfe && c2 == 0xff
 		warn(c"Skipping hidden U+FEFF character at start of input file.\n")
-		fseek(fp, -1) # Un-read the third byte
+		# Un-read the third byte by re-reading from the start
+		frewind(fp); getc(fp); getc(fp)
 	else
 		frewind(fp)
 	end
