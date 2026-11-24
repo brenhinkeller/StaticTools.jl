@@ -8,11 +8,11 @@
 [![Coverage][codecov-img]][codecov-url]
 
 
-Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things! (Experimental! 🐛)
+Tools to enable [StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)-based static compilation of Julia code (or more accurately, a subset of Julia which we might call "unsafe Julia") to standalone native binaries by avoiding GC allocations and `llvmcall`-ing all the things! For a larger subset of Julia (including allocations), see also [StaticRuntime.jl](https://github.com/brenhinkeller/StaticRuntime.jl).
 
-This package currently requires Julia 1.8 or greater for best results (if in doubt, check [which versions are passing CI](https://github.com/brenhinkeller/StaticTools.jl/actions?query=workflow%3ACI++)). Integration tests against StaticCompiler.jl and LoopVectorization.jl are currently run with Julia 1.8 and 1.9 on x86-64 linux and mac; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
+This package currently requires Julia 1.10 or greater (if in doubt, check [which versions are passing CI](https://github.com/brenhinkeller/StaticTools.jl/actions?query=workflow%3ACI++)). Integration tests against StaticCompiler.jl are currently run on x86-64 linux, mac, and windows; other platforms and versions may or may not work but will depend on StaticCompiler.jl support.
 
-While we'll do our best to keep things working, this package should still be considered experimental at present, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If there are errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. Please report any unexpected bugs you find, and PRs are welcome!
+While we'll do our best to keep things working, this package should still be considered experimental, and necessarily involves a lot of juggling of pointers and such (i.e., "unsafe Julia"). If there are errors in any of the `llvmcall`s (which we have to use instead of simpler `ccall`s for things to statically compile smoothly), there could be serious bugs or even undefined behavior. Please report any unexpected bugs you find, and PRs are welcome!
 
 In addition to the exported names, Julia `Base` functions extended for StaticTools types (i.e., `StaticString`/ `MallocString` and `StackArray`/`MallocArray`) include:
 * `print`, `println`, `error`,
@@ -29,7 +29,7 @@ Beyond that, there are the stack-allocated statically-sized `StaticString`s and 
 [printmandel.jl](https://gist.github.com/brenhinkeller/ca2246ab0928e109e281a4d540010b2d)
 
 ### Limitations:
-In order to be standalone-compileable without linking to libjulia, you need to avoid (among probably other things):
+In order to be standalone-compileable without linking to (or reimplementing) libjulia, you need to avoid (among probably other things):
 * GC allocations. Manual heap-allocation (`malloc`, `calloc`) and stack allocation (by convincing the Julia compiler to use `alloca` and put your object on the stack) are all fine though.
 * Non-`const`ant global variables
 * Type instability.
